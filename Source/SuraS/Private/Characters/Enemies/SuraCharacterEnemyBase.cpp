@@ -1,12 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MyClass.h"
+#include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
-MyClass::MyClass()
-{
-}
-
-MyClass::~MyClass()
-{
-}
