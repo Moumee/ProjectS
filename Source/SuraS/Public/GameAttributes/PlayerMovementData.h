@@ -17,41 +17,38 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	float WalkSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SprintSpeed;
+	float RunSpeed;
 
+	// The Z value of the launch velocity when jumping
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float HoldToSprintTime;
+	float JumpZVelocity;
 
+	// The XY value of the launch velocity when jumping
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float JumpVelocity;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float CrouchedWalkSpeed;
+	float JumpXYVelocity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CrouchSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SlidingThreshold;
+	float DashSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int DashMaxStack;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DashAdditionalSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DashDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DashKnockBackDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashCooldown;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WallRunSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsWallRunGravity;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float TargetWallRunGravity;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WallRunCooldown;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float WallRunJumpOffVelocity;
+	
 };

@@ -1,0 +1,44 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "ActorComponents/ACAttributes.h"
+#include "ACPlayerAttributes.generated.h"
+
+struct FPlayerMovementData;
+/**
+ * 
+ */
+UCLASS()
+class SURAS_API UACPlayerAttributes : public UActorComponent
+{
+	GENERATED_BODY()
+
+private:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attributes", meta = (AllowPrivateAccess = "true"))
+	UDataTable* PlayerMovementDT;
+
+	FPlayerMovementData* PlayerRow;
+
+protected:
+	
+	virtual void BeginPlay() override;
+
+public:
+
+	float GetWalkSpeed() const;
+
+	float GetRunSpeed() const;
+
+	float GetCrouchSpeed() const;
+
+	float GetJumpZVelocity() const;
+
+	float GetJumpXYVelocity() const;
+
+	float GetDashSpeed() const;
+
+	float GetDashAdditionalSpeed() const;
+};

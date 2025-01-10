@@ -33,33 +33,7 @@ void UACAttributes::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 	// ...
 }
 
-void UACAttributes::InitializePlayer(ACharacter* Player)
-{
-	const auto PlayerMovementData = PlayerMovementDT.DataTable->FindRow<FPlayerMovementData>("Player", "");
 
-	if (PlayerMovementData)
-	{
-		/*
-		* Sample Initialization Code
-		* 
-		// Player Movement Init
-		PlayerWalkSpeed = (*PlayerMovementData).WalkSpeed;
-		PlayerSprintSpeed = (*PlayerMovementData).SprintSpeed;
-		PlayerHoldToSprintTime = (*PlayerMovementData).HoldToSprintTime;
-		PlayerJumpVelocity = (*PlayerMovementData).JumpVelocity;
-		PlayerCrouchedWalkSpeed = (*PlayerMovementData).CrouchedWalkSpeed;
-		PlayerCrouchSpeed = (*PlayerMovementData).CrouchSpeed;
-		PlayerSlidingThreshold = (*PlayerMovementData).SlidingThreshold;
-		PlayerDashDistance = (*PlayerMovementData).DashDistance;
-		PlayerDashCooldown = (*PlayerMovementData).DashCooldown;
 
-		// WallRun Component Init
-		GetWallRunComponent()->WallRunSpeed = (*PlayerMovementData).WallRunSpeed;
-		GetWallRunComponent()->bIsWallRunGravity = (*PlayerMovementData).bIsWallRunGravity;
-		GetWallRunComponent()->TargetWallRunGravity = (*PlayerMovementData).TargetWallRunGravity;
-		GetWallRunComponent()->WallRunCooldown = (*PlayerMovementData).WallRunCooldown;
-		GetWallRunComponent()->WallRunJumpOffVelocity = (*PlayerMovementData).WallRunJumpOffVelocity;
-		*/
-	}
-}
+
 
