@@ -32,6 +32,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	/** Returns WallRunComponent subobject **/
-	UACAttributes* GetWallRunComponent() const { return AttributesComponent; }
+	/** Returns Attributes Component **/
+	UACAttributes* GetAttributesComponent() const { return AttributesComponent; }
 };
