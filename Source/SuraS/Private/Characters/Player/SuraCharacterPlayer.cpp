@@ -5,12 +5,11 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "ActorComponents/ACPlayerAttributes.h"
+#include "ActorComponents/ACPlayerMovmentData.h"
 #include "ActorComponents/WallRun/ACPlayerWallRun.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Kismet/GameplayStatics.h"
 
 
 ASuraCharacterPlayer::ASuraCharacterPlayer()
@@ -19,7 +18,7 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	WallRunComponent = CreateDefaultSubobject<UACPlayerWallRun>(TEXT("WallRunComponent"));
 	AddOwnedComponent(WallRunComponent);
 
-	PlayerAttributes = CreateDefaultSubobject<UACPlayerAttributes>("Player Attributes");
+	PlayerMovementData = CreateDefaultSubobject<UACPlayerMovementData>("Player Attributes");
 
 	// Explicitly initialize the starting states
 	CurrentMovementState = EMovementState::Walking;
@@ -66,14 +65,15 @@ void ASuraCharacterPlayer::BeginPlay()
 	// Bind Functions to State Changed Delegate
 	OnMovementStateChanged.AddDynamic(this, &ASuraCharacterPlayer::SetBaseMovementSpeed);
 
-	BaseMovementSpeed = GetPlayerAttributes()->GetWalkSpeed();
-	GetCharacterMovement()->AirControl = GetPlayerAttributes()->GetAirControl();
+	BaseMovementSpeed = GetPlayerMovementData()->GetWalkSpeed();
+	GetCharacterMovement()->AirControl = GetPlayerMovementData()->GetAirControl();
 }
 
 void ASuraCharacterPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
+
 }
 
 void ASuraCharacterPlayer::SetMovementState(const EMovementState NewMovementState)
@@ -98,24 +98,24 @@ void ASuraCharacterPlayer::SetActionState(const EActionState NewActionState)
 
 void ASuraCharacterPlayer::SetBaseMovementSpeed(EMovementState NewMovementState)
 {
-	if (!GetPlayerAttributes()) return;
+	if (!GetPlayerMovementData()) return;
 	
 	switch (NewMovementState)
 	{
 	case EMovementState::Walking:
-		BaseMovementSpeed = GetPlayerAttributes()->GetWalkSpeed();
+		BaseMovementSpeed = GetPlayerMovementData()->GetWalkSpeed();
 		break;
 	case EMovementState::Running:
-		BaseMovementSpeed = GetPlayerAttributes()->GetRunSpeed();
+		BaseMovementSpeed = GetPlayerMovementData()->GetRunSpeed();
 		break;
 	case EMovementState::Crouching:
-		BaseMovementSpeed = GetPlayerAttributes()->GetCrouchSpeed();
+		BaseMovementSpeed = GetPlayerMovementData()->GetCrouchSpeed();
 		break;
 	case EMovementState::Dashing:
-		BaseMovementSpeed = GetPlayerAttributes()->GetDashSpeed();
+		BaseMovementSpeed = GetPlayerMovementData()->GetDashSpeed();
 		break;
 	default:
-		BaseMovementSpeed = GetPlayerAttributes()->GetWalkSpeed();
+		BaseMovementSpeed = GetPlayerMovementData()->GetWalkSpeed();
 		break;
 	}
 }
@@ -153,6 +153,9 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 			GEngine->AddOnScreenDebugMessage(99, 0.f, FColor::Green,
 				FString::Printf(TEXT("Input Axis Value : ( %f, %f )"), ForwardAxisInputValue, RightAxisInputValue));
 
+			GEngine->AddOnScreenDebugMessage(98, 0.f, FColor::Green,
+				FString::Printf(TEXT("Slope Speed Delta : %f"), SlopeSpeedDelta));
+
 			
 		}
 	}
@@ -160,10 +163,15 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 
 float ASuraCharacterPlayer::FindFloorAngle() const
 {
-	const FVector FloorNormal = GetCharacterMovement()->CurrentFloor.HitResult.Normal;
-	const float FloorAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(FloorNormal, FVector::UpVector)));
-	const FVector DirectionXY = FVector(GetVelocity().X, GetVelocity().Y, 0.f).GetSafeNormal();
-	return FVector::DotProduct(FloorNormal, DirectionXY) > 0.f ? -FloorAngle : FloorAngle;
+	if (!GetCharacterMovement()->IsFalling())
+	{
+		const FVector FloorNormal = GetCharacterMovement()->CurrentFloor.HitResult.Normal;
+		const float FloorAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(FloorNormal, FVector::UpVector)));
+		const FVector DirectionXY = FVector(GetVelocity().X, GetVelocity().Y, 0.f).GetSafeNormal();
+		return FVector::DotProduct(FloorNormal, DirectionXY) > 0.f ? -FloorAngle : FloorAngle;
+	}
+	return 0.f;
+	
 }
 
 void ASuraCharacterPlayer::Tick(float DeltaTime)
@@ -171,8 +179,10 @@ void ASuraCharacterPlayer::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	PrintPlayerDebugInfo();
+
+	SlopeSpeedDelta = SlopeSpeedDeltaCurve->GetFloatValue(FindFloorAngle());
 	
-	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + AdditionalMovementSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + AdditionalMovementSpeed + SlopeSpeedDelta;
 }
 
 void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -285,8 +295,8 @@ void ASuraCharacterPlayer::StartDashing()
 	GetCharacterMovement()->GroundFriction = 0.f;
 	GetCharacterMovement()->BrakingFrictionFactor = 0.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 0.f;
-	float DashImpulseSpeed = GetPlayerAttributes()->GetDashImpulseSpeed();
-	float DashImpulseDuration = GetPlayerAttributes()->GetDashDistance() / DashImpulseSpeed;
+	float DashImpulseSpeed = GetPlayerMovementData()->GetDashImpulseSpeed();
+	float DashImpulseDuration = GetPlayerMovementData()->GetDashDistance() / DashImpulseSpeed;
 	GetCharacterMovement()->Velocity = DashDirection * DashImpulseSpeed;
 
 	FTimerHandle StopImpulseTimer;
@@ -307,10 +317,10 @@ void ASuraCharacterPlayer::StartDashing()
 	
 		
 	GetWorldTimerManager().SetTimer(DashDurationTimer, [this](){ SetMovementState(EMovementState::Running); },
-		GetPlayerAttributes()->GetDashDuration(), false);
+		GetPlayerMovementData()->GetDashDuration(), false);
 
 	GetWorldTimerManager().SetTimer(DashCooldownTimer, [this](){ bIsDashOnCooldown = false; },
-		GetPlayerAttributes()->GetDashCooldown(), false);
+		GetPlayerMovementData()->GetDashCooldown(), false);
 	
 	
 }
@@ -337,8 +347,8 @@ FVector ASuraCharacterPlayer::FindJumpLaunchVelocity() const
 			LaunchDirection = (GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue).GetSafeNormal();
 		}
 	}
-	const FVector LaunchVelocity = LaunchDirection * GetPlayerAttributes()->GetJumpXYVelocity() +
-		FVector::UpVector * GetPlayerAttributes()->GetJumpZVelocity();
+	const FVector LaunchVelocity = LaunchDirection * GetPlayerMovementData()->GetJumpXYVelocity() +
+		FVector::UpVector * GetPlayerMovementData()->GetJumpZVelocity();
 	return LaunchVelocity;
 }
 

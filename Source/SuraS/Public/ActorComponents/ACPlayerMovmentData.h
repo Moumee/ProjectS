@@ -3,21 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ActorComponents/ACAttributes.h"
-#include "ACPlayerAttributes.generated.h"
+#include "ACPlayerMovmentData.generated.h"
 
 struct FPlayerMovementData;
 /**
  * 
  */
 UCLASS()
-class SURAS_API UACPlayerAttributes : public UActorComponent
+class SURAS_API UACPlayerMovementData : public UActorComponent
 {
 	GENERATED_BODY()
 
 private:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attributes", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Data Table", meta = (AllowPrivateAccess = "true"))
 	UDataTable* PlayerMovementDT;
 
 	FPlayerMovementData* PlayerRow;
@@ -51,4 +50,6 @@ public:
 	float GetDashDistance() const;
 
 	float GetDashCooldown() const;
+
+	float GetAdditionalSpeedDuration() const;
 };

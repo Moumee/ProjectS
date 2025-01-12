@@ -52,12 +52,12 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	float DashAdditionalSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashDamage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashKnockBackDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0"))
 	float DashCooldown;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0"))
+	float AdditionalSpeedDuration;
 	
 };

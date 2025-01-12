@@ -7,16 +7,16 @@
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMovementStateChanged, EMovementState, NewMovementState);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActionStateChanged, EActionState, NewActionState);
-
-class UACPlayerAttributes;
+class UACPlayerMovementData;
 class UACPlayerWallRun;
 class UCameraComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
 class UACWallRun;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMovementStateChanged, EMovementState, NewMovementState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActionStateChanged, EActionState, NewActionState);
 
 /**
  * 
@@ -35,7 +35,7 @@ private:
 	UACPlayerWallRun* WallRunComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes", meta = (AllowPrivateAccess = "true"))
-	UACPlayerAttributes* PlayerAttributes;
+	UACPlayerMovementData* PlayerMovementData;
 
 #pragma region Input
 	
@@ -96,7 +96,9 @@ private:
 	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Curve", meta = (AllowPrivateAccess = "true"))
-	UCurveFloat* SlopeSpeedCurve;
+	UCurveFloat* SlopeSpeedDeltaCurve;
+
+	float SlopeSpeedDelta;
 
 	float BaseMovementSpeed;
 
@@ -146,7 +148,7 @@ public:
 	/** Returns WallRunComponent subobject **/
 	UACPlayerWallRun* GetWallRunComponent() const { return WallRunComponent; }
 
-	UACPlayerAttributes* GetPlayerAttributes() const { return PlayerAttributes; }
+	UACPlayerMovementData* GetPlayerMovementData() const { return PlayerMovementData; }
 	
 	FOnMovementStateChanged OnMovementStateChanged;
 

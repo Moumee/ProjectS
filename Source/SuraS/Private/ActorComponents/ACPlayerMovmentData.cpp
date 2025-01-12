@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ActorComponents/ACPlayerAttributes.h"
+#include "ActorComponents/ACPlayerMovmentData.h"
 
 #include "GameAttributes/PlayerMovementData.h"
 
-void UACPlayerAttributes::BeginPlay()
+void UACPlayerMovementData::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -13,7 +13,7 @@ void UACPlayerAttributes::BeginPlay()
 	
 }
 
-float UACPlayerAttributes::GetWalkSpeed() const
+float UACPlayerMovementData::GetWalkSpeed() const
 {
 	if (!PlayerRow)
 	{
@@ -24,7 +24,7 @@ float UACPlayerAttributes::GetWalkSpeed() const
 	
 }
 
-float UACPlayerAttributes::GetRunSpeed() const
+float UACPlayerMovementData::GetRunSpeed() const
 {
 	if (!PlayerRow)
 	{
@@ -34,7 +34,7 @@ float UACPlayerAttributes::GetRunSpeed() const
 	return PlayerRow->RunSpeed;
 }
 
-float UACPlayerAttributes::GetCrouchSpeed() const
+float UACPlayerMovementData::GetCrouchSpeed() const
 {
 	if (!PlayerRow)
 	{
@@ -44,7 +44,7 @@ float UACPlayerAttributes::GetCrouchSpeed() const
 	return PlayerRow->CrouchSpeed;
 }
 
-float UACPlayerAttributes::GetJumpZVelocity() const
+float UACPlayerMovementData::GetJumpZVelocity() const
 {
 	if (!PlayerRow)
 	{
@@ -54,7 +54,7 @@ float UACPlayerAttributes::GetJumpZVelocity() const
 	return PlayerRow->JumpZVelocity;
 }
 
-float UACPlayerAttributes::GetJumpXYVelocity() const
+float UACPlayerMovementData::GetJumpXYVelocity() const
 {
 	if (!PlayerRow)
 	{
@@ -64,7 +64,7 @@ float UACPlayerAttributes::GetJumpXYVelocity() const
 	return PlayerRow->JumpXYVelocity;
 }
 
-float UACPlayerAttributes::GetAirControl() const
+float UACPlayerMovementData::GetAirControl() const
 {
 	if (!PlayerRow)
 	{
@@ -74,7 +74,7 @@ float UACPlayerAttributes::GetAirControl() const
 	return PlayerRow->AirControl;
 }
 
-float UACPlayerAttributes::GetDashSpeed() const
+float UACPlayerMovementData::GetDashSpeed() const
 {
 	if (!PlayerRow)
 	{
@@ -84,7 +84,7 @@ float UACPlayerAttributes::GetDashSpeed() const
 	return PlayerRow->DashSpeed;
 }
 
-float UACPlayerAttributes::GetDashImpulseSpeed() const
+float UACPlayerMovementData::GetDashImpulseSpeed() const
 {
 	if (!PlayerRow)
 	{
@@ -94,7 +94,7 @@ float UACPlayerAttributes::GetDashImpulseSpeed() const
 	return PlayerRow->DashImpulseSpeed;
 }
 
-float UACPlayerAttributes::GetDashAdditionalSpeed() const
+float UACPlayerMovementData::GetDashAdditionalSpeed() const
 {
 	if (!PlayerRow)
 	{
@@ -104,7 +104,7 @@ float UACPlayerAttributes::GetDashAdditionalSpeed() const
 	return PlayerRow->DashAdditionalSpeed;
 }
 
-float UACPlayerAttributes::GetDashDuration() const
+float UACPlayerMovementData::GetDashDuration() const
 {
 	if (!PlayerRow)
 	{
@@ -114,7 +114,7 @@ float UACPlayerAttributes::GetDashDuration() const
 	return PlayerRow->DashDuration;
 }
 
-float UACPlayerAttributes::GetDashDistance() const
+float UACPlayerMovementData::GetDashDistance() const
 {
 	if (!PlayerRow)
 	{
@@ -124,7 +124,7 @@ float UACPlayerAttributes::GetDashDistance() const
 	return PlayerRow->DashDistance;
 }
 
-float UACPlayerAttributes::GetDashCooldown() const
+float UACPlayerMovementData::GetDashCooldown() const
 {
 	if (!PlayerRow)
 	{
@@ -132,4 +132,14 @@ float UACPlayerAttributes::GetDashCooldown() const
 		return 0;
 	}
 	return PlayerRow->DashCooldown;
+}
+
+float UACPlayerMovementData::GetAdditionalSpeedDuration() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->AdditionalSpeedDuration;
 }
