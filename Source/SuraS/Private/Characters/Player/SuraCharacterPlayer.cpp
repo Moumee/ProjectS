@@ -10,6 +10,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 ASuraCharacterPlayer::ASuraCharacterPlayer()
@@ -20,9 +21,9 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 
 	PlayerAttributes = CreateDefaultSubobject<UACPlayerAttributes>("Player Attributes");
 
-	// Explicitly initialize the starting movement state
+	// Explicitly initialize the starting states
 	CurrentMovementState = EMovementState::Walking;
-	
+	CurrentActionState = EActionState::None;
 
 	// Make character rotate with the controller
 	bUseControllerRotationPitch = false;
@@ -35,8 +36,12 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	Camera->SetRelativeLocation(FVector(0.f, 0.f, 58.f));
 	Camera->bUsePawnControlRotation = true;
 
-	// Attach the mesh to the camera so that it moves along with it
-	GetMesh()->SetupAttachment(Camera);
+	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
+	ArmMesh->SetupAttachment(Camera);
+
+	LegMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Leg Mesh"));
+	LegMesh->SetupAttachment(GetRootComponent());
+
 
 	// Enable capsule hit events for wall detection
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
@@ -44,10 +49,31 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	// Initialize JumpsLeft
 	JumpsLeft = MaxJumps;
 
-	GetCharacterMovement()->AirControl = 0.7f;
+}
 
+void ASuraCharacterPlayer::BeginPlay()
+{
+	Super::BeginPlay();
+	// Add Input Mapping Context
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+	}
 
-	
+	// Bind Functions to State Changed Delegate
+	OnMovementStateChanged.AddDynamic(this, &ASuraCharacterPlayer::SetBaseMovementSpeed);
+
+	BaseMovementSpeed = GetPlayerAttributes()->GetWalkSpeed();
+	GetCharacterMovement()->AirControl = GetPlayerAttributes()->GetAirControl();
+}
+
+void ASuraCharacterPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 }
 
 void ASuraCharacterPlayer::SetMovementState(const EMovementState NewMovementState)
@@ -57,6 +83,16 @@ void ASuraCharacterPlayer::SetMovementState(const EMovementState NewMovementStat
 		CurrentMovementState = NewMovementState;
 
 		OnMovementStateChanged.Broadcast(NewMovementState);
+	}
+}
+
+void ASuraCharacterPlayer::SetActionState(const EActionState NewActionState)
+{
+	if (CurrentActionState != NewActionState)
+	{
+		CurrentActionState = NewActionState;
+
+		OnActionStateChanged.Broadcast(NewActionState);
 	}
 }
 
@@ -85,54 +121,37 @@ void ASuraCharacterPlayer::SetBaseMovementSpeed(EMovementState NewMovementState)
 }
 
 
-void ASuraCharacterPlayer::BeginPlay()
-{
-	Super::BeginPlay();
-	// Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
 
-	// Bind Functions to State Changed Delegate
-	OnMovementStateChanged.AddDynamic(this, &ASuraCharacterPlayer::SetBaseMovementSpeed);
-
-	BaseMovementSpeed = GetPlayerAttributes()->GetWalkSpeed();
-}
 
 void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 {
-	if (IsDebugMode)
+	if (bIsDebugMode)
 	{
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(0, 0.0f, FColor::Green,
-			                                 FString::Printf(TEXT("Player Movement State : %s"), *UEnum::GetDisplayValueAsText(CurrentMovementState).ToString()));
-
-			GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Green,
-			                                 FString::Printf(TEXT("Player Action State : %s"), *UEnum::GetDisplayValueAsText(CurrentActionState).ToString()));
-
-			GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Green,
-				FString::Printf(TEXT("Jumps Left : %d / %d"), JumpsLeft, MaxJumps));
-			
-			
-
-			GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Green,
-				FString::Printf(TEXT("Player Base Speed : %f"), BaseMovementSpeed));
-
-			GEngine->AddOnScreenDebugMessage(4, 0.f, FColor::Green,
-				FString::Printf(TEXT("Player Additional Speed : %f"), AdditionalMovementSpeed));
-
-			GEngine->AddOnScreenDebugMessage(5, 0.f, FColor::Green,
-				FString::Printf(TEXT("Player Max Walk Speed : %f"), GetCharacterMovement()->MaxWalkSpeed));
-
-			GEngine->AddOnScreenDebugMessage(6, 0.f, FColor::Green,
+			GEngine->AddOnScreenDebugMessage(106, 0.f, FColor::Green,
 											 FString::Printf(TEXT("Current Player Speed : %f"), GetCharacterMovement()->Velocity.Size()));
 
+			GEngine->AddOnScreenDebugMessage(105, 0.f, FColor::Green,
+				FString::Printf(TEXT("Player Max Walk Speed : %f"), GetCharacterMovement()->MaxWalkSpeed));
 			
+			GEngine->AddOnScreenDebugMessage(104, 0.f, FColor::Green,
+				FString::Printf(TEXT("Player Additional Speed : %f"), AdditionalMovementSpeed));
+
+			GEngine->AddOnScreenDebugMessage(103, 0.f, FColor::Green,
+				FString::Printf(TEXT("Player Base Speed : %f"), BaseMovementSpeed));
+
+			GEngine->AddOnScreenDebugMessage(102, 0.f, FColor::Green,
+				FString::Printf(TEXT("Jumps Left : %d / %d"), JumpsLeft, MaxJumps));
+
+			GEngine->AddOnScreenDebugMessage(101, 0.0f, FColor::Green,
+			                                 FString::Printf(TEXT("Player Action State : %s"), *UEnum::GetDisplayValueAsText(CurrentActionState).ToString()));
+
+			GEngine->AddOnScreenDebugMessage(100, 0.0f, FColor::Green,
+											 FString::Printf(TEXT("Player Movement State : %s"), *UEnum::GetDisplayValueAsText(CurrentMovementState).ToString()));
+
+			GEngine->AddOnScreenDebugMessage(99, 0.f, FColor::Green,
+				FString::Printf(TEXT("Input Axis Value : ( %f, %f )"), ForwardAxisInputValue, RightAxisInputValue));
 
 			
 		}
@@ -152,8 +171,8 @@ void ASuraCharacterPlayer::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	PrintPlayerDebugInfo();
-
-	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+	
+	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + AdditionalMovementSpeed;
 }
 
 void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -167,6 +186,7 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::Look);
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartRunning);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartJumping);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartDashing);
 	}
 }
 
@@ -230,6 +250,69 @@ void ASuraCharacterPlayer::StartJumping()
 			// WallRunComponent->StopWallRunning();
 		}
 	}
+}
+
+void ASuraCharacterPlayer::StartDashing()
+{
+	if (bIsDashOnCooldown) return;
+	
+	if (CurrentActionState == EActionState::WallRunning || CurrentActionState == EActionState::Stunned ||
+		CurrentActionState == EActionState::Dead)
+	{
+		return;
+	}
+
+	bIsDashOnCooldown = true;
+	SetMovementState(EMovementState::Dashing);
+
+	FVector DashDirection;
+	if (ForwardAxisInputValue >= 0.f && RightAxisInputValue == 0.f)
+	{
+		DashDirection = GetActorForwardVector();
+		DashDirection = FVector(DashDirection.X, DashDirection.Y, 0.f).GetSafeNormal();
+	}
+	else
+	{
+		DashDirection = (GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue);
+		DashDirection = FVector(DashDirection.X, DashDirection.Y, 0.f).GetSafeNormal();
+	}
+
+	float InitialGroundFriction = GetCharacterMovement()->GroundFriction;
+	float InitialBrakingFrictionFactor = GetCharacterMovement()->BrakingFrictionFactor;
+	float InitialBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
+
+	bBlockInput = true;
+	GetCharacterMovement()->GroundFriction = 0.f;
+	GetCharacterMovement()->BrakingFrictionFactor = 0.f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 0.f;
+	float DashImpulseSpeed = GetPlayerAttributes()->GetDashImpulseSpeed();
+	float DashImpulseDuration = GetPlayerAttributes()->GetDashDistance() / DashImpulseSpeed;
+	GetCharacterMovement()->Velocity = DashDirection * DashImpulseSpeed;
+
+	FTimerHandle StopImpulseTimer;
+	GetWorldTimerManager().SetTimer(StopImpulseTimer,
+		[this, InitialGroundFriction, InitialBrakingFrictionFactor, InitialBrakingDecelerationWalking]()
+		{
+			FVector CurrentImpulseVelocity = GetCharacterMovement()->Velocity;
+			FVector ResetVelocity = CurrentImpulseVelocity.GetSafeNormal() * GetCharacterMovement()->MaxWalkSpeed;
+			bBlockInput = false;
+			GetCharacterMovement()->Velocity = ResetVelocity;
+			GetCharacterMovement()->GroundFriction = InitialGroundFriction;
+			GetCharacterMovement()->BrakingFrictionFactor = InitialBrakingFrictionFactor;
+			GetCharacterMovement()->BrakingDecelerationWalking = InitialBrakingDecelerationWalking;
+		},
+		DashImpulseDuration, false);
+	
+	
+	
+		
+	GetWorldTimerManager().SetTimer(DashDurationTimer, [this](){ SetMovementState(EMovementState::Running); },
+		GetPlayerAttributes()->GetDashDuration(), false);
+
+	GetWorldTimerManager().SetTimer(DashCooldownTimer, [this](){ bIsDashOnCooldown = false; },
+		GetPlayerAttributes()->GetDashCooldown(), false);
+	
+	
 }
 
 void ASuraCharacterPlayer::Landed(const FHitResult& Hit)

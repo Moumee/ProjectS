@@ -38,7 +38,17 @@ public:
 
 	float GetJumpXYVelocity() const;
 
+	float GetAirControl() const;
+
 	float GetDashSpeed() const;
 
+	float GetDashImpulseSpeed() const;
+
 	float GetDashAdditionalSpeed() const;
+
+	float GetDashDuration() const;
+
+	float GetDashDistance() const;
+
+	float GetDashCooldown() const;
 };

@@ -27,6 +27,9 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float JumpXYVelocity;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float AirControl;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CrouchSpeed;
 
@@ -34,9 +37,15 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	float DashSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DashImpulseSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DashDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
 	int DashMaxStack;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -48,7 +57,7 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashKnockBackDistance;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0"))
 	float DashCooldown;
 	
 };

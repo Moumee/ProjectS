@@ -64,6 +64,16 @@ float UACPlayerAttributes::GetJumpXYVelocity() const
 	return PlayerRow->JumpXYVelocity;
 }
 
+float UACPlayerAttributes::GetAirControl() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->AirControl;
+}
+
 float UACPlayerAttributes::GetDashSpeed() const
 {
 	if (!PlayerRow)
@@ -74,6 +84,16 @@ float UACPlayerAttributes::GetDashSpeed() const
 	return PlayerRow->DashSpeed;
 }
 
+float UACPlayerAttributes::GetDashImpulseSpeed() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->DashImpulseSpeed;
+}
+
 float UACPlayerAttributes::GetDashAdditionalSpeed() const
 {
 	if (!PlayerRow)
@@ -82,4 +102,34 @@ float UACPlayerAttributes::GetDashAdditionalSpeed() const
 		return 0;
 	}
 	return PlayerRow->DashAdditionalSpeed;
+}
+
+float UACPlayerAttributes::GetDashDuration() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->DashDuration;
+}
+
+float UACPlayerAttributes::GetDashDistance() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->DashDistance;
+}
+
+float UACPlayerAttributes::GetDashCooldown() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->DashCooldown;
 }

@@ -8,6 +8,7 @@
 #include "SuraCharacterPlayer.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMovementStateChanged, EMovementState, NewMovementState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActionStateChanged, EActionState, NewActionState);
 
 class UACPlayerAttributes;
 class UACPlayerWallRun;
@@ -70,10 +71,16 @@ private:
 #pragma endregion Input
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
-	bool IsDebugMode;
+	bool bIsDebugMode;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* ArmMesh;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* LegMesh;
 
 	UPROPERTY(BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
 	EMovementState CurrentMovementState;
@@ -82,6 +89,11 @@ private:
 
 	int MaxJumps = 2;
 	int JumpsLeft;
+	
+	bool bIsDashOnCooldown = false;
+	FTimerHandle DashCooldownTimer;
+	FTimerHandle DashDurationTimer;
+	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Curve", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* SlopeSpeedCurve;
@@ -91,6 +103,8 @@ private:
 	float AdditionalMovementSpeed;
 
 	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	void PrintPlayerDebugInfo() const;
 
@@ -117,7 +131,7 @@ private:
 
 	void StartCrouching();
 
-	void Dash();
+	void StartDashing();
 
 #pragma endregion Input Callback Functions
 
@@ -136,7 +150,11 @@ public:
 	
 	FOnMovementStateChanged OnMovementStateChanged;
 
-	void SetMovementState(EMovementState NewMovementState);
+	FOnActionStateChanged OnActionStateChanged;
+
+	void SetMovementState(const EMovementState NewMovementState);
+
+	void SetActionState(const EActionState NewActionState);
 
 	UFUNCTION(BlueprintCallable)
 	void SetBaseMovementSpeed(EMovementState NewMovementState);
