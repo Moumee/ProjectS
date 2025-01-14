@@ -3,10 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SuraPlayerEnums.h"
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class USuraPlayerDashMovementState;
+class USuraPlayerDashImpulseState;
+class USuraPlayerFallingState;
+class USuraPlayerDashingState;
+class USuraPlayerJumpingState;
+class USuraPlayerRunningState;
+class USuraPlayerWalkingState;
+class USuraPlayerBaseState;
 class UACPlayerMovementData;
 class UACPlayerWallRun;
 class UCameraComponent;
@@ -15,8 +22,6 @@ class UInputAction;
 class UInputMappingContext;
 class UACWallRun;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMovementStateChanged, EMovementState, NewMovementState);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActionStateChanged, EActionState, NewActionState);
 
 /**
  * 
@@ -28,7 +33,8 @@ class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase
 
 private:
 
-	
+	UPROPERTY()
+	USuraPlayerBaseState* CurrentState;
 	
 	// Wall-run actor component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall Run", meta = (AllowPrivateAccess = "true"))
@@ -64,9 +70,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* RunAction;
 
-	float ForwardAxisInputValue;
 	
-	float RightAxisInputValue;
 
 #pragma endregion Input
 
@@ -81,25 +85,15 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* LegMesh;
-
-	UPROPERTY(BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
-	EMovementState CurrentMovementState;
-	UPROPERTY(BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
-	EActionState CurrentActionState;
-
-	int MaxJumps = 2;
-	int JumpsLeft;
-	
-	bool bIsDashOnCooldown = false;
-	FTimerHandle DashCooldownTimer;
-	FTimerHandle DashDurationTimer;
 	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Curve", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* SlopeSpeedDeltaCurve;
 
+	// Value that influences player speed based on the angle of the slope
 	float SlopeSpeedDelta;
 
+	// Base movement speed is set based on Walking, Running, Dashing states
 	float BaseMovementSpeed;
 
 	float AdditionalMovementSpeed;
@@ -107,19 +101,20 @@ private:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	
+
+	// Adds on screen debug messages for debugging purposes
 	void PrintPlayerDebugInfo() const;
 
+	// Returns the angle of the current floor
+	// If floor angle is 45 degrees downward slope, returns -45.f
 	float FindFloorAngle() const;
-	
 
 	virtual void Tick(float DeltaTime) override;
 
-	
-	
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-#pragma region Input Callback Functions
+
+#pragma region Input Action Callback Functions
 	
 	void Move(const FInputActionValue& InputValue);
 
@@ -135,11 +130,9 @@ private:
 
 	void StartDashing();
 
-#pragma endregion Input Callback Functions
+#pragma endregion Input Action Callback Functions
 
 	virtual void Landed(const FHitResult& Hit) override;
-
-	FVector FindJumpLaunchVelocity() const;
 
 
 public:
@@ -148,18 +141,71 @@ public:
 	/** Returns WallRunComponent subobject **/
 	UACPlayerWallRun* GetWallRunComponent() const { return WallRunComponent; }
 
+	// Returns Player Movement Data Actor Component
 	UACPlayerMovementData* GetPlayerMovementData() const { return PlayerMovementData; }
+
+	// DesiredGroundState is set when player enters Walking, Running, Dashing state
+	// It is used to change state to desired ground state when transitioning from Falling State
+	UPROPERTY()
+	USuraPlayerBaseState* DesiredGroundState;
 	
-	FOnMovementStateChanged OnMovementStateChanged;
+	UPROPERTY()
+	USuraPlayerWalkingState* WalkingState;
+	UPROPERTY()
+	USuraPlayerRunningState* RunningState;
+	UPROPERTY()
+	USuraPlayerJumpingState* JumpingState;
+	UPROPERTY()
+	USuraPlayerFallingState* FallingState;
+	UPROPERTY()
+	USuraPlayerDashImpulseState* DashImpulseState;
+	UPROPERTY()
+	USuraPlayerDashMovementState* DashMovementState;
 
-	FOnActionStateChanged OnActionStateChanged;
+	int MaxJumps = 2;
+	int JumpsLeft;
 
-	void SetMovementState(const EMovementState NewMovementState);
+	// Input Action Bound Boolean Flags
+	bool bJumpTriggered = false;
+	bool bRunTriggered = false;
+	bool bDashTriggered = false;
+	bool bCrouchTriggered = false;
+	bool bLandedTriggered = false;
 
-	void SetActionState(const EActionState NewActionState);
+	void ResetTriggeredBooleans();
+
+	FTimerHandle DashImpulseTimerHandle;
+	FTimerHandle DashMovementTimerHandle;
+	FTimerHandle DashCooldownTimerHandle;
+
+	bool bDashOnCooldown;
+
+	// Player Input Axis Values
+	// W - Sets ForwardAxisInputValue to 1
+	// S - Sets ForwardAxisInputValue to -1
+	// A - Sets RightAxisInputValue to -1
+	// D - Sets RightAxisInputValue to 1
+	float ForwardAxisInputValue;
+	float RightAxisInputValue;
+
+	float DefaultGroundFriction;
+	float DefaultBrakingFrictionFactor; 
+	float DefaultBrakingDecelerationWalking; 
+
 
 	UFUNCTION(BlueprintCallable)
-	void SetBaseMovementSpeed(EMovementState NewMovementState);
+	void SetBaseMovementSpeed(float MovementSpeed);
+
+	void ChangeState(USuraPlayerBaseState* NewState);
+
+	bool IsFallingDown() const;
+
+	bool HasMovementInput() const;
+
+	void PrimaryJump();
+
+	void DoubleJump();
+	
 };
 
 

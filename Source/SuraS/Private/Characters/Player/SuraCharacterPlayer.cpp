@@ -8,6 +8,13 @@
 #include "ActorComponents/ACPlayerMovmentData.h"
 #include "ActorComponents/WallRun/ACPlayerWallRun.h"
 #include "Camera/CameraComponent.h"
+#include "Characters/Player/SuraPlayerBaseState.h"
+#include "Characters/Player/SuraPlayerDashImpulseState.h"
+#include "Characters/Player/SuraPlayerDashMovementState.h"
+#include "Characters/Player/SuraPlayerFallingState.h"
+#include "Characters/Player/SuraPlayerJumpingState.h"
+#include "Characters/Player/SuraPlayerRunningState.h"
+#include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -19,10 +26,6 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	AddOwnedComponent(WallRunComponent);
 
 	PlayerMovementData = CreateDefaultSubobject<UACPlayerMovementData>("Player Attributes");
-
-	// Explicitly initialize the starting states
-	CurrentMovementState = EMovementState::Walking;
-	CurrentActionState = EActionState::None;
 
 	// Make character rotate with the controller
 	bUseControllerRotationPitch = false;
@@ -62,11 +65,22 @@ void ASuraCharacterPlayer::BeginPlay()
 		}
 	}
 
-	// Bind Functions to State Changed Delegate
-	OnMovementStateChanged.AddDynamic(this, &ASuraCharacterPlayer::SetBaseMovementSpeed);
+	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
+	DefaultBrakingFrictionFactor = GetCharacterMovement()->BrakingFrictionFactor;
+	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
 
 	BaseMovementSpeed = GetPlayerMovementData()->GetWalkSpeed();
 	GetCharacterMovement()->AirControl = GetPlayerMovementData()->GetAirControl();
+
+	WalkingState = NewObject<USuraPlayerWalkingState>(this, USuraPlayerWalkingState::StaticClass());
+	RunningState = NewObject<USuraPlayerRunningState>(this, USuraPlayerRunningState::StaticClass());
+	JumpingState = NewObject<USuraPlayerJumpingState>(this, USuraPlayerJumpingState::StaticClass());
+	FallingState = NewObject<USuraPlayerFallingState>(this, USuraPlayerFallingState::StaticClass());
+	DashImpulseState = NewObject<USuraPlayerDashImpulseState>(this, USuraPlayerDashImpulseState::StaticClass());
+	DashMovementState = NewObject<USuraPlayerDashMovementState>(this, USuraPlayerDashMovementState::StaticClass());
+
+	ChangeState(WalkingState);
+
 }
 
 void ASuraCharacterPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -76,51 +90,66 @@ void ASuraCharacterPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 }
 
-void ASuraCharacterPlayer::SetMovementState(const EMovementState NewMovementState)
+void ASuraCharacterPlayer::ResetTriggeredBooleans()
 {
-	if (CurrentMovementState != NewMovementState)
-	{
-		CurrentMovementState = NewMovementState;
-
-		OnMovementStateChanged.Broadcast(NewMovementState);
-	}
+	bJumpTriggered = false;
+	bRunTriggered = false;
+	bDashTriggered = false;
+	bCrouchTriggered = false;
+	bLandedTriggered = false;
 }
 
-void ASuraCharacterPlayer::SetActionState(const EActionState NewActionState)
+void ASuraCharacterPlayer::SetBaseMovementSpeed(const float MovementSpeed)
 {
-	if (CurrentActionState != NewActionState)
-	{
-		CurrentActionState = NewActionState;
-
-		OnActionStateChanged.Broadcast(NewActionState);
-	}
+	BaseMovementSpeed = MovementSpeed;
 }
 
-void ASuraCharacterPlayer::SetBaseMovementSpeed(EMovementState NewMovementState)
+void ASuraCharacterPlayer::ChangeState(USuraPlayerBaseState* NewState)
 {
-	if (!GetPlayerMovementData()) return;
+	if (!NewState || NewState == CurrentState) return;
+
+	if (CurrentState)
+	{
+		CurrentState->ExitState(this);
+	}
+	CurrentState = NewState;
+	CurrentState->EnterState(this);
+}
+
+bool ASuraCharacterPlayer::IsFallingDown() const
+{
 	
-	switch (NewMovementState)
+	return GetCharacterMovement()->IsFalling() && GetCharacterMovement()->Velocity.Z < 0.f;
+}
+
+bool ASuraCharacterPlayer::HasMovementInput() const
+{
+	return ForwardAxisInputValue != 0.f || RightAxisInputValue != 0.f;
+}
+
+void ASuraCharacterPlayer::PrimaryJump()
+{
+	if (JumpsLeft > 0)
 	{
-	case EMovementState::Walking:
-		BaseMovementSpeed = GetPlayerMovementData()->GetWalkSpeed();
-		break;
-	case EMovementState::Running:
-		BaseMovementSpeed = GetPlayerMovementData()->GetRunSpeed();
-		break;
-	case EMovementState::Crouching:
-		BaseMovementSpeed = GetPlayerMovementData()->GetCrouchSpeed();
-		break;
-	case EMovementState::Dashing:
-		BaseMovementSpeed = GetPlayerMovementData()->GetDashSpeed();
-		break;
-	default:
-		BaseMovementSpeed = GetPlayerMovementData()->GetWalkSpeed();
-		break;
+		bJumpTriggered = true;
+		JumpsLeft--;
+		FVector JumpVector = FVector::UpVector * GetPlayerMovementData()->GetJumpZVelocity();
+		LaunchCharacter(JumpVector, false, true);
 	}
 }
 
-
+void ASuraCharacterPlayer::DoubleJump()
+{
+	if (JumpsLeft > 0 && GetCharacterMovement()->IsFalling())
+	{
+		bJumpTriggered = true;
+		JumpsLeft--;
+		FVector InputDirection = GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue;
+		FVector LaunchVelocity = InputDirection * GetPlayerMovementData()->GetJumpXYVelocity() +
+			FVector::UpVector * GetPlayerMovementData()->GetJumpZVelocity();
+		LaunchCharacter(LaunchVelocity, false, true);
+	}
+}
 
 
 void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
@@ -144,17 +173,14 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 			GEngine->AddOnScreenDebugMessage(102, 0.f, FColor::Green,
 				FString::Printf(TEXT("Jumps Left : %d / %d"), JumpsLeft, MaxJumps));
 
-			GEngine->AddOnScreenDebugMessage(101, 0.0f, FColor::Green,
-			                                 FString::Printf(TEXT("Player Action State : %s"), *UEnum::GetDisplayValueAsText(CurrentActionState).ToString()));
-
-			GEngine->AddOnScreenDebugMessage(100, 0.0f, FColor::Green,
-											 FString::Printf(TEXT("Player Movement State : %s"), *UEnum::GetDisplayValueAsText(CurrentMovementState).ToString()));
-
 			GEngine->AddOnScreenDebugMessage(99, 0.f, FColor::Green,
 				FString::Printf(TEXT("Input Axis Value : ( %f, %f )"), ForwardAxisInputValue, RightAxisInputValue));
 
 			GEngine->AddOnScreenDebugMessage(98, 0.f, FColor::Green,
 				FString::Printf(TEXT("Slope Speed Delta : %f"), SlopeSpeedDelta));
+
+			GEngine->AddOnScreenDebugMessage(97, 0.f, FColor::Green,
+				FString::Printf(TEXT("Current State : %s"), *CurrentState->StateDisplayName.ToString()));
 
 			
 		}
@@ -180,6 +206,11 @@ void ASuraCharacterPlayer::Tick(float DeltaTime)
 
 	PrintPlayerDebugInfo();
 
+	if (CurrentState)
+	{
+		CurrentState->UpdateState(this, DeltaTime);
+	}
+
 	SlopeSpeedDelta = SlopeSpeedDeltaCurve->GetFloatValue(FindFloorAngle());
 	
 	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + AdditionalMovementSpeed + SlopeSpeedDelta;
@@ -202,154 +233,57 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 void ASuraCharacterPlayer::Move(const FInputActionValue& InputValue)
 {
-	FVector2D MovementVector = InputValue.Get<FVector2D>();
-	ForwardAxisInputValue = MovementVector.Y;
-	RightAxisInputValue = MovementVector.X;
+	FVector2D InputVector = InputValue.Get<FVector2D>();
+	
+	ForwardAxisInputValue = InputVector.Y;
+	RightAxisInputValue = InputVector.X;
 
-	if (Controller != nullptr)
-	{
-		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-		AddMovementInput(GetActorRightVector(), MovementVector.X);
-	}
+	CurrentState->Move(this, InputVector);
 
-	if (CurrentMovementState == EMovementState::Running)
-	{
-		if (ForwardAxisInputValue <= 0.f)
-		{
-			SetMovementState(EMovementState::Walking);
-		}
-	}
 }
 
 void ASuraCharacterPlayer::StopMoving()
 {
 	ForwardAxisInputValue = 0.f;
 	RightAxisInputValue = 0.f;
-	if (CurrentMovementState == EMovementState::Running)
-	{
-		SetMovementState(EMovementState::Walking);
-	}
+
+	CurrentState->StopMoving(this);
 	
 }
 
 void ASuraCharacterPlayer::Look(const FInputActionValue& InputValue)
 {
-	FVector2D LookAxisVector = InputValue.Get<FVector2D>();
+	FVector2D InputVector = InputValue.Get<FVector2D>();
 
-	if (Controller != nullptr)
-	{
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
+	CurrentState->Look(this, InputVector);
 }
 
 void ASuraCharacterPlayer::StartRunning()
 {
-	SetMovementState(EMovementState::Running);
-	
+	bRunTriggered = true;
+	CurrentState->StartRunning(this);
 }
 
 void ASuraCharacterPlayer::StartJumping()
 {
-	if (JumpsLeft > 0)
-	{
-		JumpsLeft--;
-		LaunchCharacter(FindJumpLaunchVelocity(), false, true);
-		if (CurrentActionState == EActionState::WallRunning)
-		{
-			// WallRunComponent->StopWallRunning();
-		}
-	}
+	bJumpTriggered = true;
+	CurrentState->StartJumping(this);
 }
 
 void ASuraCharacterPlayer::StartDashing()
 {
-	if (bIsDashOnCooldown) return;
-	
-	if (CurrentActionState == EActionState::WallRunning || CurrentActionState == EActionState::Stunned ||
-		CurrentActionState == EActionState::Dead)
-	{
-		return;
-	}
-
-	bIsDashOnCooldown = true;
-	SetMovementState(EMovementState::Dashing);
-
-	FVector DashDirection;
-	if (ForwardAxisInputValue >= 0.f && RightAxisInputValue == 0.f)
-	{
-		DashDirection = GetActorForwardVector();
-		DashDirection = FVector(DashDirection.X, DashDirection.Y, 0.f).GetSafeNormal();
-	}
-	else
-	{
-		DashDirection = (GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue);
-		DashDirection = FVector(DashDirection.X, DashDirection.Y, 0.f).GetSafeNormal();
-	}
-
-	float InitialGroundFriction = GetCharacterMovement()->GroundFriction;
-	float InitialBrakingFrictionFactor = GetCharacterMovement()->BrakingFrictionFactor;
-	float InitialBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
-
-	bBlockInput = true;
-	GetCharacterMovement()->GroundFriction = 0.f;
-	GetCharacterMovement()->BrakingFrictionFactor = 0.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 0.f;
-	float DashImpulseSpeed = GetPlayerMovementData()->GetDashImpulseSpeed();
-	float DashImpulseDuration = GetPlayerMovementData()->GetDashDistance() / DashImpulseSpeed;
-	GetCharacterMovement()->Velocity = DashDirection * DashImpulseSpeed;
-
-	FTimerHandle StopImpulseTimer;
-	GetWorldTimerManager().SetTimer(StopImpulseTimer,
-		[this, InitialGroundFriction, InitialBrakingFrictionFactor, InitialBrakingDecelerationWalking]()
-		{
-			FVector CurrentImpulseVelocity = GetCharacterMovement()->Velocity;
-			FVector ResetVelocity = CurrentImpulseVelocity.GetSafeNormal() * GetCharacterMovement()->MaxWalkSpeed;
-			bBlockInput = false;
-			GetCharacterMovement()->Velocity = ResetVelocity;
-			GetCharacterMovement()->GroundFriction = InitialGroundFriction;
-			GetCharacterMovement()->BrakingFrictionFactor = InitialBrakingFrictionFactor;
-			GetCharacterMovement()->BrakingDecelerationWalking = InitialBrakingDecelerationWalking;
-		},
-		DashImpulseDuration, false);
-	
-	
-	
-		
-	GetWorldTimerManager().SetTimer(DashDurationTimer, [this](){ SetMovementState(EMovementState::Running); },
-		GetPlayerMovementData()->GetDashDuration(), false);
-
-	GetWorldTimerManager().SetTimer(DashCooldownTimer, [this](){ bIsDashOnCooldown = false; },
-		GetPlayerMovementData()->GetDashCooldown(), false);
-	
+	if (bDashOnCooldown) return;
+	bDashTriggered = true;
+	CurrentState->StartDashing(this);
 	
 }
 
 void ASuraCharacterPlayer::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
-
-	JumpsLeft = MaxJumps;
+	bLandedTriggered = true;
+	CurrentState->Landed(this, Hit);
 }
 
-FVector ASuraCharacterPlayer::FindJumpLaunchVelocity() const
-{
-	FVector LaunchDirection = FVector::ZeroVector;
-	if (CurrentActionState == EActionState::WallRunning)
-	{
-		// TODO: Get Launch Direction from the wall run component
-		
-	}
-	else
-	{
-		if (GetCharacterMovement()->IsFalling())
-		{
-			LaunchDirection = (GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue).GetSafeNormal();
-		}
-	}
-	const FVector LaunchVelocity = LaunchDirection * GetPlayerMovementData()->GetJumpXYVelocity() +
-		FVector::UpVector * GetPlayerMovementData()->GetJumpZVelocity();
-	return LaunchVelocity;
-}
 
 
