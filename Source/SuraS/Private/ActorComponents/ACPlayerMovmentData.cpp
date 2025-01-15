@@ -114,6 +114,16 @@ float UACPlayerMovementData::GetDashDuration() const
 	return PlayerRow->DashDuration;
 }
 
+int UACPlayerMovementData::GetDashMaxStack() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->DashMaxStack;
+}
+
 float UACPlayerMovementData::GetDashDistance() const
 {
 	if (!PlayerRow)

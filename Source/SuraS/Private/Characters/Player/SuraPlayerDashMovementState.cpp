@@ -3,10 +3,13 @@
 
 #include "Characters/Player/SuraPlayerDashMovementState.h"
 
+#include "ActorComponents/ACPlayerMovmentData.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashImpulseState.h"
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
+#include "Characters/Player/SuraPlayerRunningState.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 USuraPlayerDashMovementState::USuraPlayerDashMovementState()
 {
@@ -19,7 +22,14 @@ void USuraPlayerDashMovementState::EnterState(ASuraCharacterPlayer* Player)
 	
 	Player->DesiredGroundState = Player->DashMovementState;
 
-	
+	GetWorld()->GetTimerManager().SetTimer(Player->DashMovementTimerHandle, [Player]()
+	{
+		Player->DesiredGroundState = Player->RunningState;
+		if (!Player->GetCharacterMovement()->IsFalling())
+		{
+			Player->ChangeState(Player->RunningState);
+		}
+	}, Player->GetPlayerMovementData()->GetDashDuration(), false);
 	
 }
 

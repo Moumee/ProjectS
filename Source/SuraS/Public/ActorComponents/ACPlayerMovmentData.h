@@ -47,6 +47,8 @@ public:
 
 	float GetDashDuration() const;
 
+	int GetDashMaxStack() const;
+
 	float GetDashDistance() const;
 
 	float GetDashCooldown() const;

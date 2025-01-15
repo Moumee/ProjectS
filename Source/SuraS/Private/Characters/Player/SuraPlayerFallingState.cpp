@@ -70,5 +70,4 @@ void USuraPlayerFallingState::Landed(ASuraCharacterPlayer* Player, const FHitRes
 {
 	Super::Landed(Player, HitResult);
 	Player->bLandedTriggered = true;
-	Player->JumpsLeft = Player->MaxJumps;
 }

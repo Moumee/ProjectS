@@ -31,6 +31,4 @@ public:
 	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
 
 	
-
-	
 };

@@ -18,70 +18,60 @@ void USuraPlayerDashImpulseState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
-	Player->bDashOnCooldown = true;
+	for (int i = 0; i < Player->DashCooldowns.Num(); i++)
+	{
+		if (Player->DashCooldowns[i] == 0.f)
+		{
+			Player->DashCooldowns[i] = Player->GetPlayerMovementData()->GetDashCooldown();
+			break;
+		}
+	}
 
 	const float NewBaseMovementSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
 	Player->SetBaseMovementSpeed(NewBaseMovementSpeed);
 
 	
 	Player->GetCharacterMovement()->GroundFriction = 0.f;
-	Player->GetCharacterMovement()->BrakingFrictionFactor = 0.f;
-	Player->GetCharacterMovement()->BrakingDecelerationWalking = 0.f;
 
 	FVector DashImpulseDirection;
-	FVector InputDirection;
-
 	
 	if (Player->ForwardAxisInputValue >= 0.f && Player->RightAxisInputValue == 0.f)
 	{
-		InputDirection = Player->GetActorForwardVector();
+		DashImpulseDirection = Player->GetControlRotation().Vector();
 	}
 	else
 	{
-		InputDirection = (Player->GetActorForwardVector() * Player->ForwardAxisInputValue +
+		DashImpulseDirection = (Player->GetActorForwardVector() * Player->ForwardAxisInputValue +
 			Player->GetActorRightVector() * Player->RightAxisInputValue).GetSafeNormal();
-	}
-
-	if (Player->GetCharacterMovement()->IsFalling())
-	{
-		DashImpulseDirection = InputDirection;
-	}
-	else
-	{
-		const FVector FloorNormal = Player->GetCharacterMovement()->CurrentFloor.HitResult.Normal;
-		DashImpulseDirection = FVector::VectorPlaneProject(InputDirection, FloorNormal).GetSafeNormal();
 	}
 	
 	const float DashImpulseSpeed = Player->GetPlayerMovementData()->GetDashImpulseSpeed();
 	const float DashImpulseDuration = Player->GetPlayerMovementData()->GetDashDistance() / DashImpulseSpeed;
+	Player->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	Player->GetCharacterMovement()->Velocity = DashImpulseDirection * DashImpulseSpeed;
-
-	GetWorld()->GetTimerManager().SetTimer(Player->DashCooldownTimerHandle, [Player]()
-	{
-		Player->bDashOnCooldown = false;
-	}, Player->GetPlayerMovementData()->GetDashCooldown(), false);
-
-	GetWorld()->GetTimerManager().SetTimer(Player->DashMovementTimerHandle, [Player]()
-	{
-		Player->DesiredGroundState = Player->RunningState;
-		Player->SetBaseMovementSpeed(Player->GetPlayerMovementData()->GetRunSpeed());
-		if (!Player->GetCharacterMovement()->IsFalling())
-		{
-			Player->ChangeState(Player->RunningState);
-		}
-	}, Player->GetPlayerMovementData()->GetDashDuration(), false);
 
 	GetWorld()->GetTimerManager().SetTimer(Player->DashImpulseTimerHandle, [Player]()
 	{
+		if (Player->GetCharacterMovement()->IsMovingOnGround())
+		{
+			Player->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		}
+		else
+		{
+			Player->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+		}
 		const FVector CurrentVelocity = Player->GetCharacterMovement()->Velocity;
 		FVector ResetVelocity = CurrentVelocity.GetSafeNormal() * Player->GetCharacterMovement()->MaxWalkSpeed;
 		Player->GetCharacterMovement()->Velocity = ResetVelocity;
 		Player->GetCharacterMovement()->GroundFriction = Player->DefaultGroundFriction;
-		Player->GetCharacterMovement()->BrakingFrictionFactor = Player->DefaultBrakingFrictionFactor;
-		Player->GetCharacterMovement()->BrakingDecelerationWalking = Player->DefaultBrakingDecelerationWalking;
 		Player->ChangeState(Player->DashMovementState);
 	},DashImpulseDuration, false);
 	
+}
+
+void USuraPlayerDashImpulseState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
+{
+	Super::UpdateState(Player, DeltaTime);
 }
 
 void USuraPlayerDashImpulseState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)

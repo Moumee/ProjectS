@@ -22,7 +22,10 @@ public:
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
 
+	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;
+
 	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
+	
 	
 
 	
