@@ -5,8 +5,10 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "InventoryWidget.h"
 #include "ActorComponents/ACPlayerAttributes.h"
 #include "ActorComponents/WallRun/ACPlayerWallRun.h"
+#include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -187,6 +189,8 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartRunning);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartJumping);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartDashing);
+		//인벤토리
+		EnhancedInputComponent->BindAction(OpenInventoryAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::OpenInventory);
 	}
 }
 
@@ -341,5 +345,97 @@ FVector ASuraCharacterPlayer::FindJumpLaunchVelocity() const
 		FVector::UpVector * GetPlayerAttributes()->GetJumpZVelocity();
 	return LaunchVelocity;
 }
+
+
+
+void ASuraCharacterPlayer::OpenInventory()
+{
+	GEngine->AddOnScreenDebugMessage(1001, 3.0f, FColor::Green, "OpenInventory");
+
+	// 위젯이 생성되지 않았거나, 한 번 제거된 경우 다시 생성하도록 처리
+	if (!InventoryWidget && InventoryWidgetClass)
+	{
+		InventoryWidget = CreateWidget<UUserWidget>(GetWorld(), InventoryWidgetClass);
+		if (InventoryWidget)
+		{
+			InventoryWidget->AddToViewport();
+		}
+	}
+	else if (InventoryWidget)
+	{
+		// 이미 생성된 위젯이 있다면, 먼저 제거 후 새로 생성하여 화면에 추가
+		InventoryWidget->RemoveFromParent(); // RemoveFromParent로 위젯을 제거
+		InventoryWidget = CreateWidget<UUserWidget>(GetWorld(), InventoryWidgetClass); // 새로 생성
+		if (InventoryWidget)
+		{
+			InventoryWidget->AddToViewport(); // 화면에 다시 추가
+		}
+	}
+
+	// 게임 일시 정지
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+
+	// 마우스 커서 활성화 및 입력 모드 설정
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (PlayerController)
+	{
+		PlayerController->bShowMouseCursor = true;
+
+		// 입력 모드를 UI로 설정
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(InventoryWidget->TakeWidget());
+		//InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		PlayerController->SetInputMode(InputMode);
+	}
+
+	
+}
+
+void ASuraCharacterPlayer::CloseInventory()
+{
+	//게임 일시 정지 해제
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
+
+	// 마우스 커서 숨기기 및 입력 모드 복구
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		PlayerController->bShowMouseCursor = false;
+
+		// 입력 모드를 게임 전용으로 설정
+		FInputModeGameOnly InputMode;
+		PlayerController->SetInputMode(InputMode);
+	}
+
+}
+
+void ASuraCharacterPlayer::SwitchToWeaponTab(const FInputActionValue& Value)
+{
+	GEngine->AddOnScreenDebugMessage(-1,3.0f,FColor::Blue,TEXT("SwitchTab to Chip"));
+	
+	if (InventoryWidget)
+	{
+		UInventoryWidget* Inventory = Cast<UInventoryWidget>(InventoryWidget);
+		if (Inventory)
+		{
+			Inventory->SwitchToNextTab(); // weapon 탭으로 전환
+		}
+	}
+}
+
+void ASuraCharacterPlayer::SwitchToChipTab(const FInputActionValue& Value)
+{
+	if (InventoryWidget)
+	{
+		UInventoryWidget* Inventory = Cast<UInventoryWidget>(InventoryWidget);
+		if (Inventory)
+		{
+			Inventory->SwitchToPreviousTab(); // chip 탭으로 전환
+		}
+	}
+}
+
+
+
+
 
 
