@@ -7,7 +7,6 @@
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashMovementState.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "Characters/Player/SuraPlayerRunningState.h"
 
 USuraPlayerDashImpulseState::USuraPlayerDashImpulseState()
 {
@@ -18,9 +17,11 @@ void USuraPlayerDashImpulseState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	Player->DashesLeft--;
+	
 	for (int i = 0; i < Player->DashCooldowns.Num(); i++)
 	{
-		if (Player->DashCooldowns[i] == 0.f)
+		if (Player->DashCooldowns[i] == 0)
 		{
 			Player->DashCooldowns[i] = Player->GetPlayerMovementData()->GetDashCooldown();
 			break;

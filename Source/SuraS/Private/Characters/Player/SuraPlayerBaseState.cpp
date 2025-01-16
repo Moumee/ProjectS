@@ -43,6 +43,10 @@ void USuraPlayerBaseState::StartDashing(ASuraCharacterPlayer* Player)
 {
 }
 
+void USuraPlayerBaseState::StartCrouching(ASuraCharacterPlayer* Player)
+{
+}
+
 void USuraPlayerBaseState::Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult)
 {
 }

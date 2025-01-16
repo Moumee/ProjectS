@@ -36,6 +36,8 @@ public:
 
 	virtual void StartDashing(ASuraCharacterPlayer* Player);
 
+	virtual void StartCrouching(ASuraCharacterPlayer* Player);
+
 	virtual void Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult);
 	
 };

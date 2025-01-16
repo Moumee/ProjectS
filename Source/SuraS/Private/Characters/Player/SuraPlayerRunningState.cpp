@@ -5,6 +5,7 @@
 
 #include "ActorComponents/ACPlayerMovmentData.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/Player/SuraPlayerCrouchingState.h"
 #include "Characters/Player/SuraPlayerDashImpulseState.h"
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
@@ -45,6 +46,12 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 	if (Player->ForwardAxisInputValue <= 0.f)
 	{
 		Player->ChangeState(Player->WalkingState);
+		return;
+	}
+
+	if (Player->bCrouchTriggered)
+	{
+		Player->ChangeState(Player->CrouchingState);
 		return;
 	}
 

@@ -5,6 +5,7 @@
 
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashImpulseState.h"
+#include "Characters/Player/SuraPlayerRunningState.h"
 
 USuraPlayerFallingState::USuraPlayerFallingState()
 {
@@ -24,6 +25,11 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	{
 		Player->ChangeState(Player->DashImpulseState);
 		return;
+	}
+
+	if (Player->bRunTriggered)
+	{
+		Player->DesiredGroundState = Player->RunningState;
 	}
 
 	if (Player->bLandedTriggered)
@@ -69,5 +75,4 @@ void USuraPlayerFallingState::StartJumping(ASuraCharacterPlayer* Player)
 void USuraPlayerFallingState::Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult)
 {
 	Super::Landed(Player, HitResult);
-	Player->bLandedTriggered = true;
 }

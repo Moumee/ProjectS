@@ -5,6 +5,7 @@
 
 #include "ActorComponents/ACPlayerMovmentData.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/Player/SuraPlayerCrouchingState.h"
 #include "Characters/Player/SuraPlayerDashImpulseState.h"
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
@@ -33,6 +34,12 @@ void USuraPlayerWalkingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	if (Player->IsFallingDown())
 	{
 		Player->ChangeState(Player->FallingState);
+		return;
+	}
+
+	if (Player->bCrouchTriggered)
+	{
+		Player->ChangeState(Player->CrouchingState);
 		return;
 	}
 

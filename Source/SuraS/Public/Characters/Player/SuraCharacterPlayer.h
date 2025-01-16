@@ -6,6 +6,7 @@
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class USuraPlayerCrouchingState;
 class USuraPlayerDashMovementState;
 class USuraPlayerDashImpulseState;
 class USuraPlayerFallingState;
@@ -85,7 +86,10 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* LegMesh;
-	
+
+	float DefaultCapsuleHalfHeight;
+
+	FVector DefaultCameraLocation;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Curve", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* SlopeSpeedDeltaCurve;
@@ -147,6 +151,8 @@ public:
 	// Returns Player Movement Data Actor Component
 	UACPlayerMovementData* GetPlayerMovementData() const { return PlayerMovementData; }
 
+	UCameraComponent* GetCamera() const { return Camera; }
+
 	// DesiredGroundState is set when player enters Walking, Running, Dashing state
 	// It is used to change state to desired ground state when transitioning from Falling State
 	UPROPERTY()
@@ -164,6 +170,8 @@ public:
 	USuraPlayerDashImpulseState* DashImpulseState;
 	UPROPERTY()
 	USuraPlayerDashMovementState* DashMovementState;
+	UPROPERTY()
+	USuraPlayerCrouchingState* CrouchingState;
 
 	int MaxJumps = 2;
 	int JumpsLeft;
@@ -207,6 +215,10 @@ public:
 	void PrimaryJump();
 
 	void DoubleJump();
+
+	float GetDefaultCapsuleHalfHeight() const;
+
+	FVector GetDefaultCameraLocation() const;
 	
 };
 
