@@ -43,7 +43,7 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 
 	LegMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Leg Mesh"));
 	LegMesh->SetupAttachment(GetRootComponent());
-
+	
 
 	// Enable capsule hit events for wall detection
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
@@ -66,8 +66,11 @@ void ASuraCharacterPlayer::BeginPlay()
 	}
 
 	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
-	DefaultBrakingFrictionFactor = GetCharacterMovement()->BrakingFrictionFactor;
-	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
+
+	MaxDashes = GetPlayerMovementData()->GetDashMaxStack();
+	DashesLeft = MaxDashes;
+
+	DashCooldowns.Init(0.f, MaxDashes);
 
 	BaseMovementSpeed = GetPlayerMovementData()->GetWalkSpeed();
 	GetCharacterMovement()->AirControl = GetPlayerMovementData()->GetAirControl();
@@ -173,6 +176,18 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 			GEngine->AddOnScreenDebugMessage(102, 0.f, FColor::Green,
 				FString::Printf(TEXT("Jumps Left : %d / %d"), JumpsLeft, MaxJumps));
 
+			GEngine->AddOnScreenDebugMessage(101, 0.f, FColor::Green,
+				FString::Printf(TEXT("Dashes Left : %d / %d"), DashesLeft, MaxDashes));
+
+			FString CooldownInfo;
+			for (float Cooldown : DashCooldowns)
+			{
+				CooldownInfo += FString::Printf(TEXT("%.2f "), Cooldown);
+			}
+
+			GEngine->AddOnScreenDebugMessage(100, 0.f, FColor::Green,
+				FString::Printf(TEXT("Dash Cooldowns: %s"), *CooldownInfo));
+
 			GEngine->AddOnScreenDebugMessage(99, 0.f, FColor::Green,
 				FString::Printf(TEXT("Input Axis Value : ( %f, %f )"), ForwardAxisInputValue, RightAxisInputValue));
 
@@ -183,6 +198,24 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 				FString::Printf(TEXT("Current State : %s"), *CurrentState->StateDisplayName.ToString()));
 
 			
+		}
+	}
+}
+
+void ASuraCharacterPlayer::UpdateDashCooldowns(float DeltaTime)
+{
+	if (DashesLeft == MaxDashes) return;
+
+	for (int i = 0; i < MaxDashes; i++)
+	{
+		if (DashCooldowns[i] > 0.f)
+		{
+			DashCooldowns[i] = DashCooldowns[i] - DeltaTime;
+			if (DashCooldowns[i] <= KINDA_SMALL_NUMBER)
+			{
+				DashCooldowns[i] = 0.f;
+				DashesLeft = FMath::Min(DashesLeft + 1, MaxDashes);
+			}
 		}
 	}
 }
@@ -203,6 +236,8 @@ float ASuraCharacterPlayer::FindFloorAngle() const
 void ASuraCharacterPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	UpdateDashCooldowns(DeltaTime);
 
 	PrintPlayerDebugInfo();
 
@@ -266,14 +301,17 @@ void ASuraCharacterPlayer::StartRunning()
 
 void ASuraCharacterPlayer::StartJumping()
 {
+	if (JumpsLeft <= 0) return;
 	bJumpTriggered = true;
 	CurrentState->StartJumping(this);
 }
 
 void ASuraCharacterPlayer::StartDashing()
 {
-	if (bDashOnCooldown) return;
+	if (DashesLeft <= 0) return;
+	if (CurrentState == DashImpulseState) return;
 	bDashTriggered = true;
+	DashesLeft--;
 	CurrentState->StartDashing(this);
 	
 }
@@ -282,6 +320,7 @@ void ASuraCharacterPlayer::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 	bLandedTriggered = true;
+	JumpsLeft = MaxJumps;
 	CurrentState->Landed(this, Hit);
 }
 

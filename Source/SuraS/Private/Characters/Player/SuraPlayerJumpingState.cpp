@@ -81,8 +81,3 @@ void USuraPlayerJumpingState::StartJumping(ASuraCharacterPlayer* Player)
 	Player->DoubleJump();
 }
 
-void USuraPlayerJumpingState::Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult)
-{
-	Super::Landed(Player, HitResult);
-	Player->JumpsLeft = Player->MaxJumps;
-}

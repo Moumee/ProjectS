@@ -105,10 +105,13 @@ private:
 	// Adds on screen debug messages for debugging purposes
 	void PrintPlayerDebugInfo() const;
 
+	void UpdateDashCooldowns(float DeltaTime);
+
 	// Returns the angle of the current floor
 	// If floor angle is 45 degrees downward slope, returns -45.f
 	float FindFloorAngle() const;
 
+	
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
@@ -174,11 +177,13 @@ public:
 
 	void ResetTriggeredBooleans();
 
+	int MaxDashes;
+	int DashesLeft;
+
 	FTimerHandle DashImpulseTimerHandle;
 	FTimerHandle DashMovementTimerHandle;
-	FTimerHandle DashCooldownTimerHandle;
 
-	bool bDashOnCooldown;
+	TArray<float> DashCooldowns;
 
 	// Player Input Axis Values
 	// W - Sets ForwardAxisInputValue to 1
@@ -189,9 +194,6 @@ public:
 	float RightAxisInputValue;
 
 	float DefaultGroundFriction;
-	float DefaultBrakingFrictionFactor; 
-	float DefaultBrakingDecelerationWalking; 
-
 
 	UFUNCTION(BlueprintCallable)
 	void SetBaseMovementSpeed(float MovementSpeed);

@@ -33,7 +33,6 @@ public:
 
 	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
 
-	virtual void Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult) override;
 	
 };
 
