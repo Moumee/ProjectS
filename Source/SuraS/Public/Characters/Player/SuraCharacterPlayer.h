@@ -32,7 +32,7 @@ class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase
 {
 	GENERATED_BODY()
 
-private:
+protected:
 
 	UPROPERTY()
 	USuraPlayerBaseState* CurrentState;
