@@ -1,0 +1,42 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Characters/Player/SuraCharacterPlayer.h"
+#include "SuraCharacterPlayerWeapon.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class SURAS_API ASuraCharacterPlayerWeapon : public ASuraCharacterPlayer
+{
+	GENERATED_BODY()
+
+
+protected:
+	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	virtual void Landed(const FHitResult& Hit) override;
+
+public:
+	ASuraCharacterPlayerWeapon();
+
+//-----------------------------------------------------------------
+//TODO: 승환님께 아래 내용들 Player Character class에 필요하다고 말씀드리기. 
+// 또 ASuraCharacterPlayer의 private member를 protected로 전환 부탁드리기
+
+public:
+	/** Returns ArmMesh subobject **/
+	USkeletalMeshComponent* GetArmMesh() const { return ArmMesh; }
+	/** Returns FirstPersonCameraComponent subobject **/
+	UCameraComponent* GetFirstPersonCameraComponent() const { return Camera; }
+
+};
