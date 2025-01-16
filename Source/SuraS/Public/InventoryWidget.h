@@ -7,10 +7,10 @@
 #include "Components/Button.h" // UButton 포함
 #include "InventoryWidget.generated.h"
 
-
+// 위젯 클래스 전방선언
 class UTextBlock;
-class UScrollBox;
 class FReply;
+class UWidgetSwitcher;
 /**
  * 
  */
@@ -27,28 +27,41 @@ class SURAS_API UInventoryWidget : public UUserWidget
 	GENERATED_BODY()
 
 protected:
-	// 탭
+	// Back 버튼 변수 (디자이너에서 설정된 버튼)
+	UPROPERTY(meta = (BindWidget))
+	UButton* BackButton;
+		
+	/**  탭관련  **/
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* TabWeapon;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* TabChip;
-
-	UPROPERTY(meta = (BindWidget))
-	UScrollBox* TabContentScrollBox;
 	
 	EInventoryTab CurrentTab;
 
-private:
-	// Back 버튼 변수 (디자이너에서 설정된 버튼)
+	// Widget Switcher
 	UPROPERTY(meta = (BindWidget))
-	UButton* BackButton;
+	UWidgetSwitcher* ContentSwitcher;
 
+	/** 애니메이션 **/
+	// BtnHover 애니메이션
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* BtnHover;
+
+	/** 사운드 **/
+	// 탭 전환 효과음
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* TabSwitchSound;
+	
+
+private:
 	// Back 버튼 클릭 시 호출될 함수
 	UFUNCTION()
 	void OnBackButtonClicked();
 
 	void CloseInventoryByInput();
+
 	
 public:
 	// 위젯이 생성된 후 호출되는 함수
@@ -60,9 +73,19 @@ public:
 	void SetActiveTab(EInventoryTab NewTab);
 
 	// 키 입력 함수 (Q, E)
-	void SwitchToNextTab();
-	void SwitchToPreviousTab();
+	void SwitchToWeaponTab();
+	void SwitchToChipTab();
+	
 
+	// 탭 콘텐츠를 보여주는 함수
+	void ShowTabContent() const;
+
+	//BackButton의 Hover 이벤트 구현
+	UFUNCTION()
+	void OnBackButtonHover();
+	UFUNCTION()
+	void OnBackButtonUnHover();
 	
 	
 };
+

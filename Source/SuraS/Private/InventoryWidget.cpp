@@ -1,8 +1,8 @@
 #include "InventoryWidget.h"
 
 #include "Characters/Player/SuraCharacterPlayer.h"
-#include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
 #include "Kismet/GameplayStatics.h"
 
 void UInventoryWidget::NativeConstruct()
@@ -22,6 +22,10 @@ void UInventoryWidget::NativeConstruct()
         // 버튼 클릭 시 OnBackButtonClicked() 함수 호출
         BackButton->OnClicked.AddDynamic(this, &UInventoryWidget::OnBackButtonClicked);
     }
+
+    // BackButton Hover, UnHover 이벤트 바인딩
+    if (BackButton) BackButton->OnHovered.AddDynamic(this, &UInventoryWidget::OnBackButtonHover);
+    if (BackButton) BackButton->OnUnhovered.AddDynamic(this, &UInventoryWidget::OnBackButtonUnHover);
     
 }
 
@@ -30,12 +34,12 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
     // 키 입력 처리: Q 또는 E 키에 대한 처리를 추가
     if (InKeyEvent.GetKey() == EKeys::Q)
     {
-        SwitchToPreviousTab();  // Weapon 탭으로 돌아가기
+        SwitchToWeaponTab();  // Weapon 탭으로 돌아가기
         return FReply::Handled();  // 이벤트 처리 완료
     }
     else if (InKeyEvent.GetKey() == EKeys::E)
     {
-        SwitchToNextTab();  // Chip 탭으로 전환
+        SwitchToChipTab();  // Chip 탭으로 전환
         return FReply::Handled();  // 이벤트 처리 완료
     }
 
@@ -62,25 +66,12 @@ void UInventoryWidget::SetActiveTab(EInventoryTab NewTab)
         TabChip->SetOpacity(CurrentTab == EInventoryTab::Chip ? 1.0f : 0.5f);
     }
 
-    // 콘텐츠 슬라이드
-    if (TabContentScrollBox)
-    {
-        float ScrollOffset = (CurrentTab == EInventoryTab::Weapon) ? 0.0f : TabContentScrollBox->GetDesiredSize().X / 2;
-        TabContentScrollBox->SetScrollOffset(ScrollOffset);
-    }
+    // 활성화된 탭에 해당하는 콘텐츠를 표시
+    ShowTabContent();
     
 }
 
-void UInventoryWidget::SwitchToNextTab()
-{
-    if (CurrentTab == EInventoryTab::Weapon)
-    {
-        SetActiveTab(EInventoryTab::Chip);
-    }
-}
-
-
-void UInventoryWidget::SwitchToPreviousTab()
+void UInventoryWidget::SwitchToWeaponTab()
 {
     if (CurrentTab == EInventoryTab::Chip)
     {
@@ -88,6 +79,13 @@ void UInventoryWidget::SwitchToPreviousTab()
     }
 }
 
+void UInventoryWidget::SwitchToChipTab()
+{
+    if (CurrentTab == EInventoryTab::Weapon)
+    {
+        SetActiveTab(EInventoryTab::Chip);
+    }
+}
 
 void UInventoryWidget::OnBackButtonClicked()
 {
@@ -109,3 +107,34 @@ void UInventoryWidget::CloseInventoryByInput()
         }
     }
 }
+
+void UInventoryWidget::ShowTabContent() const
+{
+    // 현재 탭에 따라 Widget Switcher의 Index를 전환
+    if (ContentSwitcher)
+    {
+        int32 Index = (CurrentTab == EInventoryTab::Weapon) ? 0 : 1;
+        ContentSwitcher->SetActiveWidgetIndex(Index);
+        
+        // 콘텐츠가 바뀔 때 효과음 추가
+        if (USoundBase* SwitchSound = TabSwitchSound)
+        {
+            UGameplayStatics::PlaySound2D(this, SwitchSound);
+        }
+    }
+   
+}
+
+void UInventoryWidget::OnBackButtonHover()
+{
+    if (BtnHover) PlayAnimation(BtnHover);
+}
+
+void UInventoryWidget::OnBackButtonUnHover()
+{
+    if (BtnHover) PlayAnimation(BtnHover, 0.0f, 1, EUMGSequencePlayMode::Reverse);
+}
+
+
+
+

@@ -417,7 +417,7 @@ void ASuraCharacterPlayer::SwitchToWeaponTab(const FInputActionValue& Value)
 		UInventoryWidget* Inventory = Cast<UInventoryWidget>(InventoryWidget);
 		if (Inventory)
 		{
-			Inventory->SwitchToNextTab(); // weapon 탭으로 전환
+			Inventory->SwitchToWeaponTab(); // weapon 탭으로 전환
 		}
 	}
 }
@@ -429,7 +429,7 @@ void ASuraCharacterPlayer::SwitchToChipTab(const FInputActionValue& Value)
 		UInventoryWidget* Inventory = Cast<UInventoryWidget>(InventoryWidget);
 		if (Inventory)
 		{
-			Inventory->SwitchToPreviousTab(); // chip 탭으로 전환
+			Inventory->SwitchToChipTab(); // chip 탭으로 전환
 		}
 	}
 }
