@@ -59,5 +59,14 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0"))
 	float AdditionalSpeedDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AdditionalSpeedDecreaseRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DoubleJumpAdditionalSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SlideAdditionalSpeed;
 	
 };

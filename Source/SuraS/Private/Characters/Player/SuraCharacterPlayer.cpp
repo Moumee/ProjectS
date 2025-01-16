@@ -149,11 +149,22 @@ void ASuraCharacterPlayer::PrimaryJump()
 	}
 }
 
+void ASuraCharacterPlayer::StartAdditionalSpeedDuration()
+{
+	bShouldUpdateAdditionalMovementSpeed = false;
+	GetWorld()->GetTimerManager().SetTimer(AdditionalSpeedTimerHandle, [this]()
+	{
+		bShouldUpdateAdditionalMovementSpeed = true;
+	}, GetPlayerMovementData()->GetAdditionalSpeedDuration(), false);
+}
+
 void ASuraCharacterPlayer::DoubleJump()
 {
 	if (JumpsLeft > 0 && GetCharacterMovement()->IsFalling())
 	{
 		bJumpTriggered = true;
+		StartAdditionalSpeedDuration();
+		AdditionalMovementSpeed += GetPlayerMovementData()->GetDoubleJumpAdditionalSpeed();
 		JumpsLeft--;
 		FVector InputDirection = GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue;
 		FVector LaunchVelocity = InputDirection * GetPlayerMovementData()->GetJumpXYVelocity() +
@@ -238,6 +249,21 @@ void ASuraCharacterPlayer::UpdateDashCooldowns(float DeltaTime)
 	}
 }
 
+void ASuraCharacterPlayer::UpdateAdditionalMovementSpeed(float DeltaTime)
+{
+	if (!bShouldUpdateAdditionalMovementSpeed) return;
+
+	if (AdditionalMovementSpeed > 0.f)
+	{
+		AdditionalMovementSpeed -= DeltaTime * GetPlayerMovementData()->GetAdditionalSpeedDecreaseRate();
+	}
+	else
+	{
+		bShouldUpdateAdditionalMovementSpeed = false;
+		AdditionalMovementSpeed = 0.f;
+	}
+}
+
 float ASuraCharacterPlayer::FindFloorAngle() const
 {
 	if (!GetCharacterMovement()->IsFalling() && GetCharacterMovement()->MovementMode != MOVE_Flying)
@@ -264,7 +290,11 @@ void ASuraCharacterPlayer::Tick(float DeltaTime)
 		CurrentState->UpdateState(this, DeltaTime);
 	}
 
+	UpdateAdditionalMovementSpeed(DeltaTime);
+
 	SlopeSpeedDelta = SlopeSpeedDeltaCurve->GetFloatValue(FindFloorAngle());
+
+	
 	
 	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + AdditionalMovementSpeed + SlopeSpeedDelta;
 }
@@ -336,6 +366,8 @@ void ASuraCharacterPlayer::StartDashing()
 	if (DashesLeft <= 0) return;
 	if (CurrentState == DashImpulseState) return;
 	bDashTriggered = true;
+	AdditionalMovementSpeed += GetPlayerMovementData()->GetDashAdditionalSpeed();
+	StartAdditionalSpeedDuration();
 	CurrentState->StartDashing(this);
 	
 }

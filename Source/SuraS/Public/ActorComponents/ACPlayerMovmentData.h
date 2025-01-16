@@ -54,4 +54,8 @@ public:
 	float GetDashCooldown() const;
 
 	float GetAdditionalSpeedDuration() const;
+
+	float GetAdditionalSpeedDecreaseRate() const;
+
+	float GetDoubleJumpAdditionalSpeed() const;
 };

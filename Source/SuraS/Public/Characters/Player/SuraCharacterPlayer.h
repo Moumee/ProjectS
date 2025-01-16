@@ -96,11 +96,12 @@ private:
 
 	// Value that influences player speed based on the angle of the slope
 	float SlopeSpeedDelta;
-
-	// Base movement speed is set based on Walking, Running, Dashing states
+	
 	float BaseMovementSpeed;
 
 	float AdditionalMovementSpeed;
+
+	bool bShouldUpdateAdditionalMovementSpeed;
 
 	virtual void BeginPlay() override;
 
@@ -110,6 +111,8 @@ private:
 	void PrintPlayerDebugInfo() const;
 
 	void UpdateDashCooldowns(float DeltaTime);
+
+	void UpdateAdditionalMovementSpeed(float DeltaTime);
 
 	// Returns the angle of the current floor
 	// If floor angle is 45 degrees downward slope, returns -45.f
@@ -193,6 +196,8 @@ public:
 
 	TArray<float> DashCooldowns;
 
+	FTimerHandle AdditionalSpeedTimerHandle;
+
 	// Player Input Axis Values
 	// W - Sets ForwardAxisInputValue to 1
 	// S - Sets ForwardAxisInputValue to -1
@@ -213,6 +218,7 @@ public:
 	bool HasMovementInput() const;
 
 	void PrimaryJump();
+	void StartAdditionalSpeedDuration();
 
 	void DoubleJump();
 

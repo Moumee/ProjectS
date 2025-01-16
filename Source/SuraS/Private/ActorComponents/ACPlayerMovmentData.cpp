@@ -153,3 +153,23 @@ float UACPlayerMovementData::GetAdditionalSpeedDuration() const
 	}
 	return PlayerRow->AdditionalSpeedDuration;
 }
+
+float UACPlayerMovementData::GetAdditionalSpeedDecreaseRate() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->AdditionalSpeedDecreaseRate;
+}
+
+float UACPlayerMovementData::GetDoubleJumpAdditionalSpeed() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->DoubleJumpAdditionalSpeed;
+}
