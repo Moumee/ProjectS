@@ -5,7 +5,8 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "InventoryWidget.h"
+#include "UI/InventoryWidget.h"
+#include "ActorComponents/UISystem/ACBaseUIComponent.h"
 #include "ActorComponents/ACPlayerAttributes.h"
 #include "ActorComponents/WallRun/ACPlayerWallRun.h"
 #include "Blueprint/UserWidget.h"
@@ -376,8 +377,7 @@ void ASuraCharacterPlayer::OpenInventory()
 	UGameplayStatics::SetGamePaused(GetWorld(), true);
 
 	// 마우스 커서 활성화 및 입력 모드 설정
-	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (PlayerController)
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
 	{
 		PlayerController->bShowMouseCursor = true;
 
@@ -414,8 +414,7 @@ void ASuraCharacterPlayer::SwitchToWeaponTab(const FInputActionValue& Value)
 	
 	if (InventoryWidget)
 	{
-		UInventoryWidget* Inventory = Cast<UInventoryWidget>(InventoryWidget);
-		if (Inventory)
+		if (UInventoryWidget* Inventory = Cast<UInventoryWidget>(InventoryWidget))
 		{
 			Inventory->SwitchToWeaponTab(); // weapon 탭으로 전환
 		}

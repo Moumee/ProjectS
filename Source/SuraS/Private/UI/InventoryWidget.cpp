@@ -1,4 +1,4 @@
-#include "InventoryWidget.h"
+#include "UI/InventoryWidget.h"
 
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Components/TextBlock.h"

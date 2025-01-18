@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "UI/InventoryWidget.h"
+
 #include "ACBaseUIComponent.generated.h"
+
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -23,6 +26,17 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+private:
+	// UI 위젯을 저장할 변수
+	UInventoryWidget* InventoryWidget;
+
+public:
+	// UI를 띄우는 함수
+	void ShowUI();
+
+	// UI를 숨기는 함수
+	void HideUI();
 
 		
 };

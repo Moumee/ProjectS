@@ -32,3 +32,27 @@ void UACBaseUIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// ...
 }
 
+void UACBaseUIComponent::ShowUI()
+{
+	// UinventoryWidget을 인스턴스화하고 화면에 표시
+	if (!InventoryWidget)
+	{
+		// UI 위젯 인스턴스화
+		InventoryWidget = CreateWidget<UInventoryWidget>(GetWorld(), UInventoryWidget::StaticClass());
+	}
+
+	if (InventoryWidget)
+	{
+		InventoryWidget->AddToViewport(); // 화면에 UI 추가
+	}
+}
+
+void UACBaseUIComponent::HideUI()
+{
+	if (InventoryWidget)
+	{
+		InventoryWidget->RemoveFromParent(); // UI를 화면에서 제거
+	}
+}
+
+

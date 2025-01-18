@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BaseUIWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h" // UButton 포함
+
 #include "InventoryWidget.generated.h"
 
 // 위젯 클래스 전방선언
@@ -22,7 +24,7 @@ enum class EInventoryTab : uint8
 };
 
 UCLASS()
-class SURAS_API UInventoryWidget : public UUserWidget
+class SURAS_API UInventoryWidget : public UBaseUIWidget	
 {
 	GENERATED_BODY()
 
