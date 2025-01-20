@@ -94,15 +94,6 @@ float UACPlayerMovementData::GetDashImpulseSpeed() const
 	return PlayerRow->DashImpulseSpeed;
 }
 
-float UACPlayerMovementData::GetDashAdditionalSpeed() const
-{
-	if (!PlayerRow)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
-		return 0;
-	}
-	return PlayerRow->DashAdditionalSpeed;
-}
 
 float UACPlayerMovementData::GetDashDuration() const
 {
@@ -144,12 +135,3 @@ float UACPlayerMovementData::GetDashCooldown() const
 	return PlayerRow->DashCooldown;
 }
 
-float UACPlayerMovementData::GetAdditionalSpeedDuration() const
-{
-	if (!PlayerRow)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
-		return 0;
-	}
-	return PlayerRow->AdditionalSpeedDuration;
-}

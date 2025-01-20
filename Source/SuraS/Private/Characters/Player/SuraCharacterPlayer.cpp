@@ -9,10 +9,12 @@
 #include "ActorComponents/WallRun/ACPlayerWallRun.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraPlayerBaseState.h"
-#include "Characters/Player/SuraPlayerDashImpulseState.h"
-#include "Characters/Player/SuraPlayerDashMovementState.h"
+#include "Characters/Player/SuraPlayerCrouchingState.h"
+#include "Characters/Player/SuraPlayerDashingState.h"
 #include "Characters/Player/SuraPlayerFallingState.h"
+#include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
+#include "Characters/Player/SuraPlayerMantlingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
 #include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Components/CapsuleComponent.h"
@@ -21,35 +23,36 @@
 
 ASuraCharacterPlayer::ASuraCharacterPlayer()
 {
+
+	bUseControllerRotationYaw = true;
+
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	
 	// Wall-run component
 	WallRunComponent = CreateDefaultSubobject<UACPlayerWallRun>(TEXT("WallRunComponent"));
 	AddOwnedComponent(WallRunComponent);
 
-	PlayerMovementData = CreateDefaultSubobject<UACPlayerMovementData>("Player Attributes");
+	PlayerMovementData = CreateDefaultSubobject<UACPlayerMovementData>("Player Movement Data");
 
 	// Make character rotate with the controller
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
 
-	// Create and initialize first person camera
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(GetRootComponent());
-	Camera->SetRelativeLocation(FVector(0.f, 0.f, 58.f));
+	Camera->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "Camera");
 	Camera->bUsePawnControlRotation = true;
-
-	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
-	ArmMesh->SetupAttachment(Camera);
-
-	LegMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Leg Mesh"));
-	LegMesh->SetupAttachment(GetRootComponent());
-	
 
 	// Enable capsule hit events for wall detection
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
 
+	DefaultCapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	DefaultCameraLocation = Camera->GetRelativeLocation();
+
 	// Initialize JumpsLeft
 	JumpsLeft = MaxJumps;
+
+
 
 }
 
@@ -64,7 +67,8 @@ void ASuraCharacterPlayer::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
+	
+	
 	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
 
 	MaxDashes = GetPlayerMovementData()->GetDashMaxStack();
@@ -79,8 +83,10 @@ void ASuraCharacterPlayer::BeginPlay()
 	RunningState = NewObject<USuraPlayerRunningState>(this, USuraPlayerRunningState::StaticClass());
 	JumpingState = NewObject<USuraPlayerJumpingState>(this, USuraPlayerJumpingState::StaticClass());
 	FallingState = NewObject<USuraPlayerFallingState>(this, USuraPlayerFallingState::StaticClass());
-	DashImpulseState = NewObject<USuraPlayerDashImpulseState>(this, USuraPlayerDashImpulseState::StaticClass());
-	DashMovementState = NewObject<USuraPlayerDashMovementState>(this, USuraPlayerDashMovementState::StaticClass());
+	DashingState = NewObject<USuraPlayerDashingState>(this, USuraPlayerDashingState::StaticClass());
+	CrouchingState = NewObject<USuraPlayerCrouchingState>(this, USuraPlayerCrouchingState::StaticClass());
+	HangingState = NewObject<USuraPlayerHangingState>(this, USuraPlayerHangingState::StaticClass());
+	MantlingState = NewObject<USuraPlayerMantlingState>(this, USuraPlayerMantlingState::StaticClass());
 
 	ChangeState(WalkingState);
 
@@ -154,6 +160,21 @@ void ASuraCharacterPlayer::DoubleJump()
 	}
 }
 
+float ASuraCharacterPlayer::GetDefaultCapsuleHalfHeight() const
+{
+	return DefaultCapsuleHalfHeight;
+}
+
+FVector ASuraCharacterPlayer::GetDefaultCameraLocation() const
+{
+	return DefaultCameraLocation;
+}
+
+USuraPlayerBaseState* ASuraCharacterPlayer::GetCurrentState() const
+{
+	return CurrentState;
+}
+
 
 void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 {
@@ -222,7 +243,7 @@ void ASuraCharacterPlayer::UpdateDashCooldowns(float DeltaTime)
 
 float ASuraCharacterPlayer::FindFloorAngle() const
 {
-	if (!GetCharacterMovement()->IsFalling())
+	if (!GetCharacterMovement()->IsFalling() && GetCharacterMovement()->MovementMode != MOVE_Flying)
 	{
 		const FVector FloorNormal = GetCharacterMovement()->CurrentFloor.HitResult.Normal;
 		const float FloorAngle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(FloorNormal, FVector::UpVector)));
@@ -248,7 +269,7 @@ void ASuraCharacterPlayer::Tick(float DeltaTime)
 
 	SlopeSpeedDelta = SlopeSpeedDeltaCurve->GetFloatValue(FindFloorAngle());
 	
-	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + AdditionalMovementSpeed + SlopeSpeedDelta;
+	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + SlopeSpeedDelta;
 }
 
 void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -263,6 +284,7 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartRunning);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartJumping);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartDashing);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartCrouching);
 	}
 }
 
@@ -306,12 +328,17 @@ void ASuraCharacterPlayer::StartJumping()
 	CurrentState->StartJumping(this);
 }
 
+void ASuraCharacterPlayer::StartCrouching()
+{
+	bCrouchTriggered = true;
+	CurrentState->StartCrouching(this);
+}
+
 void ASuraCharacterPlayer::StartDashing()
 {
 	if (DashesLeft <= 0) return;
-	if (CurrentState == DashImpulseState) return;
+	if (CurrentState == DashingState) return;
 	bDashTriggered = true;
-	DashesLeft--;
 	CurrentState->StartDashing(this);
 	
 }

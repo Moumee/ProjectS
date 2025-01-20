@@ -6,10 +6,11 @@
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
-class USuraPlayerDashMovementState;
-class USuraPlayerDashImpulseState;
-class USuraPlayerFallingState;
+class USuraPlayerMantlingState;
+class USuraPlayerHangingState;
+class USuraPlayerCrouchingState;
 class USuraPlayerDashingState;
+class USuraPlayerFallingState;
 class USuraPlayerJumpingState;
 class USuraPlayerRunningState;
 class USuraPlayerWalkingState;
@@ -77,30 +78,29 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 	bool bIsDebugMode;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* ArmMesh;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* LegMesh;
-	
+	float DefaultCapsuleHalfHeight;
+
+	FVector DefaultCameraLocation;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Curve", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* SlopeSpeedDeltaCurve;
 
 	// Value that influences player speed based on the angle of the slope
 	float SlopeSpeedDelta;
-
-	// Base movement speed is set based on Walking, Running, Dashing states
+	
 	float BaseMovementSpeed;
 
 	float AdditionalMovementSpeed;
 
+	bool bShouldUpdateAdditionalMovementSpeed;
+
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 
 	// Adds on screen debug messages for debugging purposes
 	void PrintPlayerDebugInfo() const;
@@ -147,23 +147,29 @@ public:
 	// Returns Player Movement Data Actor Component
 	UACPlayerMovementData* GetPlayerMovementData() const { return PlayerMovementData; }
 
+	UCameraComponent* GetCamera() const { return Camera; }
+
 	// DesiredGroundState is set when player enters Walking, Running, Dashing state
 	// It is used to change state to desired ground state when transitioning from Falling State
 	UPROPERTY()
 	USuraPlayerBaseState* DesiredGroundState;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerWalkingState* WalkingState;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerRunningState* RunningState;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerJumpingState* JumpingState;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerFallingState* FallingState;
-	UPROPERTY()
-	USuraPlayerDashImpulseState* DashImpulseState;
-	UPROPERTY()
-	USuraPlayerDashMovementState* DashMovementState;
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerDashingState* DashingState;
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerCrouchingState* CrouchingState;
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerHangingState* HangingState;
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerMantlingState* MantlingState;
 
 	int MaxJumps = 2;
 	int JumpsLeft;
@@ -177,13 +183,16 @@ public:
 
 	void ResetTriggeredBooleans();
 
+	FHitResult MantleHitResult;
+
 	int MaxDashes;
 	int DashesLeft;
 
-	FTimerHandle DashImpulseTimerHandle;
-	FTimerHandle DashMovementTimerHandle;
+	FTimerHandle DashingTimerHandle;
 
 	TArray<float> DashCooldowns;
+
+	FTimerHandle AdditionalSpeedTimerHandle;
 
 	// Player Input Axis Values
 	// W - Sets ForwardAxisInputValue to 1
@@ -207,6 +216,14 @@ public:
 	void PrimaryJump();
 
 	void DoubleJump();
+
+	float GetDefaultCapsuleHalfHeight() const;
+
+	FVector GetDefaultCameraLocation() const;
+
+	USuraPlayerBaseState* GetCurrentState() const;
+
+	bool IsDebugMode() const { return bIsDebugMode; }
 	
 };
 

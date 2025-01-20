@@ -3,8 +3,13 @@
 
 #include "Characters/Player/SuraPlayerFallingState.h"
 
+#include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
-#include "Characters/Player/SuraPlayerDashImpulseState.h"
+#include "Characters/Player/SuraPlayerDashingState.h"
+#include "Characters/Player/SuraPlayerMantlingState.h"
+#include "Characters/Player/SuraPlayerRunningState.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 USuraPlayerFallingState::USuraPlayerFallingState()
 {
@@ -20,10 +25,67 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 
+	// FHitResult WallHitResult;
+	// FCollisionQueryParams WallParams;
+	// WallParams.AddIgnoredActor(Player);
+	//
+	// const FVector WallDetectStart = Player->GetActorLocation();
+	// const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 50.f;
+	// const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
+	// 	ECC_GameTraceChannel1, FCollisionShape::MakeCapsule(Player->GetCapsuleComponent()->GetScaledCapsuleRadius(),
+	// 		Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()), WallParams);
+	//
+	// if (Player->IsDebugMode())
+	// {
+	// 	DrawDebugSphere(GetWorld(), WallHitResult.Location, 20, 20, FColor::Red, false, 1.f);
+	// }
+	//
+	// if (bWallHit && Player->GetCharacterMovement()->IsFalling() && Player->ForwardAxisInputValue > 0.f)
+	// {
+	// 	FHitResult LedgeHitResult;
+	// 	FCollisionQueryParams LedgeParams;
+	// 	LedgeParams.AddIgnoredActor(Player);
+	// 	
+	// 	FVector LedgeDetectStart = Player->GetCamera()->GetComponentLocation() + FVector::UpVector * 200.f;
+	// 	FVector LedgeDetectEnd = FVector(LedgeDetectStart.X, LedgeDetectStart.Y, WallHitResult.ImpactPoint.Z);
+	//
+	// 	bool bLedgeHit = GetWorld()->SweepSingleByChannel(LedgeHitResult, LedgeDetectStart, LedgeDetectEnd, FQuat::Identity,
+	// 		ECC_GameTraceChannel2, FCollisionShape::MakeSphere(20.f), LedgeParams);
+	//
+	// 	if (Player->IsDebugMode())
+	// 	{
+	// 		DrawDebugSphere(GetWorld(), LedgeHitResult.ImpactPoint, 20.f, 10, FColor::Green, false, 0.5f, 0, 1.f);
+	// 	}
+	//
+	// 	if (bLedgeHit && Player->GetCharacterMovement()->IsWalkable(LedgeHitResult))
+	// 	{
+	// 		Player->MantleHitResult = LedgeHitResult;
+	// 		Player->ChangeState(Player->MantlingState);
+	// 		return;
+	// 		// if (LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z)
+	// 		// {
+	// 		// 	
+	// 		// 	
+	// 		// }
+	// 		// else
+	// 		// {
+	// 		// 	Player->ChangeState(Player->HangingState);
+	// 		// 	return;
+	// 		// }
+	// 	}
+	// 	
+	// }
+	
+
 	if (Player->bDashTriggered)
 	{
-		Player->ChangeState(Player->DashImpulseState);
+		Player->ChangeState(Player->DashingState);
 		return;
+	}
+
+	if (Player->bRunTriggered)
+	{
+		Player->DesiredGroundState = Player->RunningState;
 	}
 
 	if (Player->bLandedTriggered)
@@ -69,5 +131,4 @@ void USuraPlayerFallingState::StartJumping(ASuraCharacterPlayer* Player)
 void USuraPlayerFallingState::Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult)
 {
 	Super::Landed(Player, HitResult);
-	Player->bLandedTriggered = true;
 }
