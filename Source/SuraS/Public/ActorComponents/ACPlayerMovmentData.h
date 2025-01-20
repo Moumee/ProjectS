@@ -43,8 +43,6 @@ public:
 
 	float GetDashImpulseSpeed() const;
 
-	float GetDashAdditionalSpeed() const;
-
 	float GetDashDuration() const;
 
 	int GetDashMaxStack() const;
@@ -52,10 +50,5 @@ public:
 	float GetDashDistance() const;
 
 	float GetDashCooldown() const;
-
-	float GetAdditionalSpeedDuration() const;
-
-	float GetAdditionalSpeedDecreaseRate() const;
-
-	float GetDoubleJumpAdditionalSpeed() const;
+	
 };

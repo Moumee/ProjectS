@@ -6,7 +6,7 @@
 #include "ActorComponents/ACPlayerMovmentData.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerCrouchingState.h"
-#include "Characters/Player/SuraPlayerDashImpulseState.h"
+#include "Characters/Player/SuraPlayerDashingState.h"
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
@@ -45,7 +45,7 @@ void USuraPlayerWalkingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bDashTriggered)
 	{
-		Player->ChangeState(Player->DashImpulseState);
+		Player->ChangeState(Player->DashingState);
 		return;
 	}
 

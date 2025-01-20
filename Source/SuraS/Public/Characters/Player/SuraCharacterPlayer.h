@@ -6,11 +6,11 @@
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class USuraPlayerMantlingState;
+class USuraPlayerHangingState;
 class USuraPlayerCrouchingState;
-class USuraPlayerDashMovementState;
-class USuraPlayerDashImpulseState;
-class USuraPlayerFallingState;
 class USuraPlayerDashingState;
+class USuraPlayerFallingState;
 class USuraPlayerJumpingState;
 class USuraPlayerRunningState;
 class USuraPlayerWalkingState;
@@ -78,14 +78,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
 	bool bIsDebugMode;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* ArmMesh;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* LegMesh;
 
 	float DefaultCapsuleHalfHeight;
 
@@ -106,13 +100,12 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 
 	// Adds on screen debug messages for debugging purposes
 	void PrintPlayerDebugInfo() const;
 
 	void UpdateDashCooldowns(float DeltaTime);
-
-	void UpdateAdditionalMovementSpeed(float DeltaTime);
 
 	// Returns the angle of the current floor
 	// If floor angle is 45 degrees downward slope, returns -45.f
@@ -161,20 +154,22 @@ public:
 	UPROPERTY()
 	USuraPlayerBaseState* DesiredGroundState;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerWalkingState* WalkingState;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerRunningState* RunningState;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerJumpingState* JumpingState;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerFallingState* FallingState;
-	UPROPERTY()
-	USuraPlayerDashImpulseState* DashImpulseState;
-	UPROPERTY()
-	USuraPlayerDashMovementState* DashMovementState;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerDashingState* DashingState;
+	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerCrouchingState* CrouchingState;
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerHangingState* HangingState;
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerMantlingState* MantlingState;
 
 	int MaxJumps = 2;
 	int JumpsLeft;
@@ -188,11 +183,12 @@ public:
 
 	void ResetTriggeredBooleans();
 
+	FHitResult MantleHitResult;
+
 	int MaxDashes;
 	int DashesLeft;
 
-	FTimerHandle DashImpulseTimerHandle;
-	FTimerHandle DashMovementTimerHandle;
+	FTimerHandle DashingTimerHandle;
 
 	TArray<float> DashCooldowns;
 
@@ -218,13 +214,16 @@ public:
 	bool HasMovementInput() const;
 
 	void PrimaryJump();
-	void StartAdditionalSpeedDuration();
 
 	void DoubleJump();
 
 	float GetDefaultCapsuleHalfHeight() const;
 
 	FVector GetDefaultCameraLocation() const;
+
+	USuraPlayerBaseState* GetCurrentState() const;
+
+	bool IsDebugMode() const { return bIsDebugMode; }
 	
 };
 

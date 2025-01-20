@@ -49,24 +49,10 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	int DashMaxStack;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashAdditionalSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashKnockBackDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0"))
 	float DashCooldown;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0"))
-	float AdditionalSpeedDuration;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float AdditionalSpeedDecreaseRate;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DoubleJumpAdditionalSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SlideAdditionalSpeed;
+	
 	
 };

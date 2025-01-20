@@ -14,25 +14,6 @@ class SURAS_API USuraPlayerCrouchingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
-	float DefaultCapsuleHalfHeight;
-
-	float CrouchedCapsuleHalfHeight;
-
-	FVector DefaultCameraLocation;
-
-	FVector CrouchedCameraLocation;
-
-	float CrouchTransitionDuration = 0.1f;
-
-	float CrouchTransitionElapsedTime = 0.f;
-
-	float UnCrouchTransitionElapsedTime = 0.f;
-
-	bool bShouldStartCrouching;
-
-	void UnCrouchToNextState(ASuraCharacterPlayer* Player, USuraPlayerBaseState* NextState, float DeltaTime);
-
-	// TODO: Lerp Camera Height!!
 public:
 
 	USuraPlayerCrouchingState();
