@@ -10,6 +10,7 @@
 // 근데 우선은 상속받은 클래스로 구현
 //class ASuraCharacterPlayer
 class ASuraCharacterPlayerWeapon;
+//class enum
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURAS_API UACWeapon : public USkeletalMeshComponent
@@ -73,3 +74,7 @@ protected:
 	ASuraCharacterPlayerWeapon* Character;
 	
 };
+
+
+//memo
+

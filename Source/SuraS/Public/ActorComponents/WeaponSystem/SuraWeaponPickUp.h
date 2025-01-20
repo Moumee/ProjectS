@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
+#include "InteractInterface.h"
+
 #include "SuraWeaponPickUp.generated.h"
 
 class UACWeapon;
@@ -12,7 +15,7 @@ class ASuraCharacterBase;
 class ASuraCharacterPlayerWeapon;
 
 UCLASS()
-class SURAS_API ASuraWeaponPickUp : public AActor
+class SURAS_API ASuraWeaponPickUp : public AActor, public IInteractInterface
 {
 	GENERATED_BODY()
 	
@@ -32,6 +35,12 @@ public:
 
 	UFUNCTION()
 	void AttachToCharacter(ASuraCharacterPlayerWeapon* Character);
+
+	//---------------------------------------------------------------------------------
+	// <Interface>
+public:
+
+	virtual void Interact(ACharacter* Character) override;
 
 
 protected:

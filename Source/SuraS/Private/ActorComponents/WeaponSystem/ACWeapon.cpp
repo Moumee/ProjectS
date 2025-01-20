@@ -2,6 +2,12 @@
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 //#include "Characters/Player/SuraCharacterPlayer.h"
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
+
+#include "ActorComponents/WeaponSystem/WeaponName.h"
+#include "ActorComponents/WeaponSystem/WeaponType.h"
+#include "ActorComponents/WeaponSystem/WeaponFireMode.h"
+
+
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -106,6 +112,7 @@ void UACWeapon::Fire()
 
 void UACWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
 }
 
 

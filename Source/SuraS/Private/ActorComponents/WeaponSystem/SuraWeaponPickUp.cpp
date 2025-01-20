@@ -32,8 +32,6 @@ void ASuraWeaponPickUp::BeginPlay()
 	if (PickUpComponent)
 	{
 		PickUpComponent->OnPickUp.AddDynamic(this, &ASuraWeaponPickUp::AttachToCharacter);
-
-		//PickUpComponent->OnHealthChanged.AddDynamic(this, &AMyHUD::UpdateHealthBar);
 	}
 }
 
@@ -48,10 +46,24 @@ void ASuraWeaponPickUp::AttachToCharacter(ASuraCharacterPlayerWeapon* Character)
 {
 	Weapon->AttachWeapon(Character);
 
-	UE_LOG(LogTemp, Warning, TEXT("Weapon Collided"));
+	UE_LOG(LogTemp, Warning, TEXT("Weapon has been spwaned"));
 }
 
-void PickUpComponent()
+void ASuraWeaponPickUp::Interact(ACharacter* Character)
+{
+	ASuraCharacterPlayerWeapon* CharacterPickingUp = Cast<ASuraCharacterPlayerWeapon>(Character);
+	if (CharacterPickingUp)
+	{
+		Weapon->AttachWeapon(CharacterPickingUp);
+		UE_LOG(LogTemp, Warning, TEXT("Weapon has been spwaned"));
+	}
+}
+
+
+
+
+
+void PickUpComponent() //TODO: ???
 {
 }
 
