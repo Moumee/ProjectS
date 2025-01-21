@@ -184,6 +184,7 @@ public:
 	void ResetTriggeredBooleans();
 
 	FHitResult MantleHitResult;
+	FHitResult WallHitResult;
 
 	int MaxDashes;
 	int DashesLeft;

@@ -9,8 +9,7 @@
 
 USuraPlayerMantlingState::USuraPlayerMantlingState()
 {
-	bShouldMantleUp = false;
-	bShouldMantleForward = false;
+	bShouldMantle = false;
 	StateDisplayName = "Mantling";
 }
 
@@ -18,63 +17,41 @@ void USuraPlayerMantlingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 	Player->GetCharacterMovement()->StopMovementImmediately();
-	Player->GetCharacterMovement()->GravityScale = 0.f;
-	bShouldMantleUp = true;
-	bShouldMantleForward = false;
-	UpMovementElapsedTime = 0;
-	ForwardMovementElapsedTime = 0;
+	bShouldMantle = true;
 	StartLocation = Player->GetActorLocation();
-	TargetLocation = Player->MantleHitResult.Location + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * FVector::UpVector;
-	UpMantleTarget = FVector(StartLocation.X, StartLocation.Y, TargetLocation.Z);
+	TargetLocation = Player->MantleHitResult.ImpactPoint + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * FVector::UpVector;
+	
 	
 }
 
 void USuraPlayerMantlingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
-	if (bShouldMantleUp)
+	if (bShouldMantle)
 	{
-		if (UpMovementElapsedTime < 0.15f)
+		if (ElapsedTime < 0.2f)
 		{
-			float t = UpMovementElapsedTime / 0.15f;
-			UpMovementElapsedTime += DeltaTime;
-			FVector NewLocation = FMath::Lerp(StartLocation, UpMantleTarget,
+			float t = ElapsedTime / 0.2f;
+			ElapsedTime += DeltaTime;
+			FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation,
 				t);
 			Player->SetActorLocation(NewLocation);
 		}
 		else
 		{
-			bShouldMantleUp = false;
-			bShouldMantleForward = true;
-			Player->SetActorLocation(UpMantleTarget);
-			
-		}
-	}
-
-	if (bShouldMantleForward)
-	{
-		if (ForwardMovementElapsedTime < 0.1f)
-		{
-			float t = ForwardMovementElapsedTime / 0.1f;
-			ForwardMovementElapsedTime += DeltaTime;
-			FVector NewLocation = FMath::Lerp(UpMantleTarget, TargetLocation, t);
-			Player->SetActorLocation(NewLocation);
-		}
-		else
-		{
-			bShouldMantleForward = false;
+			bShouldMantle = false;
 			Player->SetActorLocation(TargetLocation);
 			Player->ChangeState(Player->DesiredGroundState);
+			return;
 		}
 	}
+	
 }
 
 void USuraPlayerMantlingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
 	Player->GetCharacterMovement()->GravityScale = 1.f;
-	bShouldMantleUp = false;
-	bShouldMantleForward = false;
-	ForwardMovementElapsedTime = 0;
-	UpMovementElapsedTime = 0;
+	bShouldMantle = false;
+	ElapsedTime = 0;
 }
