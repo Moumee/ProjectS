@@ -29,6 +29,18 @@ public:
 
 	float GetWalkSpeed() const;
 
+	float GetWalkRunTransitionDuration() const;
+	
+	float GetWalkDashTransitionDuration() const;
+
+	float GetRunDashTransitionDuration() const;
+
+	float GetCrouchRunTransitionDuration() const;
+
+	float GetCrouchDashTransitionDuration() const;
+
+	float GetWalkCrouchTransitionDuration() const;
+
 	float GetRunSpeed() const;
 
 	float GetCrouchSpeed() const;

@@ -12,7 +12,7 @@ USuraPlayerHangingState::USuraPlayerHangingState()
 {
 	ElapsedTime = 0.f;
 	StateDisplayName = "Hanging";
-	BaseYaw = 0;
+	StateType = EPlayerState::Hanging;
 	bShouldMoveToHangPosition = false;
 }
 

@@ -6,7 +6,9 @@
 USuraPlayerWallRunningState::USuraPlayerWallRunningState()
 {
 	StateDisplayName = "Wall Running";
+	StateType = EPlayerState::WallRunning;
 }
+
 
 void USuraPlayerWallRunningState::EnterState(ASuraCharacterPlayer* Player)
 {

@@ -36,6 +36,12 @@ protected:
 
 	UPROPERTY()
 	USuraPlayerBaseState* CurrentState;
+
+	UPROPERTY()
+	USuraPlayerBaseState* PreviousState;
+
+	UPROPERTY()
+	USuraPlayerBaseState* PreviousGroundedState;
 	
 	// Wall-run actor component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall Run", meta = (AllowPrivateAccess = "true"))
@@ -69,7 +75,7 @@ protected:
 	UInputAction* DashAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* RunAction;
+	UInputAction* WalkAction;
 
 	
 
@@ -125,7 +131,7 @@ protected:
 
 	void Look(const FInputActionValue& InputValue);
 
-	void StartRunning();
+	void StartWalking();
 	
 	void StartJumping();
 
@@ -176,7 +182,7 @@ public:
 
 	// Input Action Bound Boolean Flags
 	bool bJumpTriggered = false;
-	bool bRunTriggered = false;
+	bool bWalkTriggered = false;
 	bool bDashTriggered = false;
 	bool bCrouchTriggered = false;
 	bool bLandedTriggered = false;
@@ -208,6 +214,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetBaseMovementSpeed(float MovementSpeed);
 
+	float GetBaseMovementSpeed() const;
+
 	void ChangeState(USuraPlayerBaseState* NewState);
 
 	bool IsFallingDown() const;
@@ -223,6 +231,12 @@ public:
 	FVector GetDefaultCameraLocation() const;
 
 	USuraPlayerBaseState* GetCurrentState() const;
+
+	USuraPlayerBaseState* GetPreviousState() const;
+
+	USuraPlayerBaseState* GetPreviousGroundedState() const;
+
+	void SetPreviousGroundedState(USuraPlayerBaseState* InState);
 
 	bool IsDebugMode() const { return bIsDebugMode; }
 	

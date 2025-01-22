@@ -17,7 +17,6 @@ class SURAS_API USuraPlayerDashingState : public USuraPlayerBaseState
 public:
 
 	USuraPlayerDashingState();
-
 	
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;

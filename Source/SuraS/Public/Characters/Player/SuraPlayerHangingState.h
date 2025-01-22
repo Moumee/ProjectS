@@ -13,8 +13,6 @@ UCLASS()
 class SURAS_API USuraPlayerHangingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
-	
-	float BaseYaw;
 
 	float ElapsedTime;
 

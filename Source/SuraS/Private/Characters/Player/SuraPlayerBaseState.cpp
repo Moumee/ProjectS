@@ -5,6 +5,12 @@
 
 #include "Characters/Player/SuraCharacterPlayer.h"
 
+
+EPlayerState USuraPlayerBaseState::GetStateType() const
+{
+	return StateType;
+}
+
 void USuraPlayerBaseState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Player->ResetTriggeredBooleans();
@@ -31,7 +37,7 @@ void USuraPlayerBaseState::Look(ASuraCharacterPlayer* Player, const FVector2D& I
 {
 }
 
-void USuraPlayerBaseState::StartRunning(ASuraCharacterPlayer* Player)
+void USuraPlayerBaseState::StartWalking(ASuraCharacterPlayer* Player)
 {
 }
 

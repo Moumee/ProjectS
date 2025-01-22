@@ -14,21 +14,70 @@
 USuraPlayerRunningState::USuraPlayerRunningState()
 {
 	StateDisplayName = "Running";
+	StateType = EPlayerState::Running;
 }
+
 
 void USuraPlayerRunningState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
-	const float NewBaseMovementSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
-	Player->SetBaseMovementSpeed(NewBaseMovementSpeed);
-	
+	bShouldUpdateSpeed = true;
+
+	float RunSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
+
+
+	switch (Player->GetPreviousGroundedState()->GetStateType())
+	{
+	case EPlayerState::Walking:
+		{
+			SpeedTransitionTime = Player->GetPlayerMovementData()->GetWalkRunTransitionDuration();
+			float WalkSpeed = Player->GetPlayerMovementData()->GetWalkSpeed();
+			SpeedChangePerSecond = (RunSpeed - WalkSpeed) / SpeedTransitionTime;
+			break;
+		}
+
+	case EPlayerState::Dashing:
+		{
+			SpeedTransitionTime = Player->GetPlayerMovementData()->GetRunDashTransitionDuration();
+			float DashSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
+			SpeedChangePerSecond = (RunSpeed - DashSpeed) / SpeedTransitionTime;
+			break;
+		}
+	case EPlayerState::Crouching:
+		{
+			SpeedTransitionTime = Player->GetPlayerMovementData()->GetCrouchRunTransitionDuration();
+			float CrouchSpeed = Player->GetPlayerMovementData()->GetCrouchSpeed();
+			SpeedChangePerSecond = (RunSpeed - CrouchSpeed) / SpeedTransitionTime;
+			break;
+		}
+	default:
+		break;
+	}
+
 	Player->DesiredGroundState = Player->RunningState;
 }
 
 void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
+
+	if (bShouldUpdateSpeed)
+	{
+		float CurrentBaseSpeed = Player->GetBaseMovementSpeed();
+		float TargetRunSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
+		if (SpeedChangePerSecond > 0 && CurrentBaseSpeed < TargetRunSpeed ||
+			SpeedChangePerSecond < 0 && CurrentBaseSpeed > TargetRunSpeed)
+		{
+			float NewBaseMovementSpeed = Player->GetBaseMovementSpeed() + SpeedChangePerSecond * DeltaTime;
+			Player->SetBaseMovementSpeed(NewBaseMovementSpeed);
+		}
+		else
+		{
+			Player->SetBaseMovementSpeed(Player->GetPlayerMovementData()->GetRunSpeed());
+			bShouldUpdateSpeed = false;
+		}
+	}
 
 	if (Player->IsFallingDown())
 	{
@@ -42,7 +91,7 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 		return;
 	}
 
-	if (Player->ForwardAxisInputValue <= 0.f)
+	if (Player->bWalkTriggered)
 	{
 		Player->ChangeState(Player->WalkingState);
 		return;
@@ -65,6 +114,8 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 void USuraPlayerRunningState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
+	Player->SetPreviousGroundedState(this);
+	bShouldUpdateSpeed = false;
 }
 
 void USuraPlayerRunningState::Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector)

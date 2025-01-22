@@ -9,9 +9,10 @@
 
 USuraPlayerMantlingState::USuraPlayerMantlingState()
 {
-	bShouldMantle = false;
 	StateDisplayName = "Mantling";
+	StateType = EPlayerState::Mantling;
 }
+
 
 void USuraPlayerMantlingState::EnterState(ASuraCharacterPlayer* Player)
 {
@@ -20,6 +21,9 @@ void USuraPlayerMantlingState::EnterState(ASuraCharacterPlayer* Player)
 	bShouldMantle = true;
 	StartLocation = Player->GetActorLocation();
 	TargetLocation = Player->MantleHitResult.ImpactPoint + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * FVector::UpVector;
+
+	MantleDuration = 0.2f * FMath::Clamp(FVector::Dist(StartLocation, TargetLocation) / 200.f, 0.1f, 0.3f);
+	
 	
 	
 }
@@ -29,9 +33,9 @@ void USuraPlayerMantlingState::UpdateState(ASuraCharacterPlayer* Player, float D
 	Super::UpdateState(Player, DeltaTime);
 	if (bShouldMantle)
 	{
-		if (ElapsedTime < 0.2f)
+		if (ElapsedTime < MantleDuration)
 		{
-			float t = ElapsedTime / 0.2f;
+			float t = ElapsedTime / MantleDuration;
 			ElapsedTime += DeltaTime;
 			FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation,
 				t);

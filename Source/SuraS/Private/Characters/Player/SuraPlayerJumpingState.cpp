@@ -10,13 +10,16 @@
 #include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
+#include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 USuraPlayerJumpingState::USuraPlayerJumpingState()
 {
 	StateDisplayName = "Jumping";
+	StateType = EPlayerState::Jumping;
 }
+
 
 void USuraPlayerJumpingState::EnterState(ASuraCharacterPlayer* Player)
 {
@@ -35,7 +38,7 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 50.f;
 	const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
 		ECC_GameTraceChannel1, FCollisionShape::MakeCapsule(Player->GetCapsuleComponent()->GetScaledCapsuleRadius(),
-			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.7f), WallParams);
+			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
 
 	if (bWallHit && Player->GetCharacterMovement()->IsFalling())
 	{
@@ -78,9 +81,16 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		return;
 	}
 
-	if (Player->bRunTriggered)
+	if (Player->bWalkTriggered)
 	{
-		Player->DesiredGroundState = Player->RunningState;
+		if (Player->GetPreviousGroundedState()->IsA(USuraPlayerWalkingState::StaticClass()))
+		{
+			Player->DesiredGroundState = Player->RunningState;
+		}
+		else if (Player->GetPreviousGroundedState()->IsA(USuraPlayerRunningState::StaticClass()))
+		{
+			Player->DesiredGroundState = Player->WalkingState;
+		}
 	}
 
 	if (Player->bDashTriggered)
@@ -119,9 +129,9 @@ void USuraPlayerJumpingState::Look(ASuraCharacterPlayer* Player, const FVector2D
 	
 }
 
-void USuraPlayerJumpingState::StartRunning(ASuraCharacterPlayer* Player)
+void USuraPlayerJumpingState::StartWalking(ASuraCharacterPlayer* Player)
 {
-	Super::StartRunning(Player);
+	Super::StartWalking(Player);
 }
 
 void USuraPlayerJumpingState::StartJumping(ASuraCharacterPlayer* Player)

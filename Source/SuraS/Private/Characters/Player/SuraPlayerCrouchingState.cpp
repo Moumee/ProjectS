@@ -15,6 +15,7 @@
 USuraPlayerCrouchingState::USuraPlayerCrouchingState()
 {
 	StateDisplayName = "Crouching";
+	StateType = EPlayerState::Crouching;
 	
 }
 
@@ -51,15 +52,9 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 		
 	}
 
-	if (Player->bRunTriggered)
-	{
-		Player->ChangeState(Player->RunningState);
-		return;
-	}
-
 	if (Player->bCrouchTriggered)
 	{
-		Player->ChangeState(Player->WalkingState);
+		Player->ChangeState(Player->RunningState);
 		return;
 	}
 
@@ -69,6 +64,8 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 void USuraPlayerCrouchingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
+
+	Player->SetPreviousGroundedState(Player->CrouchingState);
 	
 }
 

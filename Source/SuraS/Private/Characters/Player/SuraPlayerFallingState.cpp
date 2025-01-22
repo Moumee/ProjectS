@@ -9,12 +9,14 @@
 #include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
+#include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 USuraPlayerFallingState::USuraPlayerFallingState()
 {
 	StateDisplayName = "Falling";
+	StateType = EPlayerState::Falling;
 }
 
 void USuraPlayerFallingState::EnterState(ASuraCharacterPlayer* Player)
@@ -34,9 +36,10 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 50.f;
 	const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
 		ECC_GameTraceChannel1, FCollisionShape::MakeCapsule(Player->GetCapsuleComponent()->GetScaledCapsuleRadius(),
-			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()), WallParams);
+			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
 	
-	if (bWallHit && Player->GetCharacterMovement()->IsFalling() && Player->JumpsLeft < Player->MaxJumps)
+	if (bWallHit && Player->GetCharacterMovement()->IsFalling() && Player->JumpsLeft < Player->MaxJumps &&
+		Player->ForwardAxisInputValue > 0.f)
 	{
 		Player->WallHitResult = WallHitResult;
 		FHitResult LedgeHitResult;
@@ -54,17 +57,11 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 			Player->MantleHitResult = LedgeHitResult;	
 			if (LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z)
 			{
-				if (Player->ForwardAxisInputValue > 0.f)
-				{
-					Player->ChangeState(Player->MantlingState);
-					return;
-				}
-			}
-			else
-			{
-				Player->ChangeState(Player->HangingState);
+				Player->ChangeState(Player->MantlingState);
 				return;
 			}
+			Player->ChangeState(Player->HangingState);
+			return;
 		}
 		
 	}
@@ -76,9 +73,16 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		return;
 	}
 
-	if (Player->bRunTriggered)
+	if (Player->bWalkTriggered)
 	{
-		Player->DesiredGroundState = Player->RunningState;
+		if (Player->GetPreviousGroundedState()->IsA(USuraPlayerWalkingState::StaticClass()))
+		{
+			Player->DesiredGroundState = Player->RunningState;
+		}
+		else if (Player->GetPreviousGroundedState()->IsA(USuraPlayerRunningState::StaticClass()))
+		{
+			Player->DesiredGroundState = Player->WalkingState;
+		}
 	}
 
 	if (Player->bLandedTriggered)

@@ -76,7 +76,7 @@ void ASuraCharacterPlayer::BeginPlay()
 
 	DashCooldowns.Init(0.f, MaxDashes);
 
-	BaseMovementSpeed = GetPlayerMovementData()->GetWalkSpeed();
+	BaseMovementSpeed = GetPlayerMovementData()->GetRunSpeed();
 	GetCharacterMovement()->AirControl = GetPlayerMovementData()->GetAirControl();
 
 	WalkingState = NewObject<USuraPlayerWalkingState>(this, USuraPlayerWalkingState::StaticClass());
@@ -88,7 +88,8 @@ void ASuraCharacterPlayer::BeginPlay()
 	HangingState = NewObject<USuraPlayerHangingState>(this, USuraPlayerHangingState::StaticClass());
 	MantlingState = NewObject<USuraPlayerMantlingState>(this, USuraPlayerMantlingState::StaticClass());
 
-	ChangeState(WalkingState);
+	PreviousGroundedState = RunningState;
+	ChangeState(RunningState);
 
 }
 
@@ -102,7 +103,7 @@ void ASuraCharacterPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASuraCharacterPlayer::ResetTriggeredBooleans()
 {
 	bJumpTriggered = false;
-	bRunTriggered = false;
+	bWalkTriggered = false;
 	bDashTriggered = false;
 	bCrouchTriggered = false;
 	bLandedTriggered = false;
@@ -113,6 +114,11 @@ void ASuraCharacterPlayer::SetBaseMovementSpeed(const float MovementSpeed)
 	BaseMovementSpeed = MovementSpeed;
 }
 
+float ASuraCharacterPlayer::GetBaseMovementSpeed() const
+{
+	return BaseMovementSpeed;
+}
+
 void ASuraCharacterPlayer::ChangeState(USuraPlayerBaseState* NewState)
 {
 	if (!NewState || NewState == CurrentState) return;
@@ -120,6 +126,7 @@ void ASuraCharacterPlayer::ChangeState(USuraPlayerBaseState* NewState)
 	if (CurrentState)
 	{
 		CurrentState->ExitState(this);
+		PreviousState = CurrentState;
 	}
 	CurrentState = NewState;
 	CurrentState->EnterState(this);
@@ -173,6 +180,21 @@ FVector ASuraCharacterPlayer::GetDefaultCameraLocation() const
 USuraPlayerBaseState* ASuraCharacterPlayer::GetCurrentState() const
 {
 	return CurrentState;
+}
+
+USuraPlayerBaseState* ASuraCharacterPlayer::GetPreviousState() const
+{
+	return PreviousState;
+}
+
+USuraPlayerBaseState* ASuraCharacterPlayer::GetPreviousGroundedState() const
+{
+	return PreviousGroundedState;
+}
+
+void ASuraCharacterPlayer::SetPreviousGroundedState(USuraPlayerBaseState* InState)
+{
+	PreviousGroundedState = InState;
 }
 
 
@@ -281,7 +303,7 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::Move);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraCharacterPlayer::StopMoving);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::Look);
-		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartRunning);
+		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartWalking);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartJumping);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartDashing);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartCrouching);
@@ -315,10 +337,10 @@ void ASuraCharacterPlayer::Look(const FInputActionValue& InputValue)
 	CurrentState->Look(this, InputVector);
 }
 
-void ASuraCharacterPlayer::StartRunning()
+void ASuraCharacterPlayer::StartWalking()
 {
-	bRunTriggered = true;
-	CurrentState->StartRunning(this);
+	bWalkTriggered = true;
+	CurrentState->StartWalking(this);
 }
 
 void ASuraCharacterPlayer::StartJumping()

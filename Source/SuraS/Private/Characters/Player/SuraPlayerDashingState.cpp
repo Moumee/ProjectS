@@ -11,7 +11,9 @@
 USuraPlayerDashingState::USuraPlayerDashingState()
 {
 	StateDisplayName = "Dashing";
+	StateType = EPlayerState::Dashing;
 }
+
 
 void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 {
@@ -92,6 +94,7 @@ void USuraPlayerDashingState::UpdateState(ASuraCharacterPlayer* Player, float De
 void USuraPlayerDashingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
+	Player->SetPreviousGroundedState(this);
 
 }
 

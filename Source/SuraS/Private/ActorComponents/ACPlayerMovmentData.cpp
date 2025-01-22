@@ -24,6 +24,68 @@ float UACPlayerMovementData::GetWalkSpeed() const
 	
 }
 
+float UACPlayerMovementData::GetWalkRunTransitionDuration() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->WalkRunTransitionDuration;
+}
+
+float UACPlayerMovementData::GetWalkDashTransitionDuration() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->WalkDashTransitionDuration;
+}
+
+float UACPlayerMovementData::GetRunDashTransitionDuration() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->RunDashTransitionDuration;
+}
+
+
+float UACPlayerMovementData::GetCrouchRunTransitionDuration() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->CrouchRunTransitionDuration;
+}
+
+float UACPlayerMovementData::GetCrouchDashTransitionDuration() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->CrouchDashTransitionDuration;
+}
+
+float UACPlayerMovementData::GetWalkCrouchTransitionDuration() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->WalkCrouchTransitionDuration;
+}
+
+
 float UACPlayerMovementData::GetRunSpeed() const
 {
 	if (!PlayerRow)
