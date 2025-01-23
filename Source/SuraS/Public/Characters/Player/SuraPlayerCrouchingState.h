@@ -14,6 +14,20 @@ class SURAS_API USuraPlayerCrouchingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
+	bool bShouldUpdateSpeed = false;
+
+	float SpeedChangePerSecond = 0;
+
+	float SpeedTransitionTime = 0;
+
+	bool bShouldUpdateAnimation = false;
+
+	float CrouchedCapsuleHalfHeight = 0.f;
+
+	FVector CrouchedCameraLocation = FVector::ZeroVector;
+
+	float CrouchAnimationSpeed = 5.f;
+	
 public:
 
 	USuraPlayerCrouchingState();

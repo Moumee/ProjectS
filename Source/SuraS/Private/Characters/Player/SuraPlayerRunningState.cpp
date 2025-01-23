@@ -4,12 +4,14 @@
 #include "Characters/Player/SuraPlayerRunningState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerCrouchingState.h"
 #include "Characters/Player/SuraPlayerDashingState.h"
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerWalkingState.h"
+#include "Components/CapsuleComponent.h"
 
 USuraPlayerRunningState::USuraPlayerRunningState()
 {
@@ -78,6 +80,15 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 			bShouldUpdateSpeed = false;
 		}
 	}
+
+	float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+		Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
+	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+
+	FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+		Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
+	Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
 
 	if (Player->IsFallingDown())
 	{

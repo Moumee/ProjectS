@@ -4,8 +4,10 @@
 #include "Characters/Player/SuraPlayerDashingState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 USuraPlayerDashingState::USuraPlayerDashingState()
@@ -89,6 +91,15 @@ void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 void USuraPlayerDashingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
+	
+	float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+	Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 10.f);
+	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+
+	FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+		Player->GetDefaultCameraLocation().Z, DeltaTime, 10.f);
+	Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
 }
 
 void USuraPlayerDashingState::ExitState(ASuraCharacterPlayer* Player)
@@ -96,5 +107,12 @@ void USuraPlayerDashingState::ExitState(ASuraCharacterPlayer* Player)
 	Super::ExitState(Player);
 	Player->SetPreviousGroundedState(this);
 
+}
+
+void USuraPlayerDashingState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)
+{
+	Super::Look(Player, InputVector);
+	Player->AddControllerYawInput(InputVector.X);
+	Player->AddControllerPitchInput(InputVector.Y);
 }
 

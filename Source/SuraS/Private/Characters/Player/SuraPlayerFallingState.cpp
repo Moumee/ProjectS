@@ -28,6 +28,15 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 
+	float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+	Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
+	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+
+	FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+		Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
+	Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
+
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
 	WallParams.AddIgnoredActor(Player);

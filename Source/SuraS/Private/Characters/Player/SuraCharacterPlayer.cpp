@@ -40,8 +40,11 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	bUseControllerRotationRoll = false;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "Camera");
+	Camera->SetupAttachment(GetRootComponent());
+	Camera->SetRelativeLocation(FVector(0, 0, 60.f));
 	Camera->bUsePawnControlRotation = true;
+
+	GetMesh()->AttachToComponent(Camera, FAttachmentTransformRules::SnapToTargetIncludingScale);
 
 	// Enable capsule hit events for wall detection
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
