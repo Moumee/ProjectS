@@ -13,6 +13,12 @@ UCLASS()
 class SURAS_API USuraPlayerFallingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
+	
+	bool bShouldUpdateSpeed = false;
+
+	float SpeedChangePerSecond = 0;
+
+	float SpeedTransitionTime = 0;
 
 public:
 

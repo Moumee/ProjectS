@@ -6,6 +6,7 @@
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class USpringArmComponent;
 class USuraPlayerMantlingState;
 class USuraPlayerHangingState;
 class USuraPlayerCrouchingState;
@@ -44,48 +45,49 @@ protected:
 	USuraPlayerBaseState* PreviousGroundedState;
 	
 	// Wall-run actor component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall Run", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall Run")
 	UACPlayerWallRun* WallRunComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
 	UACPlayerMovementData* PlayerMovementData;
 
 #pragma region Input
 	
 	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputMappingContext* DefaultMappingContext;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* MoveAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* LookAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* JumpAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* ShootAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* CrouchAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* DashAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* WalkAction;
 
 	
 
 #pragma endregion Input
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug")
 	bool bIsDebugMode;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* Camera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
+	USkeletalMeshComponent* ArmMesh;
 
 	float DefaultCapsuleHalfHeight;
 
@@ -130,8 +132,6 @@ protected:
 	void StopMoving();
 
 	void Look(const FInputActionValue& InputValue);
-
-	void StartWalking();
 	
 	void StartJumping();
 
@@ -182,7 +182,6 @@ public:
 
 	// Input Action Bound Boolean Flags
 	bool bJumpTriggered = false;
-	bool bWalkTriggered = false;
 	bool bDashTriggered = false;
 	bool bCrouchTriggered = false;
 	bool bLandedTriggered = false;
@@ -210,6 +209,10 @@ public:
 	float RightAxisInputValue;
 
 	float DefaultGroundFriction;
+	float DefaultGravityScale;
+	float DefaultBrakingDecelerationWalking;
+	float DefaultBrakingDecelerationFalling;
+	float DefaultBrakingFriction;
 
 	UFUNCTION(BlueprintCallable)
 	void SetBaseMovementSpeed(float MovementSpeed);

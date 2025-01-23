@@ -6,8 +6,9 @@
 #include "ActorComponents/ACPlayerMovmentData.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/Player/SuraPlayerFallingState.h"
+#include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 USuraPlayerDashingState::USuraPlayerDashingState()
@@ -19,9 +20,15 @@ USuraPlayerDashingState::USuraPlayerDashingState()
 
 void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 {
+	
 	Super::EnterState(Player);
 
+	
+	DashImpulseElapsedTime = 0.f;
+	
+
 	Player->DashesLeft--;
+	Player->JumpsLeft = Player->MaxJumps;
 	
 	for (int i = 0; i < Player->DashCooldowns.Num(); i++)
 	{
@@ -35,20 +42,18 @@ void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 	const float NewBaseMovementSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
 	Player->SetBaseMovementSpeed(NewBaseMovementSpeed);
 
-	
-	Player->GetCharacterMovement()->GroundFriction = 0.f;
 
 	FVector DashImpulseDirection;
 	
-	if (Player->RightAxisInputValue == 0.f)
+	if (FMath::IsNearlyEqual(Player->RightAxisInputValue, 0.f))
 	{
 		if (Player->ForwardAxisInputValue >= 0.f)
 		{
-			DashImpulseDirection = Player->GetControlRotation().Vector();
+			DashImpulseDirection = Player->GetCamera()->GetForwardVector();
 		}
 		else
 		{
-			DashImpulseDirection = Player->GetControlRotation().Vector() * -1.f;
+			DashImpulseDirection = Player->GetCamera()->GetForwardVector() * -1.f;
 		}
 		
 	}
@@ -56,14 +61,37 @@ void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 	{
 		DashImpulseDirection = (Player->GetActorForwardVector() * Player->ForwardAxisInputValue +
 			Player->GetActorRightVector() * Player->RightAxisInputValue).GetSafeNormal();
+		
+		if (Player->ForwardAxisInputValue < 0.f)
+		{
+			DashImpulseDirection.Z = Player->GetCamera()->GetForwardVector().Z * -1.f;
+		}
 	}
-	
-	const float DashImpulseSpeed = Player->GetPlayerMovementData()->GetDashImpulseSpeed();
-	const float DashImpulseDuration = Player->GetPlayerMovementData()->GetDashDistance() / DashImpulseSpeed;
 	Player->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	const float DashImpulseSpeed = Player->GetPlayerMovementData()->GetDashImpulseSpeed();
+	DashImpulseDuration = Player->GetPlayerMovementData()->GetDashDistance() / DashImpulseSpeed;
 	Player->GetCharacterMovement()->Velocity = DashImpulseDirection * DashImpulseSpeed;
+	
+}
 
-	GetWorld()->GetTimerManager().SetTimer(Player->DashingTimerHandle, [Player]()
+void USuraPlayerDashingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
+{
+	Super::UpdateState(Player, DeltaTime);
+	
+	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 10.f);
+	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+	//
+	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 10.f);
+	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
+
+	if (DashImpulseElapsedTime < DashImpulseDuration)
+	{
+		DashImpulseElapsedTime += DeltaTime;
+	}
+	else
 	{
 		if (Player->GetCharacterMovement()->IsMovingOnGround())
 		{
@@ -72,41 +100,34 @@ void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 		else
 		{
 			Player->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-			if (Player->JumpsLeft > 0)
-			{
-				Player->JumpsLeft--;
-			}
-			
 		}
 		
 		const FVector CurrentVelocity = Player->GetCharacterMovement()->Velocity;
-		FVector ResetVelocity = CurrentVelocity.GetSafeNormal() * Player->GetCharacterMovement()->MaxWalkSpeed;
+		FVector ResetVelocity = CurrentVelocity.GetSafeNormal() * Player->GetPlayerMovementData()->GetDashSpeed();
 		Player->GetCharacterMovement()->Velocity = ResetVelocity;
-		Player->GetCharacterMovement()->GroundFriction = Player->DefaultGroundFriction;
+		
+		if (Player->GetCharacterMovement()->IsFalling())
+		{
+			if (Player->IsFallingDown())
+			{
+				Player->ChangeState(Player->FallingState);
+				return;
+			}
+			Player->ChangeState(Player->JumpingState);
+			return;
+		}
 		Player->ChangeState(Player->RunningState);
-	},DashImpulseDuration, false);
-	
-}
+		return;
+	}
 
-void USuraPlayerDashingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
-{
-	Super::UpdateState(Player, DeltaTime);
 	
-	float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-	Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 10.f);
-	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-
-	FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
-	float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
-		Player->GetDefaultCameraLocation().Z, DeltaTime, 10.f);
-	Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
 }
 
 void USuraPlayerDashingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
 	Player->SetPreviousGroundedState(this);
-
+	DashImpulseElapsedTime = 0.f;
 }
 
 void USuraPlayerDashingState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)

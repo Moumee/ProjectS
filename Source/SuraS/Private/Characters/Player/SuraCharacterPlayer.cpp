@@ -40,11 +40,12 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	bUseControllerRotationRoll = false;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(GetRootComponent());
-	Camera->SetRelativeLocation(FVector(0, 0, 60.f));
-	Camera->bUsePawnControlRotation = true;
+	Camera->SetupAttachment(GetMesh(), FName(TEXT("Camera")));
+	Camera->bUsePawnControlRotation = false;
 
-	GetMesh()->AttachToComponent(Camera, FAttachmentTransformRules::SnapToTargetIncludingScale);
+	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
+	ArmMesh->SetupAttachment(GetMesh());
+	ArmMesh->SetLeaderPoseComponent(GetMesh());
 
 	// Enable capsule hit events for wall detection
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
@@ -52,6 +53,12 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	DefaultCapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	DefaultCameraLocation = Camera->GetRelativeLocation();
 
+	DefaultGravityScale = GetCharacterMovement()->GravityScale;
+	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
+	DefaultBrakingFriction = GetCharacterMovement()->BrakingFriction;
+	DefaultBrakingDecelerationFalling = GetCharacterMovement()->BrakingDecelerationFalling;
+	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
+	
 	// Initialize JumpsLeft
 	JumpsLeft = MaxJumps;
 
@@ -91,6 +98,7 @@ void ASuraCharacterPlayer::BeginPlay()
 	HangingState = NewObject<USuraPlayerHangingState>(this, USuraPlayerHangingState::StaticClass());
 	MantlingState = NewObject<USuraPlayerMantlingState>(this, USuraPlayerMantlingState::StaticClass());
 
+	PreviousState = RunningState;
 	PreviousGroundedState = RunningState;
 	ChangeState(RunningState);
 
@@ -106,7 +114,6 @@ void ASuraCharacterPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASuraCharacterPlayer::ResetTriggeredBooleans()
 {
 	bJumpTriggered = false;
-	bWalkTriggered = false;
 	bDashTriggered = false;
 	bCrouchTriggered = false;
 	bLandedTriggered = false;
@@ -243,7 +250,11 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 			GEngine->AddOnScreenDebugMessage(97, 0.f, FColor::Green,
 				FString::Printf(TEXT("Current State : %s"), *CurrentState->StateDisplayName.ToString()));
 
-			
+			GEngine->AddOnScreenDebugMessage(96, 0.f, FColor::Green,
+				FString::Printf(TEXT("Previous Grounded State : %s"), *PreviousGroundedState->StateDisplayName.ToString()));
+
+			GEngine->AddOnScreenDebugMessage(95, 0.f, FColor::Green,
+				FString::Printf(TEXT("Previous State : %s"), *PreviousState->StateDisplayName.ToString()));
 		}
 	}
 }
@@ -306,7 +317,6 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::Move);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraCharacterPlayer::StopMoving);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::Look);
-		EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartWalking);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartJumping);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartDashing);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartCrouching);
@@ -338,12 +348,6 @@ void ASuraCharacterPlayer::Look(const FInputActionValue& InputValue)
 	FVector2D InputVector = InputValue.Get<FVector2D>();
 
 	CurrentState->Look(this, InputVector);
-}
-
-void ASuraCharacterPlayer::StartWalking()
-{
-	bWalkTriggered = true;
-	CurrentState->StartWalking(this);
 }
 
 void ASuraCharacterPlayer::StartJumping()

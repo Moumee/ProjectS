@@ -15,6 +15,12 @@ class SURAS_API USuraPlayerJumpingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
+	bool bShouldUpdateSpeed = false;
+
+	float SpeedChangePerSecond = 0;
+
+	float SpeedTransitionTime = 0;
+
 public:
 
 	USuraPlayerJumpingState();
@@ -28,8 +34,6 @@ public:
 	virtual void Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
 
 	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
-
-	virtual void StartWalking(ASuraCharacterPlayer* Player) override;
 
 	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
 

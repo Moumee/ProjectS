@@ -16,6 +16,8 @@ class SURAS_API USuraPlayerHangingState : public USuraPlayerBaseState
 
 	float ElapsedTime;
 
+	float ForwardPressElapsedTime = 0.f;
+
 	bool bShouldMoveToHangPosition;
 
 	FVector StartPosition;

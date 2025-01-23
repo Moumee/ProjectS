@@ -37,10 +37,6 @@ void USuraPlayerBaseState::Look(ASuraCharacterPlayer* Player, const FVector2D& I
 {
 }
 
-void USuraPlayerBaseState::StartWalking(ASuraCharacterPlayer* Player)
-{
-}
-
 void USuraPlayerBaseState::StartJumping(ASuraCharacterPlayer* Player)
 {
 }

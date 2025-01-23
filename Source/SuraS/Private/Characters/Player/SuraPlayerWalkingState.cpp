@@ -81,21 +81,27 @@ void USuraPlayerWalkingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		}
 	}
 
-	float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-	Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
-	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-
-	FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
-	float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
-		Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
-	Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
+	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
+	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+	//
+	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
+	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
 	
-
 	if (Player->IsFallingDown())
 	{
 		Player->ChangeState(Player->FallingState);
 		return;
 	}
+
+	if (Player->ForwardAxisInputValue > 0.f)
+	{
+		Player->ChangeState(Player->RunningState);
+		return;
+	}
+	
 
 	if (Player->bCrouchTriggered)
 	{
@@ -106,12 +112,6 @@ void USuraPlayerWalkingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	if (Player->bDashTriggered)
 	{
 		Player->ChangeState(Player->DashingState);
-		return;
-	}
-
-	if (Player->bWalkTriggered)
-	{
-		Player->ChangeState(Player->RunningState);
 		return;
 	}
 

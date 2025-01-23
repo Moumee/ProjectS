@@ -3,7 +3,6 @@
 
 #include "Characters/Player/SuraPlayerMantlingState.h"
 
-#include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -33,20 +32,20 @@ void USuraPlayerMantlingState::UpdateState(ASuraCharacterPlayer* Player, float D
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-	Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
-	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-
-	FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
-	float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
-		Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
-	Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
+	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
+	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+	//
+	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
+	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
 	
 	if (bShouldMantle)
 	{
-		if (ElapsedTime < MantleDuration)
+		if (ElapsedTime < 0.2f)
 		{
-			float t = ElapsedTime / MantleDuration;
+			float t = ElapsedTime / 0.2f;
 			ElapsedTime += DeltaTime;
 			FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation,
 				t);

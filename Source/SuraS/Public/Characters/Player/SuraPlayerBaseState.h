@@ -19,7 +19,9 @@ class SURAS_API USuraPlayerBaseState : public UObject
 
 public:
 
+	UPROPERTY(BlueprintReadOnly, Category = "Player State")
 	EPlayerState StateType;
+	
 	FName StateDisplayName;
 
 	virtual EPlayerState GetStateType() const;
@@ -35,8 +37,6 @@ public:
 	virtual void StopMoving(ASuraCharacterPlayer* Player);
 
 	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector);
-
-	virtual void StartWalking(ASuraCharacterPlayer* Player);
 
 	virtual void StartJumping(ASuraCharacterPlayer* Player);
 

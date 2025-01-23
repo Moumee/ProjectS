@@ -3,14 +3,13 @@
 
 #include "Characters/Player/SuraPlayerJumpingState.h"
 
+#include "ActorComponents/ACPlayerMovmentData.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashingState.h"
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
-#include "Characters/Player/SuraPlayerRunningState.h"
-#include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -24,20 +23,45 @@ USuraPlayerJumpingState::USuraPlayerJumpingState()
 void USuraPlayerJumpingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
+	if (Player->GetPreviousGroundedState()->GetStateType() == EPlayerState::Dashing)
+	{
+		bShouldUpdateSpeed = true;
+		SpeedTransitionTime = Player->GetPlayerMovementData()->GetRunDashTransitionDuration();
+		float DashSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
+		float RunSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
+		SpeedChangePerSecond = (RunSpeed - DashSpeed) / SpeedTransitionTime;
+	}
 }
 
 void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-	Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
-	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
+	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+	//
+	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
+	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
 
-	FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
-	float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
-		Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
-	Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
+	if (bShouldUpdateSpeed)
+	{
+		float CurrentBaseSpeed = Player->GetBaseMovementSpeed();
+		float TargetRunSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
+		if (SpeedChangePerSecond > 0 && CurrentBaseSpeed < TargetRunSpeed ||
+			SpeedChangePerSecond < 0 && CurrentBaseSpeed > TargetRunSpeed)
+		{
+			float NewBaseMovementSpeed = Player->GetBaseMovementSpeed() + SpeedChangePerSecond * DeltaTime;
+			Player->SetBaseMovementSpeed(NewBaseMovementSpeed);
+		}
+		else
+		{
+			Player->SetBaseMovementSpeed(Player->GetPlayerMovementData()->GetRunSpeed());
+			bShouldUpdateSpeed = false;
+		}
+	}
 
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
@@ -90,18 +114,6 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		return;
 	}
 
-	if (Player->bWalkTriggered)
-	{
-		if (Player->GetPreviousGroundedState()->IsA(USuraPlayerWalkingState::StaticClass()))
-		{
-			Player->DesiredGroundState = Player->RunningState;
-		}
-		else if (Player->GetPreviousGroundedState()->IsA(USuraPlayerRunningState::StaticClass()))
-		{
-			Player->DesiredGroundState = Player->WalkingState;
-		}
-	}
-
 	if (Player->bDashTriggered)
 	{
 		Player->ChangeState(Player->DashingState);
@@ -118,6 +130,7 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 void USuraPlayerJumpingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
+	bShouldUpdateSpeed = false;
 }
 
 void USuraPlayerJumpingState::Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector)
@@ -136,11 +149,6 @@ void USuraPlayerJumpingState::Look(ASuraCharacterPlayer* Player, const FVector2D
 	Player->AddControllerYawInput(InputVector.X);
 
 	
-}
-
-void USuraPlayerJumpingState::StartWalking(ASuraCharacterPlayer* Player)
-{
-	Super::StartWalking(Player);
 }
 
 void USuraPlayerJumpingState::StartJumping(ASuraCharacterPlayer* Player)
