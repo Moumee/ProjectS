@@ -6,6 +6,7 @@
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class USuraPlayerWallRunningState;
 class USpringArmComponent;
 class USuraPlayerMantlingState;
 class USuraPlayerHangingState;
@@ -17,7 +18,6 @@ class USuraPlayerRunningState;
 class USuraPlayerWalkingState;
 class USuraPlayerBaseState;
 class UACPlayerMovementData;
-class UACPlayerWallRun;
 class UCameraComponent;
 struct FInputActionValue;
 class UInputAction;
@@ -45,8 +45,8 @@ protected:
 	USuraPlayerBaseState* PreviousGroundedState;
 	
 	// Wall-run actor component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall Run")
-	UACPlayerWallRun* WallRunComponent;
+	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall Run")
+	// UACWallRun* WallRunComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
 	UACPlayerMovementData* PlayerMovementData;
@@ -148,12 +148,13 @@ public:
 	ASuraCharacterPlayer();
 
 	/** Returns WallRunComponent subobject **/
-	UACPlayerWallRun* GetWallRunComponent() const { return WallRunComponent; }
+	// UACWallRun* GetWallRunComponent() const { return WallRunComponent; }
 
 	// Returns Player Movement Data Actor Component
 	UACPlayerMovementData* GetPlayerMovementData() const { return PlayerMovementData; }
 
 	UCameraComponent* GetCamera() const { return Camera; }
+
 
 	// DesiredGroundState is set when player enters Walking, Running, Dashing state
 	// It is used to change state to desired ground state when transitioning from Falling State
@@ -176,6 +177,8 @@ public:
 	USuraPlayerHangingState* HangingState;
 	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerMantlingState* MantlingState;
+	// UPROPERTY(BlueprintReadOnly)
+	// USuraPlayerWallRunningState* WallRunningState;
 
 	int MaxJumps = 2;
 	int JumpsLeft;

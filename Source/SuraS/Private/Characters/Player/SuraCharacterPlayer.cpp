@@ -6,7 +6,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "ActorComponents/ACPlayerMovmentData.h"
-#include "ActorComponents/WallRun/ACPlayerWallRun.h"
+#include "ActorComponents/ACWallRun.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraPlayerBaseState.h"
 #include "Characters/Player/SuraPlayerCrouchingState.h"
@@ -17,6 +17,7 @@
 #include "Characters/Player/SuraPlayerMantlingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
 #include "Characters/Player/SuraPlayerWalkingState.h"
+#include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -29,8 +30,8 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	
 	// Wall-run component
-	WallRunComponent = CreateDefaultSubobject<UACPlayerWallRun>(TEXT("WallRunComponent"));
-	AddOwnedComponent(WallRunComponent);
+	// WallRunComponent = CreateDefaultSubobject<UACWallRun>(TEXT("WallRunComponent"));
+	// AddOwnedComponent(WallRunComponent);
 
 	PlayerMovementData = CreateDefaultSubobject<UACPlayerMovementData>("Player Movement Data");
 
@@ -69,6 +70,9 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 void ASuraCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
+	
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -97,6 +101,7 @@ void ASuraCharacterPlayer::BeginPlay()
 	CrouchingState = NewObject<USuraPlayerCrouchingState>(this, USuraPlayerCrouchingState::StaticClass());
 	HangingState = NewObject<USuraPlayerHangingState>(this, USuraPlayerHangingState::StaticClass());
 	MantlingState = NewObject<USuraPlayerMantlingState>(this, USuraPlayerMantlingState::StaticClass());
+	// WallRunningState = NewObject<USuraPlayerWallRunningState>(this, USuraPlayerWallRunningState::StaticClass());
 
 	PreviousState = RunningState;
 	PreviousGroundedState = RunningState;

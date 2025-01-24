@@ -4,6 +4,7 @@
 #include "Characters/Player/SuraPlayerFallingState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "ActorComponents/ACWallRun.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashingState.h"
@@ -98,6 +99,12 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		}
 		
 	}
+
+	// if (Player->GetWallRunComponent()->ShouldWallRun())
+	// {
+	// 	Player->ChangeState(Player->WallRunningState);
+	// 	return;
+	// }
 	
 
 	if (Player->bDashTriggered)

@@ -4,12 +4,14 @@
 #include "Characters/Player/SuraPlayerJumpingState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "ActorComponents/ACWallRun.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashingState.h"
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
+#include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -106,6 +108,12 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		}
 		
 	}
+
+	// if (Player->GetWallRunComponent()->ShouldWallRun())
+	// {
+	// 	Player->ChangeState(Player->WallRunningState);
+	// 	return;
+	// }
 	
 
 	if (Player->IsFallingDown())
