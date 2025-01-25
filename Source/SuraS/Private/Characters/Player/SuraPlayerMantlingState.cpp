@@ -20,9 +20,16 @@ void USuraPlayerMantlingState::EnterState(ASuraCharacterPlayer* Player)
 	Player->GetCharacterMovement()->StopMovementImmediately();
 	bShouldMantle = true;
 	StartLocation = Player->GetActorLocation();
-	TargetLocation = Player->MantleHitResult.ImpactPoint + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * FVector::UpVector;
+	TargetLocation = Player->LedgeHitResult.ImpactPoint + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * FVector::UpVector;
 
-	MantleDuration = 0.2f * FMath::Clamp(FVector::Dist(StartLocation, TargetLocation) / 200.f, 0.1f, 0.3f);
+	if (Player->LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z)
+	{
+		MantleDuration = 0.1f;
+	}
+	else
+	{
+		MantleDuration = 0.2f;
+	}
 	
 	
 	
@@ -43,9 +50,9 @@ void USuraPlayerMantlingState::UpdateState(ASuraCharacterPlayer* Player, float D
 	
 	if (bShouldMantle)
 	{
-		if (ElapsedTime < 0.2f)
+		if (ElapsedTime < MantleDuration)
 		{
-			float t = ElapsedTime / 0.2f;
+			float t = ElapsedTime / MantleDuration;
 			ElapsedTime += DeltaTime;
 			FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation,
 				t);

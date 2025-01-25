@@ -156,17 +156,6 @@ float UACPlayerMovementData::GetDashImpulseSpeed() const
 	return PlayerRow->DashImpulseSpeed;
 }
 
-
-float UACPlayerMovementData::GetDashDuration() const
-{
-	if (!PlayerRow)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
-		return 0;
-	}
-	return PlayerRow->DashDuration;
-}
-
 int UACPlayerMovementData::GetDashMaxStack() const
 {
 	if (!PlayerRow)

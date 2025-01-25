@@ -4,7 +4,6 @@
 #include "Characters/Player/SuraPlayerJumpingState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
-#include "ActorComponents/ACWallRun.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashingState.h"
@@ -33,21 +32,11 @@ void USuraPlayerJumpingState::EnterState(ASuraCharacterPlayer* Player)
 		float RunSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
 		SpeedChangePerSecond = (RunSpeed - DashSpeed) / SpeedTransitionTime;
 	}
+	ElapsedTimeFromWallRun = 0.f;
 }
 
-void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
+void USuraPlayerJumpingState::UpdateBaseMovementSpeed(ASuraCharacterPlayer* Player, float DeltaTime)
 {
-	Super::UpdateState(Player, DeltaTime);
-
-	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
-	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-	//
-	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
-	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
-	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
-	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
-
 	if (bShouldUpdateSpeed)
 	{
 		float CurrentBaseSpeed = Player->GetBaseMovementSpeed();
@@ -64,13 +53,29 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 			bShouldUpdateSpeed = false;
 		}
 	}
+}
+
+void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
+{
+	Super::UpdateState(Player, DeltaTime);
+
+	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
+	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+	//
+	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
+	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
+
+	UpdateBaseMovementSpeed(Player, DeltaTime);
 
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
 	WallParams.AddIgnoredActor(Player);
 
 	const FVector WallDetectStart = Player->GetActorLocation();
-	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 50.f;
+	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 75.f;
 	const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
 		ECC_GameTraceChannel1, FCollisionShape::MakeCapsule(Player->GetCapsuleComponent()->GetScaledCapsuleRadius(),
 			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
@@ -91,29 +96,37 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		if (bLedgeHit && Player->GetCharacterMovement()->IsWalkable(LedgeHitResult))
 		{
 			
-			Player->MantleHitResult = LedgeHitResult;
-			if (LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z)
+			Player->LedgeHitResult = LedgeHitResult;
+			if (LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z && Player->ForwardAxisInputValue > 0.f)
 			{
-				if (Player->ForwardAxisInputValue > 0.f)
-				{
-					Player->ChangeState(Player->MantlingState);
-					return;
-				}
+				Player->ChangeState(Player->MantlingState);
+				return;
 			}
-			else
+			Player->ChangeState(Player->HangingState);
+			return;
+		}
+	}
+
+	if (Player->GetPreviousState()->GetStateType() == EPlayerState::WallRunning)
+	{
+		ElapsedTimeFromWallRun += DeltaTime;
+		if (ElapsedTimeFromWallRun > 0.2f)
+		{
+			if (Player->ShouldEnterWallRunning(Player->WallRunDirection, Player->WallRunSide))
 			{
-				Player->ChangeState(Player->HangingState);
+				Player->ChangeState(Player->WallRunningState);
 				return;
 			}
 		}
-		
 	}
-
-	// if (Player->GetWallRunComponent()->ShouldWallRun())
-	// {
-	// 	Player->ChangeState(Player->WallRunningState);
-	// 	return;
-	// }
+	else
+	{
+		if (Player->ShouldEnterWallRunning(Player->WallRunDirection, Player->WallRunSide))
+		{
+			Player->ChangeState(Player->WallRunningState);
+			return;
+		}
+	}
 	
 
 	if (Player->IsFallingDown())
@@ -139,6 +152,7 @@ void USuraPlayerJumpingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
 	bShouldUpdateSpeed = false;
+	ElapsedTimeFromWallRun = 0.f;
 }
 
 void USuraPlayerJumpingState::Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector)

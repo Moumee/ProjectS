@@ -55,8 +55,6 @@ public:
 
 	float GetDashImpulseSpeed() const;
 
-	float GetDashDuration() const;
-
 	int GetDashMaxStack() const;
 
 	float GetDashDistance() const;

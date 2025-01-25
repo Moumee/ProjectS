@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SuraPlayerEnums.h"
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class USphereComponent;
 class USuraPlayerWallRunningState;
-class USpringArmComponent;
 class USuraPlayerMantlingState;
 class USuraPlayerHangingState;
 class USuraPlayerCrouchingState;
@@ -22,7 +23,6 @@ class UCameraComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
-class UACWallRun;
 
 
 /**
@@ -43,10 +43,6 @@ protected:
 
 	UPROPERTY()
 	USuraPlayerBaseState* PreviousGroundedState;
-	
-	// Wall-run actor component
-	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall Run")
-	// UACWallRun* WallRunComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
 	UACPlayerMovementData* PlayerMovementData;
@@ -108,7 +104,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	
 
 	// Adds on screen debug messages for debugging purposes
 	void PrintPlayerDebugInfo() const;
@@ -177,8 +172,8 @@ public:
 	USuraPlayerHangingState* HangingState;
 	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerMantlingState* MantlingState;
-	// UPROPERTY(BlueprintReadOnly)
-	// USuraPlayerWallRunningState* WallRunningState;
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerWallRunningState* WallRunningState;
 
 	int MaxJumps = 2;
 	int JumpsLeft;
@@ -191,8 +186,11 @@ public:
 
 	void ResetTriggeredBooleans();
 
-	FHitResult MantleHitResult;
+	FHitResult LedgeHitResult;
 	FHitResult WallHitResult;
+
+	EWallSide WallRunSide = EWallSide::None;
+	FVector WallRunDirection = FVector::ZeroVector;
 
 	int MaxDashes;
 	int DashesLeft;
@@ -245,7 +243,9 @@ public:
 	void SetPreviousGroundedState(USuraPlayerBaseState* InState);
 
 	bool IsDebugMode() const { return bIsDebugMode; }
-	
+
+	bool ShouldEnterWallRunning(FVector& OutWallRunDirection, EWallSide& OutWallRunSide);
+
 };
 
 

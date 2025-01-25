@@ -3,6 +3,7 @@
 UENUM(BlueprintType)
 enum class EWallSide : uint8
 {
+	None UMETA(DisplayName = "None"),
 	Left UMETA(DisplayName = "Left"),
 	Right UMETA(DisplayName = "Right"),
 };

@@ -60,9 +60,6 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashDistance;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashDuration;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
 	int DashMaxStack;
 

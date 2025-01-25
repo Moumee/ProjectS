@@ -21,11 +21,14 @@ class SURAS_API USuraPlayerJumpingState : public USuraPlayerBaseState
 
 	float SpeedTransitionTime = 0;
 
+	float ElapsedTimeFromWallRun = 0.f;
+
 public:
 
 	USuraPlayerJumpingState();
 	
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
+	void UpdateBaseMovementSpeed(ASuraCharacterPlayer* Player, float DeltaTime);
 
 	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;
 
