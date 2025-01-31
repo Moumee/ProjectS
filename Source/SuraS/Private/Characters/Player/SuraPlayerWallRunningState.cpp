@@ -32,9 +32,15 @@ void USuraPlayerWallRunningState::EnterState(ASuraCharacterPlayer* Player)
 
 }
 
+
+
 void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
+
+	Player->InterpPlayerRoll(TargetRoll, DeltaTime, 7.f);
+
+	SetPlayerWallOffsetLocation(Player, DeltaTime);
 
 	
 	if (Player->bJumpTriggered)
@@ -142,5 +148,14 @@ void USuraPlayerWallRunningState::StartJumping(ASuraCharacterPlayer* Player)
 		FVector LaunchVector = LaunchDirectionXY * 500.f +
 			FVector::UpVector * Player->GetPlayerMovementData()->GetJumpZVelocity();
 		Player->LaunchCharacter(LaunchVector, false, true);
+	}
+}
+
+void USuraPlayerWallRunningState::SetPlayerWallOffsetLocation(ASuraCharacterPlayer* Player, float DeltaTime)
+{
+	if (WallHit.ImpactNormal != FVector::ZeroVector)
+	{
+		FVector NewLocation = FMath::VInterpTo(Player->GetActorLocation(),
+											   Player->GetActorLocation() + WallHit.ImpactNormal * 30.f, DeltaTime, 15.f);
 	}
 }

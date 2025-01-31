@@ -18,8 +18,6 @@ class SURAS_API USuraPlayerWallRunningState : public USuraPlayerBaseState
 
 	float StateEnterVelocity = 0.f;
 
-	FVector WallNormal = FVector::ZeroVector;
-	
 	FVector WallRunDirection = FVector::ZeroVector;
 
 	FHitResult WallHit;
@@ -30,6 +28,8 @@ public:
 	USuraPlayerWallRunningState();
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
+	
+	void SetPlayerWallOffsetLocation(ASuraCharacterPlayer* Player, float DeltaTime);
 
 	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;
 

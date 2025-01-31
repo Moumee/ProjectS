@@ -34,6 +34,8 @@ void USuraPlayerHangingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 	
+	Player->InterpPlayerRoll(0.f, DeltaTime, 7.f);
+	
 	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
 	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
 	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);

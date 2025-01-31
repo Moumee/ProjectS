@@ -246,6 +246,8 @@ public:
 
 	bool ShouldEnterWallRunning(FVector& OutWallRunDirection, EWallSide& OutWallRunSide);
 
+	void InterpPlayerRoll(float TargetRoll, float DeltaTime, float InterpSpeed);
+
 };
 
 

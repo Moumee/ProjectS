@@ -64,6 +64,8 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 
+	Player->InterpPlayerRoll(0.f, DeltaTime, 7.f);
+
 	if (bShouldUpdateSpeed)
 	{
 		float CurrentBaseSpeed = Player->GetBaseMovementSpeed();

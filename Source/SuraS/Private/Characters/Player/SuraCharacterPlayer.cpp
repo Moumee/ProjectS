@@ -450,4 +450,16 @@ bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, 
 	
 }
 
+void ASuraCharacterPlayer::InterpPlayerRoll(float TargetRoll, float DeltaTime, float InterpSpeed)
+{
+	if (GetRootComponent()->GetRelativeRotation().Roll != TargetRoll)
+	{
+		FRotator CurrentRotation = GetRootComponent()->GetRelativeRotation();
+		float NewRoll = FMath::FInterpTo(CurrentRotation.Roll, TargetRoll, DeltaTime, InterpSpeed);
+		FRotator NewRotation = FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, NewRoll);
+		
+		GetRootComponent()->SetRelativeRotation(NewRotation);
+	}
+}
+
 
