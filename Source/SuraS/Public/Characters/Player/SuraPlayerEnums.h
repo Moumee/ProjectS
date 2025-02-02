@@ -21,4 +21,5 @@ enum class EPlayerState : uint8
 	Hanging UMETA(DisplayName = "Hanging"),
 	Mantling UMETA(DisplayName = "Mantling"),
 	WallRunning UMETA(DisplayName = "WallRunning"),
+	Sliding UMETA(DisplayName = "Sliding"),
 };

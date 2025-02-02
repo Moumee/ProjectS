@@ -3,7 +3,9 @@
 
 #include "Characters/Player/SuraPlayerHangingState.h"
 
+#include "ActorComponents/ACPlayerMovmentData.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -22,6 +24,7 @@ void USuraPlayerHangingState::EnterState(ASuraCharacterPlayer* Player)
 	Super::EnterState(Player);
 
 	StartPosition = Player->GetActorLocation();
+	Player->JumpsLeft = Player->MaxJumps;
 	Player->GetCharacterMovement()->StopMovementImmediately();
 	ElapsedTime = 0.f;
 	bShouldMoveToHangPosition = true;
@@ -66,6 +69,12 @@ void USuraPlayerHangingState::UpdateState(ASuraCharacterPlayer* Player, float De
 			Player->GetCharacterMovement()->StopMovementImmediately();
 		}
 	}
+
+	if (Player->bJumpTriggered)
+	{
+		Player->ChangeState(Player->JumpingState);
+		return;
+	}
 	
 
 	
@@ -86,4 +95,17 @@ void USuraPlayerHangingState::Look(ASuraCharacterPlayer* Player, const FVector2D
 	Player->AddControllerYawInput(InputVector.X);
 	
 	
+}
+
+void USuraPlayerHangingState::StartJumping(ASuraCharacterPlayer* Player)
+{
+	Super::StartJumping(Player);
+	if (Player->JumpsLeft > 0)
+	{
+		Player->JumpsLeft -= 1;
+		FVector JumpXY = FVector(Player->WallHitResult.ImpactNormal.X, Player->WallHitResult.ImpactNormal.Y, 0.f);
+		FVector JumpVector = JumpXY * 500.f + FVector::UpVector *
+			Player->GetPlayerMovementData()->GetJumpZVelocity() * 0.8f;
+		Player->LaunchCharacter(JumpVector, true, true);
+	}
 }

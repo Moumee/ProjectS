@@ -15,7 +15,7 @@ void USuraPlayerAnimInstance::NativeInitializeAnimation()
 	Super::NativeInitializeAnimation();
 
 	Player = Cast<ASuraCharacterPlayer>(TryGetPawnOwner());
-	
+
 }
 
 void USuraPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
@@ -34,6 +34,7 @@ void USuraPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds
 		if (Player->GetCurrentState())
 		{
 			CurrentState = Player->GetCurrentState();
+			CurrentStateType = Player->GetCurrentState()->GetStateType();
 			bIsCrouching = Player->GetCurrentState()->IsA(USuraPlayerCrouchingState::StaticClass());
 		}
 		

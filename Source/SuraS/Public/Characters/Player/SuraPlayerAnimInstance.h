@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SuraPlayerEnums.h"
 #include "Animation/AnimInstance.h"
 #include "SuraPlayerAnimInstance.generated.h"
 
@@ -38,6 +39,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	USuraPlayerBaseState* CurrentState;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	EPlayerState CurrentStateType;
 
 	
 	virtual void NativeInitializeAnimation() override;

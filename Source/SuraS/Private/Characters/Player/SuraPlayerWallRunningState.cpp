@@ -27,7 +27,8 @@ void USuraPlayerWallRunningState::EnterState(ASuraCharacterPlayer* Player)
 	Player->GetCharacterMovement()->SetPlaneConstraintNormal(FVector::UpVector);
 	Player->JumpsLeft = Player->MaxJumps;
 	WallRunSide = Player->WallRunSide;
-	StateEnterVelocity = Player->GetCharacterMovement()->MaxWalkSpeed;
+	// Need to make variable for minimum wall run velocity!! Currently set to WalkSpeed for testing purposes.
+	StateEnterVelocity = FMath::Max(Player->GetCharacterMovement()->Velocity.Size(), Player->GetPlayerMovementData()->GetRunSpeed());
 	TargetRoll = Player->WallRunSide == EWallSide::Left ? 15.f : -15.f;
 
 }

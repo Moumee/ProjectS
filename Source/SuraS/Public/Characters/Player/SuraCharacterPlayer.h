@@ -7,6 +7,7 @@
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class USuraPlayerSlidingState;
 class USphereComponent;
 class USuraPlayerWallRunningState;
 class USuraPlayerMantlingState;
@@ -110,9 +111,7 @@ protected:
 
 	void UpdateDashCooldowns(float DeltaTime);
 
-	// Returns the angle of the current floor
-	// If floor angle is 45 degrees downward slope, returns -45.f
-	float FindFloorAngle() const;
+	
 
 	
 	virtual void Tick(float DeltaTime) override;
@@ -132,6 +131,8 @@ protected:
 
 	void StartCrouching();
 
+	void StopCrouching();
+
 	void StartDashing();
 
 #pragma endregion Input Action Callback Functions
@@ -149,6 +150,10 @@ public:
 	UACPlayerMovementData* GetPlayerMovementData() const { return PlayerMovementData; }
 
 	UCameraComponent* GetCamera() const { return Camera; }
+
+	// Returns the angle of the current floor
+	// If floor angle is 45 degrees downward slope, returns -45.f
+	float FindFloorAngle() const;
 
 
 	// DesiredGroundState is set when player enters Walking, Running, Dashing state
@@ -174,6 +179,8 @@ public:
 	USuraPlayerMantlingState* MantlingState;
 	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerWallRunningState* WallRunningState;
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerSlidingState* SlidingState;
 
 	int MaxJumps = 2;
 	int JumpsLeft;

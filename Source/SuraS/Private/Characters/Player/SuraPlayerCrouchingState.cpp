@@ -116,7 +116,7 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 		
 	}
 
-	if (Player->bCrouchTriggered)
+	if (!Player->bCrouchTriggered)
 	{
 		Player->ChangeState(Player->RunningState);
 		return;

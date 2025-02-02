@@ -18,6 +18,7 @@ void USuraPlayerMantlingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 	Player->GetCharacterMovement()->StopMovementImmediately();
+	Player->JumpsLeft = Player->MaxJumps;
 	bShouldMantle = true;
 	StartLocation = Player->GetActorLocation();
 	TargetLocation = Player->LedgeHitResult.ImpactPoint + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * FVector::UpVector;
