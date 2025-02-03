@@ -11,7 +11,8 @@ public class SuraS : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
-			"AnimGraphRuntime"
-		});
+			"AnimGraphRuntime",
+			"UMG"
+        });
 	}
 }
