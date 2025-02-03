@@ -5,9 +5,15 @@
 
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h" //TODO: Player Class 수정하기
 #include "ActorComponents/WeaponSystem/SuraWeaponPickUp.h"
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/WeaponName.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/SkeletalMeshComponent.h"
+
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 
 // Sets default values for this component's properties
 UWeaponSystemComponent::UWeaponSystemComponent()
@@ -39,6 +45,9 @@ void UWeaponSystemComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	// ...
 
 	SearchWeapon();
+
+	//CalculateScreenCenterWorldPositionAndDirection(ScreenCenterWorldLocation, ScreenCenterWorldDirection);
+	CalculateTargetRightHandPosition();
 }
 
 #pragma region PlayerReference
@@ -49,8 +58,30 @@ void UWeaponSystemComponent::InitializePlayerReference()
 	{
 		PlayerOwner = NewPlayerOwner;
 		PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	}
+		//PlayerController = Cast<APlayerController>(PlayerOwner->GetController())
 
+		// Set up action bindings
+		if (PlayerController)
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+			{
+				// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
+				Subsystem->AddMappingContext(WeaponSystemMappingContext, 1);
+			}
+
+			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
+			{
+				//TODO : Weapon Switching하는 logic 필요함
+
+				// Inereact With WeaponPickUp
+				EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &UWeaponSystemComponent::PickUpWeapon);
+	
+				// Switch Weapon
+				EnhancedInputComponent->BindAction(SwitchWeaponUpAction, ETriggerEvent::Started, this, &UWeaponSystemComponent::SwitchToNextWeapon);
+				EnhancedInputComponent->BindAction(SwitchWeaponDownAction, ETriggerEvent::Started, this, &UWeaponSystemComponent::SwitchToPreviousWeapon);
+			}
+		}
+	}
 }
 #pragma endregion
 
@@ -196,16 +227,172 @@ bool UWeaponSystemComponent::IsInViewport(FVector2D ActorScreenPosition, float S
 	{
 		return false;
 	}
-
-	return false;
 }
 
+#pragma region Interaction
+
 void UWeaponSystemComponent::PickUpWeapon()
+{
+	if (OverlappedWeapon != nullptr)
+	{
+		//TODO: 바로 Attach 하는 것이 아니라 inventory에 총기를 저장하기
+		// OverlappedWeapon->AttachToCharacter(PlayerOwner);
+		ObtainNewWeapon(OverlappedWeapon);
+	}
+}
+
+bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
+{
+	for (const UACWeapon* WeaponInPossession : WeaponInventory)
+	{
+		if (WeaponInPossession->GetWeaponName() == NewWeaponPickUp->GetWeaponName())
+		{
+			return false;
+		}
+	}
+
+	UACWeapon* NewWeapon = NewWeaponPickUp->SpawnWeapon(PlayerOwner);
+	NewWeaponPickUp->DestroyWeaponPickUp();
+
+	WeaponInventory.AddUnique(NewWeapon);
+
+	if (CurrentWeapon == nullptr)
+	{
+		CurrentWeapon = NewWeapon;
+		CurrentWeapon->EquipWeapon(PlayerOwner);
+	}
+
+	return true;
+}
+
+#pragma endregion
+
+void UWeaponSystemComponent::ZoomIn(bool bZoomIn)
+{
+	bIsZoomIn = bZoomIn;
+
+	UE_LOG(LogTemp, Warning, TEXT("ZOOM Toggled!!!"));
+}
+
+#pragma endregion
+
+#pragma region Aiming
+
+void UWeaponSystemComponent::SetRightHandToAimSocketOffset(FVector offset)
+{
+	RightHandToAimSocketOffset = offset;
+}
+
+FVector UWeaponSystemComponent::CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const
+{
+	//APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (!PlayerController || !PlayerController->PlayerCameraManager)
+	{
+		return FVector::ZeroVector;
+	}
+
+	// 화면 크기 가져오기
+	FVector2D ViewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
+
+	// 화면 중앙 좌표 계산
+	FVector2D ScreenCenter(ViewportSize.X / 2.0f, ViewportSize.Y / 2.0f);
+
+	// 화면 중심의 월드 위치와 방향 가져오기
+	FVector WorldPosition, WorldDirection;
+	if (PlayerController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldPosition, WorldDirection))
+	{
+		OutWorldPosition = WorldPosition;
+		OutWorldDirection = WorldDirection;
+		return WorldPosition + (WorldDirection * 15.0f); // TODO: 임의 거리를 사용했음. 수치 조절 가능하도록 구현하기
+	}
+
+	return FVector::ZeroVector;
+}
+
+FVector UWeaponSystemComponent::CalculateTargetRightHandPosition()
+{
+	const FVector AimLocation = CalculateScreenCenterWorldPositionAndDirection(ScreenCenterWorldLocation, ScreenCenterWorldDirection);
+
+	const FRotator MeshRotation = PlayerOwner->GetMesh()->GetComponentRotation();
+
+	const FVector TargetRightHandLocation = AimLocation - MeshRotation.RotateVector(RightHandToAimSocketOffset);
+
+	TargetRightHandWorldLocation = TargetRightHandLocation;
+
+	return TargetRightHandLocation;
+}
+
+FTransform UWeaponSystemComponent::GetWeaponAimSocketRelativeTransform()
 {
 
 
 
+
+
+	return FTransform();
 }
+
+
+//TODO: 아래 함수 완성하기
+//FVector UWeaponSystemComponent::ConvertTargetToBoneSpace(const FVector& TargetWorldLocation, const FName& BoneName) const
+//{
+//	// 캐릭터의 스켈레탈 메시 컴포넌트 가져오기
+//	USkeletalMeshComponent* SkeletalMesh = PlayerOwner->GetMesh();
+//	if (!SkeletalMesh)
+//	{
+//		return FVector::ZeroVector;
+//	}
+//
+//	// 월드 위치를 본 스페이스로 변환
+//	//TODO: ConvertWorldLocationToBoneSpace 함수가 존재하지 않음
+//	SkeletalMesh->TransformToBoneSpace(BoneName, );
+//
+//	FVector BoneSpaceLocation = SkeletalMesh->ConvertWorldLocationToBoneSpace(BoneName, TargetWorldPosition, EBoneSpaces::WorldSpace);
+//	return BoneSpaceLocation;
+//}
 #pragma endregion
 
 
+#pragma region SwitchWeapon
+
+void UWeaponSystemComponent::SwitchToPreviousWeapon()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Wheel Down"));
+
+	if (WeaponInventory.Num() > 1)
+	{
+		CurrentWeaponIndex--;
+		if (CurrentWeaponIndex < 0)
+		{
+			CurrentWeaponIndex = WeaponInventory.Num() + CurrentWeaponIndex;
+		}
+		EquipWeapon(CurrentWeaponIndex);
+	}
+}
+
+void UWeaponSystemComponent::SwitchToNextWeapon()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Wheel Up"));
+
+	if (WeaponInventory.Num() > 1)
+	{
+		CurrentWeaponIndex = (CurrentWeaponIndex + 1) % WeaponInventory.Num();
+		EquipWeapon(CurrentWeaponIndex);
+	}
+}
+
+void UWeaponSystemComponent::EquipWeapon(int32 WeaponIndex)
+{
+	if (WeaponInventory.IsValidIndex(WeaponIndex))
+	{
+		if (IsValid(CurrentWeapon))
+		{
+			CurrentWeapon->UnequipWeapon(PlayerOwner);
+		}
+
+		WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
+		CurrentWeapon = WeaponInventory[WeaponIndex];
+	}
+}
+
+#pragma endregion

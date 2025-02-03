@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
+#include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "InteractInterface.h"
 
 #include "SuraWeaponPickUp.generated.h"
@@ -36,6 +37,11 @@ public:
 	UFUNCTION()
 	void AttachToCharacter(ASuraCharacterPlayerWeapon* Character);
 
+	UFUNCTION()
+	UACWeapon* SpawnWeapon(ASuraCharacterPlayerWeapon* Character);
+
+	void DestroyWeaponPickUp();
+
 	//---------------------------------------------------------------------------------
 	// <Interface>
 public:
@@ -44,11 +50,26 @@ public:
 
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon, meta = (AllowPrivateAccess = "true"))
-	UACWeapon* Weapon;
+
+	/** Weapon class to spawn */
+	UPROPERTY(EditDefaultsOnly, Category = Weapon)
+	TSubclassOf<UACWeapon> WeaponClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* WeaponMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EWeaponName WeaponName;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon, meta = (AllowPrivateAccess = "true"))
+	//UACWeapon* Weapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	USuraPickUpComponent* PickUpComponent;
 	
+public:
+	//UACWeapon* GetWeapon() const { return Weapon; }
+
+	EWeaponName GetWeaponName() const { return WeaponName; }
 
 };

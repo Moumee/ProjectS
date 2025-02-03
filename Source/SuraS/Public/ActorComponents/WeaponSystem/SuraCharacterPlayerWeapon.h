@@ -35,7 +35,7 @@ public:
 
 public:
 	/** Returns ArmMesh subobject **/
-	USkeletalMeshComponent* GetArmMesh() const { return ArmMesh; }
+	//USkeletalMeshComponent* GetArmMesh() const { return ArmMesh; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return Camera; }
 
@@ -59,10 +59,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
 	class UWeaponSystemComponent* WeaponSystem;
 
+public:
+	UFUNCTION()
 	FORCEINLINE class UWeaponSystemComponent* GetWeaponSystem() const
 	{
 		return WeaponSystem;
 	}
+
+#pragma endregion
+
+#pragma region Mesh
+
+	// TODO: ArmMesh 사용 안하기 때문에 삭제하기
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* ArmMesh;
 
 #pragma endregion
 

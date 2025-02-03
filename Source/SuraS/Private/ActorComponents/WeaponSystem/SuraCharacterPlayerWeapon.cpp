@@ -23,7 +23,18 @@
 
 ASuraCharacterPlayerWeapon::ASuraCharacterPlayerWeapon()
 {
+	//// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
+	//ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
+	//ArmMesh->SetOnlyOwnerSee(true);
+	//ArmMesh->SetupAttachment(GetCapsuleComponent());
+	//ArmMesh->bCastDynamicShadow = false;
+	//ArmMesh->CastShadow = false;
+	//ArmMesh->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	//WeaponSystem
+	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 }
 
 void ASuraCharacterPlayerWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -44,9 +55,6 @@ void ASuraCharacterPlayerWeapon::BeginPlay()
 	Super::BeginPlay();
 
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ASuraCharacterPlayerWeapon::OnOverlapBegin);
-
-	//WeaponSystem
-	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 }
 
 void ASuraCharacterPlayerWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)

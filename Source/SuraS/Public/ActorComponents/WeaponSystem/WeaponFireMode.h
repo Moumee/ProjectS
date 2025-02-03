@@ -12,8 +12,9 @@
 UENUM(BlueprintType)
 enum class EWeaponFireMode : uint8
 {
-	WeaponFireMode_Pistol UMETA(DisplayName = "Pistol"),
-	WeaponFireMode_Rifle UMETA(DisplayName = "Rifle")
+	WeaponFireMode_Single UMETA(DisplayName = "Single"),
+	WeaponFireMode_Burst UMETA(DisplayName = "Burst"),
+	WeaponFireMode_FullAuto UMETA(DisplayName = "FullAuto")
 };
 
 UCLASS()
