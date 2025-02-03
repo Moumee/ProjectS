@@ -4,27 +4,29 @@
 
 #include "CoreMinimal.h"
 #include "Characters/Player/SuraPlayerBaseState.h"
-#include "SuraPlayerHangingState.generated.h"
+#include "SuraPlayerSlidingState.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURAS_API USuraPlayerHangingState : public USuraPlayerBaseState
+class SURAS_API USuraPlayerSlidingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
-	float ElapsedTime;
+	FVector SlideDirection = FVector::ZeroVector;
 
-	bool bShouldMoveToHangPosition;
+	float SlideDeltaSpeed = 1500.f;
 
-	FVector StartPosition;
+	float StartSpeed = 0.f;
 
-	FVector HangPosition = FVector::ZeroVector;
+	float CurrentSlideSpeed = 0.f;
+	
+	float CrouchSpeed = 0.f;
 
 public:
 
-	USuraPlayerHangingState();
+	USuraPlayerSlidingState();
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
 
@@ -32,8 +34,10 @@ public:
 
 	virtual void ExitState(ASuraCharacterPlayer* Player) override;
 
-	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
-
 	virtual void StartJumping(ASuraCharacterPlayer* Player) override;
+
+	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
 	
 };
+
+

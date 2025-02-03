@@ -15,6 +15,7 @@
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
+#include "Characters/Player/SuraPlayerSlidingState.h"
 #include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
@@ -94,10 +95,11 @@ void ASuraCharacterPlayer::BeginPlay()
 	HangingState = NewObject<USuraPlayerHangingState>(this, USuraPlayerHangingState::StaticClass());
 	MantlingState = NewObject<USuraPlayerMantlingState>(this, USuraPlayerMantlingState::StaticClass());
 	WallRunningState = NewObject<USuraPlayerWallRunningState>(this, USuraPlayerWallRunningState::StaticClass());
+	SlidingState = NewObject<USuraPlayerSlidingState>(this, USuraPlayerSlidingState::StaticClass());
 
 	PreviousState = RunningState;
 	PreviousGroundedState = RunningState;
-	ChangeState(RunningState);
+	CurrentState = RunningState;
 
 }
 
@@ -112,7 +114,6 @@ void ASuraCharacterPlayer::ResetTriggeredBooleans()
 {
 	bJumpTriggered = false;
 	bDashTriggered = false;
-	bCrouchTriggered = false;
 	bLandedTriggered = false;
 }
 
@@ -154,7 +155,6 @@ void ASuraCharacterPlayer::PrimaryJump()
 {
 	if (JumpsLeft > 0)
 	{
-		bJumpTriggered = true;
 		JumpsLeft--;
 		FVector JumpVector = FVector::UpVector * GetPlayerMovementData()->GetJumpZVelocity();
 		LaunchCharacter(JumpVector, false, true);
@@ -165,7 +165,6 @@ void ASuraCharacterPlayer::DoubleJump()
 {
 	if (JumpsLeft > 0 && GetCharacterMovement()->IsFalling())
 	{
-		bJumpTriggered = true;
 		JumpsLeft--;
 		FVector InputDirection = GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue;
 		FVector LaunchVelocity = InputDirection * GetPlayerMovementData()->GetJumpXYVelocity() +
@@ -321,6 +320,8 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartJumping);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartDashing);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartCrouching);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASuraCharacterPlayer::StopCrouching);
+		
 	}
 }
 
@@ -362,6 +363,11 @@ void ASuraCharacterPlayer::StartCrouching()
 {
 	bCrouchTriggered = true;
 	CurrentState->StartCrouching(this);
+}
+
+void ASuraCharacterPlayer::StopCrouching()
+{
+	bCrouchTriggered = false;
 }
 
 void ASuraCharacterPlayer::StartDashing()
@@ -446,6 +452,28 @@ bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, 
 	}
 
 	return false;
+
+	
+}
+
+void ASuraCharacterPlayer::InterpPlayerRoll(float TargetRoll, float DeltaTime, float InterpSpeed)
+{
+	FRotator CurrentRotation = GetRootComponent()->GetRelativeRotation();
+	
+	if (FMath::IsNearlyEqual(CurrentRotation.Roll, TargetRoll, 0.001f))
+	{
+		if (CurrentRotation.Roll == TargetRoll) return;
+		
+		GetRootComponent()->SetRelativeRotation(FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, TargetRoll));
+		
+	}
+	
+	float NewRoll = FMath::FInterpTo(CurrentRotation.Roll, TargetRoll, DeltaTime, InterpSpeed);
+	FRotator NewRotation = FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, NewRoll);
+	GetRootComponent()->SetRelativeRotation(NewRotation);
+
+	
+		
 
 	
 }

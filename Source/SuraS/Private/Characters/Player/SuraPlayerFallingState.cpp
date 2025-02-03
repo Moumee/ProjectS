@@ -67,6 +67,8 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
 
 	UpdateBaseMovementSpeed(Player, DeltaTime);
+	
+	Player->InterpPlayerRoll(0.f, DeltaTime, 7.f);
 
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
