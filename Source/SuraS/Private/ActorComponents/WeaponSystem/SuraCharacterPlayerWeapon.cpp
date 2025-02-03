@@ -3,7 +3,7 @@
 
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponPickUp.h"
-#include "WeaponSystemComponent.h" // TODO: 파일 경로 수정
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h" // TODO: 파일 경로 수정
 
 #include "EnhancedInputComponent.h"
 //#include "EnhancedInputSubsystems.h"

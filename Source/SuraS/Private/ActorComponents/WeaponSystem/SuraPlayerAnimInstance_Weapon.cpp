@@ -1,10 +1,10 @@
 
 
 
-#include "SuraPlayerAnimInstance_Weapon.h"
+#include "ActorComponents/WeaponSystem/SuraPlayerAnimInstance_Weapon.h"
 
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
-#include "WeaponSystemComponent.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 
 #include "KismetAnimationLibrary.h"

@@ -1,7 +1,7 @@
 
 
 
-#include "SuraWeaponBaseState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
 
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 

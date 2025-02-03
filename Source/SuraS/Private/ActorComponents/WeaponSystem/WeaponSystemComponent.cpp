@@ -1,7 +1,7 @@
 
 
 
-#include "WeaponSystemComponent.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h" //TODO: Player Class 수정하기
 #include "ActorComponents/WeaponSystem/SuraWeaponPickUp.h"

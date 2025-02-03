@@ -6,13 +6,13 @@
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
 
 //TODO: file path 수정하기
-#include "WeaponInterface.h"
-#include "WeaponSystemComponent.h"
+#include "ActorComponents/WeaponSystem/WeaponInterface.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 
-#include "SuraWeaponBaseState.h"
-#include "SuraWeaponIdleState.h"
-#include "SuraWeaponFiringState.h"
-#include "SuraWeaponUnequippedState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponIdleState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponFiringState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponUnequippedState.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
