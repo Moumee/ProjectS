@@ -301,6 +301,7 @@ void ASuraCharacterPlayer::Tick(float DeltaTime)
 	{
 		CurrentState->UpdateState(this, DeltaTime);
 	}
+	
 
 	SlopeSpeedDelta = FindFloorAngle() < GetCharacterMovement()->GetWalkableFloorAngle() ?
 		SlopeSpeedDeltaCurve->GetFloatValue(FindFloorAngle()) : 0.f;
