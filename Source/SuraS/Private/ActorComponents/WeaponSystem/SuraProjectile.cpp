@@ -1,6 +1,11 @@
 
 
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
+
+#include "Interfaces/Damageable.h"
+#include "Structures/DamageData.h"
+#include "Enumerations/EDamageType.h"
+
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Particles/ParticleSystem.h"
@@ -77,6 +82,17 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 			SpawnParticleEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
+
+			FDamageData DefaultDamage;
+			DefaultDamage.DamageAmount = 50.f;
+			DefaultDamage.DamageType = EDamageType::Melee;
+			DefaultDamage.bCanForceDamage = false;
+
+			if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Enemy Hit!!!"));
+				Cast<IDamageable>(OtherActor)->TakeDamage(DefaultDamage, this->ProjectileOwner);
+			}
 
 			Destroy();
 		}
