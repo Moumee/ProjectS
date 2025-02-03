@@ -4,7 +4,9 @@
 #include "Characters/Player/SuraPlayerHangingState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -56,10 +58,10 @@ void USuraPlayerHangingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (bShouldMoveToHangPosition)
 	{
-		if (ElapsedTime < 0.2f)
+		if (ElapsedTime < 0.3f)
 		{
 			ElapsedTime += DeltaTime;
-			FVector NewPosition = FMath::Lerp(StartPosition, HangPosition, ElapsedTime / 0.2f);
+			FVector NewPosition = FMath::Lerp(StartPosition, HangPosition, ElapsedTime / 0.3f);
 			Player->SetActorLocation(NewPosition);
 		}
 		else
@@ -75,7 +77,16 @@ void USuraPlayerHangingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		Player->ChangeState(Player->JumpingState);
 		return;
 	}
-	
+
+	FVector CameraForwardVector = Player->GetCamera()->GetForwardVector();
+	FVector CameraForwardXY = FVector(CameraForwardVector.X, CameraForwardVector.Y, 0.f).GetSafeNormal();
+	FVector WallNormalXY = FVector(Player->WallHitResult.ImpactNormal.X, Player->WallHitResult.ImpactNormal.Y, 0.f).GetSafeNormal();
+	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(CameraForwardXY, WallNormalXY)));
+	if (Angle < 75.f)
+	{
+		Player->ChangeState(Player->FallingState);
+		return;
+	}
 
 	
 }
@@ -105,7 +116,7 @@ void USuraPlayerHangingState::StartJumping(ASuraCharacterPlayer* Player)
 		Player->JumpsLeft -= 1;
 		FVector JumpXY = FVector(Player->WallHitResult.ImpactNormal.X, Player->WallHitResult.ImpactNormal.Y, 0.f);
 		FVector JumpVector = JumpXY * 500.f + FVector::UpVector *
-			Player->GetPlayerMovementData()->GetJumpZVelocity() * 0.8f;
+			Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed() * 0.8f;
 		Player->LaunchCharacter(JumpVector, true, true);
 	}
 }

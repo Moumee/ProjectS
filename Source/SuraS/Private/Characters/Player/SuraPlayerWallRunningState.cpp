@@ -112,7 +112,7 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 void USuraPlayerWallRunningState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
-	Player->GetCharacterMovement()->GravityScale = 1.f;
+	Player->GetCharacterMovement()->GravityScale = Player->DefaultGravityScale;
 	Player->GetCharacterMovement()->AirControl = Player->GetPlayerMovementData()->GetAirControl();
 	Player->GetCharacterMovement()->SetPlaneConstraintNormal(FVector::ZeroVector);
 	Player->WallRunSide = EWallSide::None;
@@ -147,7 +147,7 @@ void USuraPlayerWallRunningState::StartJumping(ASuraCharacterPlayer* Player)
 			LaunchDirectionXY = FVector::CrossProduct(Player->WallRunDirection, FVector::UpVector).GetSafeNormal();
 		}
 		FVector LaunchVector = LaunchDirectionXY * 500.f +
-			FVector::UpVector * Player->GetPlayerMovementData()->GetJumpZVelocity();
+			FVector::UpVector * Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed();
 		Player->LaunchCharacter(LaunchVector, false, true);
 	}
 }

@@ -45,9 +45,11 @@ public:
 
 	float GetCrouchSpeed() const;
 
-	float GetJumpZVelocity() const;
+	float GetPrimaryJumpZSpeed() const;
 
-	float GetJumpXYVelocity() const;
+	float GetDoubleJumpZSpeed() const;
+
+	float GetDoubleJumpXYSpeed() const;
 
 	float GetAirControl() const;
 

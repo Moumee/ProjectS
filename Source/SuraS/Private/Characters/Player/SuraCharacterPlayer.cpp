@@ -156,7 +156,7 @@ void ASuraCharacterPlayer::PrimaryJump()
 	if (JumpsLeft > 0)
 	{
 		JumpsLeft--;
-		FVector JumpVector = FVector::UpVector * GetPlayerMovementData()->GetJumpZVelocity();
+		FVector JumpVector = FVector::UpVector * GetPlayerMovementData()->GetPrimaryJumpZSpeed();
 		LaunchCharacter(JumpVector, false, true);
 	}
 }
@@ -167,8 +167,8 @@ void ASuraCharacterPlayer::DoubleJump()
 	{
 		JumpsLeft--;
 		FVector InputDirection = GetActorForwardVector() * ForwardAxisInputValue + GetActorRightVector() * RightAxisInputValue;
-		FVector LaunchVelocity = InputDirection * GetPlayerMovementData()->GetJumpXYVelocity() +
-			FVector::UpVector * GetPlayerMovementData()->GetJumpZVelocity();
+		FVector LaunchVelocity = InputDirection * GetPlayerMovementData()->GetDoubleJumpXYSpeed() +
+			FVector::UpVector * GetPlayerMovementData()->GetDoubleJumpZSpeed();
 		LaunchCharacter(LaunchVelocity, false, true);
 	}
 }
