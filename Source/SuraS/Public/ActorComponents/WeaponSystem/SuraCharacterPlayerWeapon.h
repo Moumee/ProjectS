@@ -71,8 +71,8 @@ public:
 #pragma region Mesh
 
 	// TODO: ArmMesh 사용 안하기 때문에 삭제하기
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
-	USkeletalMeshComponent* ArmMesh;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
+	//USkeletalMeshComponent* ArmMesh;
 
 #pragma endregion
 

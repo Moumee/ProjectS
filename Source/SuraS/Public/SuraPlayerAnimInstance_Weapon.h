@@ -85,6 +85,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	FRotator AimPointRelativeRotation;
 
+	//---------------------------------------
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	FVector HandTargetRelativeLocation;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	FRotator HandTargetRelativeRotation;
+
+
 
 public:
 	void UpdateWeapon();

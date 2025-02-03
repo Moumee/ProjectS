@@ -73,9 +73,9 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 
 		bIsZoomIn = Character->GetWeaponSystem()->IsZoomIn();
 
-		ScreenCenterWorldLocation = Character->GetWeaponSystem()->GetScreenCenterWorldPosition();
+		//ScreenCenterWorldLocation = Character->GetWeaponSystem()->GetScreenCenterWorldPosition();
 
-		TargetRightHandWorldLocation = Character->GetWeaponSystem()->GetTargetRightHandWorldLocation();
+		//TargetRightHandWorldLocation = Character->GetWeaponSystem()->GetTargetRightHandWorldLocation();
 
 		SetTargetRightHandTransform();
 
@@ -91,7 +91,7 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 		}
 
 
-		//LogTransform(AimSocketRelativeTransform);
+		// LogTransform(AimSocketRelativeTransform);
 
 	}
 }
@@ -176,7 +176,8 @@ void USuraPlayerAnimInstance_Weapon::SetAimPoint()
 {
 	FTransform CameraTransform = Character->GetCamera()->GetComponentTransform();
 	//FTransform HandRootTransform = Character->GetMesh()->GetSocketTransform(FName(TEXT("ik_hand_root")));
-	FTransform HandRootTransform = Character->GetMesh()->GetBoneTransform(FName(TEXT("ik_hand_root")), ERelativeTransformSpace::RTS_World);
+	//FTransform HandRootTransform = Character->GetMesh()->GetBoneTransform(FName(TEXT("ik_hand_root")), ERelativeTransformSpace::RTS_World);
+	FTransform HandRootTransform = Character->GetMesh()->GetComponentTransform();
 
 	FTransform CameraRelativeTransform = CameraTransform.GetRelativeTransform(HandRootTransform);
 	//FTransform CameraRelativeTransform = HandRootTransform.GetRelativeTransform(CameraTransform);
@@ -196,23 +197,31 @@ void USuraPlayerAnimInstance_Weapon::SetTargetRightHandTransform()
 			&& IsValid(Character->GetWeaponSystem()->GetCurrentWeapon())
 			&& Character->GetWeaponSystem()->GetCurrentWeapon() != nullptr)
 		{
-			FTransform RootTransform = Character->GetMesh()->GetBoneTransform(FName(TEXT("ik_hand_root")), ERelativeTransformSpace::RTS_World);
-
+			//FTransform RootTransform = Character->GetMesh()->GetBoneTransform(FName(TEXT("ik_hand_root")), ERelativeTransformSpace::RTS_World);
+			FTransform RootTransform = Character->GetMesh()->GetComponentTransform();
 
 			FTransform CameraTransform = Character->GetCamera()->GetComponentTransform();
-
 			FTransform WeaponAimSocketTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetSocketTransform(FName(TEXT("Aim")));
+			FTransform RightHandTransform = Character->GetMesh()->GetBoneTransform(FName(TEXT("hand_r")));
 
 			FTransform CameraRelativeTransform = CameraTransform.GetRelativeTransform(RootTransform);
 			FTransform WeaponAimSocketRelativeTransform = WeaponAimSocketTransform.GetRelativeTransform(RootTransform);
+			FTransform RightHandRelativeTransform = RightHandTransform.GetRelativeTransform(RootTransform);
 
+			float CamOffset = 50.f; //TODO: 임시로 설정했음. 설정가능한 변수로 바꾸기
 
-			float CamOffset = 20.f; //TODO: 임시로 설정했음. 설정가능한 변수로 바꾸기
 
 			AimPointRelativeLocation = CameraRelativeTransform.GetLocation() + CameraRelativeTransform.GetRotation().GetForwardVector() * CamOffset;
 			AimPointRelativeRotation = CameraRelativeTransform.GetRotation().Rotator();
 
-			LogTransform(CameraRelativeTransform);
+			//LogTransform(CameraRelativeTransform);
+
+			//-------------------------------------------------------------------
+			//FTransform AimRelativeToCam = WeaponAimSocketRelativeTransform.GetRelativeTransform(CameraRelativeTransform);
+			//FTransform RightHandRelativeToAim = RightHandRelativeTransform.GetRelativeTransform(WeaponAimSocketRelativeTransform);
+	
+			HandTargetRelativeLocation = AimPointRelativeLocation + (RightHandRelativeTransform.GetLocation() - WeaponAimSocketRelativeTransform.GetLocation());
+			HandTargetRelativeRotation = AimPointRelativeRotation + (RightHandRelativeTransform.GetRotation().Rotator() - WeaponAimSocketRelativeTransform.GetRotation().Rotator());
 		}
 	}
 }

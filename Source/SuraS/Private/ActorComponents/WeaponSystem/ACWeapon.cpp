@@ -181,7 +181,7 @@ void UACWeapon::DetachWeaponFromPlayer()
 		DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 		Character = nullptr;
 
-		ActivateCrosshairWidget(false);
+		//ActivateCrosshairWidget(false);
 
 		SetVisibility(false);
 	}
