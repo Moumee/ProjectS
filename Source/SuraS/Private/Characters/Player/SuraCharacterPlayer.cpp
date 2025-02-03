@@ -6,7 +6,6 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "ActorComponents/ACPlayerMovmentData.h"
-#include "ActorComponents/WallRun/ACPlayerWallRun.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraPlayerBaseState.h"
 #include "Characters/Player/SuraPlayerCrouchingState.h"
@@ -17,6 +16,7 @@
 #include "Characters/Player/SuraPlayerMantlingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
 #include "Characters/Player/SuraPlayerWalkingState.h"
+#include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -27,10 +27,6 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	bUseControllerRotationYaw = true;
 
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	
-	// Wall-run component
-	WallRunComponent = CreateDefaultSubobject<UACPlayerWallRun>(TEXT("WallRunComponent"));
-	AddOwnedComponent(WallRunComponent);
 
 	PlayerMovementData = CreateDefaultSubobject<UACPlayerMovementData>("Player Movement Data");
 
@@ -40,15 +36,22 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	bUseControllerRotationRoll = false;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "Camera");
-	Camera->bUsePawnControlRotation = true;
+	Camera->SetupAttachment(GetMesh(), FName(TEXT("Camera")));
+	Camera->bUsePawnControlRotation = false;
 
-	// Enable capsule hit events for wall detection
-	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
+	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
+	ArmMesh->SetupAttachment(GetMesh());
+	ArmMesh->SetLeaderPoseComponent(GetMesh());
 
 	DefaultCapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	DefaultCameraLocation = Camera->GetRelativeLocation();
 
+	DefaultGravityScale = GetCharacterMovement()->GravityScale;
+	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
+	DefaultBrakingFriction = GetCharacterMovement()->BrakingFriction;
+	DefaultBrakingDecelerationFalling = GetCharacterMovement()->BrakingDecelerationFalling;
+	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
+	
 	// Initialize JumpsLeft
 	JumpsLeft = MaxJumps;
 
@@ -59,6 +62,9 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 void ASuraCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
+	
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -76,7 +82,7 @@ void ASuraCharacterPlayer::BeginPlay()
 
 	DashCooldowns.Init(0.f, MaxDashes);
 
-	BaseMovementSpeed = GetPlayerMovementData()->GetWalkSpeed();
+	BaseMovementSpeed = GetPlayerMovementData()->GetRunSpeed();
 	GetCharacterMovement()->AirControl = GetPlayerMovementData()->GetAirControl();
 
 	WalkingState = NewObject<USuraPlayerWalkingState>(this, USuraPlayerWalkingState::StaticClass());
@@ -87,8 +93,11 @@ void ASuraCharacterPlayer::BeginPlay()
 	CrouchingState = NewObject<USuraPlayerCrouchingState>(this, USuraPlayerCrouchingState::StaticClass());
 	HangingState = NewObject<USuraPlayerHangingState>(this, USuraPlayerHangingState::StaticClass());
 	MantlingState = NewObject<USuraPlayerMantlingState>(this, USuraPlayerMantlingState::StaticClass());
+	WallRunningState = NewObject<USuraPlayerWallRunningState>(this, USuraPlayerWallRunningState::StaticClass());
 
-	ChangeState(WalkingState);
+	PreviousState = RunningState;
+	PreviousGroundedState = RunningState;
+	ChangeState(RunningState);
 
 }
 
@@ -102,7 +111,6 @@ void ASuraCharacterPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASuraCharacterPlayer::ResetTriggeredBooleans()
 {
 	bJumpTriggered = false;
-	bRunTriggered = false;
 	bDashTriggered = false;
 	bCrouchTriggered = false;
 	bLandedTriggered = false;
@@ -113,6 +121,11 @@ void ASuraCharacterPlayer::SetBaseMovementSpeed(const float MovementSpeed)
 	BaseMovementSpeed = MovementSpeed;
 }
 
+float ASuraCharacterPlayer::GetBaseMovementSpeed() const
+{
+	return BaseMovementSpeed;
+}
+
 void ASuraCharacterPlayer::ChangeState(USuraPlayerBaseState* NewState)
 {
 	if (!NewState || NewState == CurrentState) return;
@@ -120,6 +133,7 @@ void ASuraCharacterPlayer::ChangeState(USuraPlayerBaseState* NewState)
 	if (CurrentState)
 	{
 		CurrentState->ExitState(this);
+		PreviousState = CurrentState;
 	}
 	CurrentState = NewState;
 	CurrentState->EnterState(this);
@@ -175,6 +189,21 @@ USuraPlayerBaseState* ASuraCharacterPlayer::GetCurrentState() const
 	return CurrentState;
 }
 
+USuraPlayerBaseState* ASuraCharacterPlayer::GetPreviousState() const
+{
+	return PreviousState;
+}
+
+USuraPlayerBaseState* ASuraCharacterPlayer::GetPreviousGroundedState() const
+{
+	return PreviousGroundedState;
+}
+
+void ASuraCharacterPlayer::SetPreviousGroundedState(USuraPlayerBaseState* InState)
+{
+	PreviousGroundedState = InState;
+}
+
 
 void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 {
@@ -215,10 +244,17 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 			GEngine->AddOnScreenDebugMessage(98, 0.f, FColor::Green,
 				FString::Printf(TEXT("Slope Speed Delta : %f"), SlopeSpeedDelta));
 
-			GEngine->AddOnScreenDebugMessage(97, 0.f, FColor::Green,
+			GEngine->AddOnScreenDebugMessage(97, 0.f, FColor::Red,
 				FString::Printf(TEXT("Current State : %s"), *CurrentState->StateDisplayName.ToString()));
 
-			
+			GEngine->AddOnScreenDebugMessage(96, 0.f, FColor::Green,
+				FString::Printf(TEXT("Previous Grounded State : %s"), *PreviousGroundedState->StateDisplayName.ToString()));
+
+			GEngine->AddOnScreenDebugMessage(95, 0.f, FColor::Green,
+				FString::Printf(TEXT("Previous State : %s"), *PreviousState->StateDisplayName.ToString()));
+
+			GEngine->AddOnScreenDebugMessage(94, 0.f, FColor::Green,
+				FString::Printf(TEXT("Wall Run Side : %s"), *UEnum::GetDisplayValueAsText(WallRunSide).ToString()));
 		}
 	}
 }
@@ -267,7 +303,8 @@ void ASuraCharacterPlayer::Tick(float DeltaTime)
 		CurrentState->UpdateState(this, DeltaTime);
 	}
 
-	SlopeSpeedDelta = SlopeSpeedDeltaCurve->GetFloatValue(FindFloorAngle());
+	SlopeSpeedDelta = FindFloorAngle() < GetCharacterMovement()->GetWalkableFloorAngle() ?
+		SlopeSpeedDeltaCurve->GetFloatValue(FindFloorAngle()) : 0.f;
 	
 	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed + SlopeSpeedDelta;
 }
@@ -281,7 +318,6 @@ void ASuraCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::Move);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &ASuraCharacterPlayer::StopMoving);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayer::Look);
-		EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartRunning);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartJumping);
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartDashing);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASuraCharacterPlayer::StartCrouching);
@@ -315,12 +351,6 @@ void ASuraCharacterPlayer::Look(const FInputActionValue& InputValue)
 	CurrentState->Look(this, InputVector);
 }
 
-void ASuraCharacterPlayer::StartRunning()
-{
-	bRunTriggered = true;
-	CurrentState->StartRunning(this);
-}
-
 void ASuraCharacterPlayer::StartJumping()
 {
 	if (JumpsLeft <= 0) return;
@@ -351,5 +381,73 @@ void ASuraCharacterPlayer::Landed(const FHitResult& Hit)
 	CurrentState->Landed(this, Hit);
 }
 
+bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, EWallSide& OutWallRunSide)
+{
+	if (!GetCharacterMovement()->IsFalling()) return false;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	FHitResult LeftHit;
+	bool bLeftHit = GetWorld()->LineTraceSingleByChannel(LeftHit, GetActorLocation(),
+		GetActorLocation() + GetActorRightVector() * -45.f, ECC_Visibility, Params);
+	bool bLeftWallRunnable = false;
+	FHitResult RightHit;
+	bool bRightHit = GetWorld()->LineTraceSingleByChannel(RightHit, GetActorLocation(),
+		GetActorLocation() + GetActorRightVector() * 45.f, ECC_Visibility, Params);
+	bool bRightWallRunnable = false;
+
+	if (bLeftHit)
+	{
+		if (LeftHit.ImpactNormal.Z > -0.05f && LeftHit.ImpactNormal.Z < GetCharacterMovement()->GetWalkableFloorZ())
+		{
+			bLeftWallRunnable = true;
+		}
+	}
+
+	if (bRightHit)
+	{
+		if (RightHit.ImpactNormal.Z > -0.05f && RightHit.ImpactNormal.Z < GetCharacterMovement()->GetWalkableFloorZ())
+		{
+			bRightWallRunnable = true;
+		}
+	}
+
+	if (bLeftWallRunnable && bRightWallRunnable)
+	{
+		if (LeftHit.Distance < RightHit.Distance)
+		{
+			OutWallRunSide = EWallSide::Left;
+			FVector WallNormalXY = FVector(LeftHit.ImpactNormal.X, LeftHit.ImpactNormal.Y, 0.f);
+			OutWallRunDirection = FVector::CrossProduct(WallNormalXY, FVector::UpVector).GetSafeNormal();
+		}
+		else
+		{
+			OutWallRunSide = EWallSide::Right;
+			FVector WallNormalXY = FVector(RightHit.ImpactNormal.X, RightHit.ImpactNormal.Y, 0.f);
+			OutWallRunDirection = FVector::CrossProduct(WallNormalXY, FVector::DownVector).GetSafeNormal();
+		}
+		return true;
+	}
+
+	if (bLeftWallRunnable)
+	{
+		OutWallRunSide = EWallSide::Left;
+		FVector WallNormalXY = FVector(LeftHit.ImpactNormal.X, LeftHit.ImpactNormal.Y, 0.f);
+		OutWallRunDirection = FVector::CrossProduct(WallNormalXY, FVector::UpVector).GetSafeNormal();
+		return true;
+	}
+
+	if (bRightWallRunnable)
+	{
+		OutWallRunSide = EWallSide::Right;
+		FVector WallNormalXY = FVector(RightHit.ImpactNormal.X, RightHit.ImpactNormal.Y, 0.f);
+		OutWallRunDirection = FVector::CrossProduct(WallNormalXY, FVector::DownVector).GetSafeNormal();
+		return true;
+	}
+
+	return false;
+
+	
+}
 
 

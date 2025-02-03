@@ -16,16 +16,14 @@ class SURAS_API USuraPlayerMantlingState : public USuraPlayerBaseState
 
 	FTimerHandle MantleTimerHandle;
 
-	bool bShouldMantleUp;
-	bool bShouldMantleForward;
+	bool bShouldMantle = false;
 
-	FVector StartLocation;
-	FVector TargetLocation;
+	FVector StartLocation = FVector::ZeroVector;
+	FVector TargetLocation = FVector::ZeroVector;
 
-	FVector UpMantleTarget;
+	float ElapsedTime = 0;
 
-	float UpMovementElapsedTime;
-	float ForwardMovementElapsedTime;
+	float MantleDuration = 0;
 
 public:
 

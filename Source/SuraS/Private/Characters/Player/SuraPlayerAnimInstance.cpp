@@ -4,8 +4,9 @@
 #include "Characters/Player/SuraPlayerAnimInstance.h"
 
 #include "KismetAnimationLibrary.h"
-#include "KismetAnimationLibrary.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
+#include "Characters/Player/SuraPlayerBaseState.h"
+#include "Characters/Player/SuraPlayerCrouchingState.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -30,8 +31,12 @@ void USuraPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds
 
 		Pitch = UKismetMathLibrary::NormalizeAxis(Player->GetControlRotation().Pitch);
 
-		CurrentState = Player->GetCurrentState();
-
+		if (Player->GetCurrentState())
+		{
+			CurrentState = Player->GetCurrentState();
+			bIsCrouching = Player->GetCurrentState()->IsA(USuraPlayerCrouchingState::StaticClass());
+		}
+		
 		if (Player->GetCharacterMovement()->MovementMode == MOVE_Flying)
 		{
 			bIsInAir = true;

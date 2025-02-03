@@ -28,6 +28,9 @@ protected:
 	bool bIsInAir;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsCrouching;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float Direction;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")

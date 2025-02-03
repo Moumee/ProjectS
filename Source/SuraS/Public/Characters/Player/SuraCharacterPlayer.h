@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SuraPlayerEnums.h"
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class USphereComponent;
+class USuraPlayerWallRunningState;
 class USuraPlayerMantlingState;
 class USuraPlayerHangingState;
 class USuraPlayerCrouchingState;
@@ -16,12 +19,10 @@ class USuraPlayerRunningState;
 class USuraPlayerWalkingState;
 class USuraPlayerBaseState;
 class UACPlayerMovementData;
-class UACPlayerWallRun;
 class UCameraComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
-class UACWallRun;
 
 
 /**
@@ -36,50 +37,53 @@ protected:
 
 	UPROPERTY()
 	USuraPlayerBaseState* CurrentState;
-	
-	// Wall-run actor component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall Run", meta = (AllowPrivateAccess = "true"))
-	UACPlayerWallRun* WallRunComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY()
+	USuraPlayerBaseState* PreviousState;
+
+	UPROPERTY()
+	USuraPlayerBaseState* PreviousGroundedState;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
 	UACPlayerMovementData* PlayerMovementData;
 
 #pragma region Input
 	
 	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputMappingContext* DefaultMappingContext;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* MoveAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* LookAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* JumpAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* ShootAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* CrouchAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* DashAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* RunAction;
 
 	
 
 #pragma endregion Input
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Debug")
 	bool bIsDebugMode;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* Camera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
+	USkeletalMeshComponent* ArmMesh;
 
 	float DefaultCapsuleHalfHeight;
 
@@ -100,7 +104,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	
 
 	// Adds on screen debug messages for debugging purposes
 	void PrintPlayerDebugInfo() const;
@@ -124,8 +127,6 @@ protected:
 	void StopMoving();
 
 	void Look(const FInputActionValue& InputValue);
-
-	void StartRunning();
 	
 	void StartJumping();
 
@@ -142,12 +143,13 @@ public:
 	ASuraCharacterPlayer();
 
 	/** Returns WallRunComponent subobject **/
-	UACPlayerWallRun* GetWallRunComponent() const { return WallRunComponent; }
+	// UACWallRun* GetWallRunComponent() const { return WallRunComponent; }
 
 	// Returns Player Movement Data Actor Component
 	UACPlayerMovementData* GetPlayerMovementData() const { return PlayerMovementData; }
 
 	UCameraComponent* GetCamera() const { return Camera; }
+
 
 	// DesiredGroundState is set when player enters Walking, Running, Dashing state
 	// It is used to change state to desired ground state when transitioning from Falling State
@@ -170,20 +172,25 @@ public:
 	USuraPlayerHangingState* HangingState;
 	UPROPERTY(BlueprintReadOnly)
 	USuraPlayerMantlingState* MantlingState;
+	UPROPERTY(BlueprintReadOnly)
+	USuraPlayerWallRunningState* WallRunningState;
 
 	int MaxJumps = 2;
 	int JumpsLeft;
 
 	// Input Action Bound Boolean Flags
 	bool bJumpTriggered = false;
-	bool bRunTriggered = false;
 	bool bDashTriggered = false;
 	bool bCrouchTriggered = false;
 	bool bLandedTriggered = false;
 
 	void ResetTriggeredBooleans();
 
-	FHitResult MantleHitResult;
+	FHitResult LedgeHitResult;
+	FHitResult WallHitResult;
+
+	EWallSide WallRunSide = EWallSide::None;
+	FVector WallRunDirection = FVector::ZeroVector;
 
 	int MaxDashes;
 	int DashesLeft;
@@ -203,9 +210,15 @@ public:
 	float RightAxisInputValue;
 
 	float DefaultGroundFriction;
+	float DefaultGravityScale;
+	float DefaultBrakingDecelerationWalking;
+	float DefaultBrakingDecelerationFalling;
+	float DefaultBrakingFriction;
 
 	UFUNCTION(BlueprintCallable)
 	void SetBaseMovementSpeed(float MovementSpeed);
+
+	float GetBaseMovementSpeed() const;
 
 	void ChangeState(USuraPlayerBaseState* NewState);
 
@@ -223,8 +236,16 @@ public:
 
 	USuraPlayerBaseState* GetCurrentState() const;
 
+	USuraPlayerBaseState* GetPreviousState() const;
+
+	USuraPlayerBaseState* GetPreviousGroundedState() const;
+
+	void SetPreviousGroundedState(USuraPlayerBaseState* InState);
+
 	bool IsDebugMode() const { return bIsDebugMode; }
-	
+
+	bool ShouldEnterWallRunning(FVector& OutWallRunDirection, EWallSide& OutWallRunSide);
+
 };
 
 

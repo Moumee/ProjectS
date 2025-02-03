@@ -14,10 +14,13 @@ class SURAS_API USuraPlayerDashingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
+	float DashImpulseDuration = 0.f;
+
+	float DashImpulseElapsedTime = 0.f;
+	
 public:
 
 	USuraPlayerDashingState();
-
 	
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
@@ -26,5 +29,6 @@ public:
 
 	virtual void ExitState(ASuraCharacterPlayer* Player) override;
 
+	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector) override;
 	
 };

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SuraPlayerEnums.h"
 #include "SuraPlayerBaseState.generated.h"
 
 class ASuraCharacterPlayer;
@@ -14,9 +15,16 @@ class SURAS_API USuraPlayerBaseState : public UObject
 {
 	GENERATED_BODY()
 
+	
+
 public:
 
+	UPROPERTY(BlueprintReadOnly, Category = "Player State")
+	EPlayerState StateType;
+	
 	FName StateDisplayName;
+
+	virtual EPlayerState GetStateType() const;
 
 	virtual void EnterState(ASuraCharacterPlayer* Player);
 
@@ -29,8 +37,6 @@ public:
 	virtual void StopMoving(ASuraCharacterPlayer* Player);
 
 	virtual void Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector);
-
-	virtual void StartRunning(ASuraCharacterPlayer* Player);
 
 	virtual void StartJumping(ASuraCharacterPlayer* Player);
 

@@ -4,17 +4,20 @@
 #include "Characters/Player/SuraPlayerCrouchingState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashingState.h"
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
 #include "Characters/Player/SuraPlayerWalkingState.h"
+#include "Components/CapsuleComponent.h"
 
 
 USuraPlayerCrouchingState::USuraPlayerCrouchingState()
 {
 	StateDisplayName = "Crouching";
+	StateType = EPlayerState::Crouching;
 	
 }
 
@@ -22,7 +25,41 @@ void USuraPlayerCrouchingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
-	Player->SetBaseMovementSpeed(Player->GetPlayerMovementData()->GetCrouchSpeed());
+	bShouldUpdateSpeed = true;
+
+	bShouldUpdateAnimation = true;
+
+	float CrouchSpeed = Player->GetPlayerMovementData()->GetCrouchSpeed();
+
+
+	switch (Player->GetPreviousGroundedState()->GetStateType())
+	{
+	case EPlayerState::Walking:
+		{
+			SpeedTransitionTime = Player->GetPlayerMovementData()->GetWalkCrouchTransitionDuration();
+			float WalkSpeed = Player->GetPlayerMovementData()->GetWalkSpeed();
+			SpeedChangePerSecond = (CrouchSpeed - WalkSpeed) / SpeedTransitionTime;
+			break;
+		}
+
+	case EPlayerState::Dashing:
+		{
+			SpeedTransitionTime = Player->GetPlayerMovementData()->GetCrouchDashTransitionDuration();
+			float DashSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
+			SpeedChangePerSecond = (CrouchSpeed- DashSpeed) / SpeedTransitionTime;
+			break;
+		}
+	case EPlayerState::Running:
+		{
+			SpeedTransitionTime = Player->GetPlayerMovementData()->GetCrouchRunTransitionDuration();
+			float RunSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
+			SpeedChangePerSecond = (CrouchSpeed - RunSpeed) / SpeedTransitionTime;
+			break;
+		}
+	default:
+		break;
+	}
+	
 	
 }
 
@@ -30,6 +67,33 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 {
 	Super::UpdateState(Player, DeltaTime);
 
+
+	if (bShouldUpdateSpeed)
+	{
+		float CurrentBaseSpeed = Player->GetBaseMovementSpeed();
+		float TargetCrouchSpeed = Player->GetPlayerMovementData()->GetCrouchSpeed();
+		if (SpeedChangePerSecond > 0 && CurrentBaseSpeed < TargetCrouchSpeed ||
+			SpeedChangePerSecond < 0 && CurrentBaseSpeed > TargetCrouchSpeed)
+		{
+			float NewBaseMovementSpeed = Player->GetBaseMovementSpeed() + SpeedChangePerSecond * DeltaTime;
+			Player->SetBaseMovementSpeed(NewBaseMovementSpeed);
+		}
+		else
+		{
+			Player->SetBaseMovementSpeed(Player->GetPlayerMovementData()->GetCrouchSpeed());
+			bShouldUpdateSpeed = false;
+		}
+	}
+
+	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+	// 	Player->GetDefaultCapsuleHalfHeight() * 0.65f, DeltaTime, 5.f);
+	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+	//
+	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+	// 	Player->GetDefaultCameraLocation().Z * 0.65f, DeltaTime, 5.f);
+	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
+	
 
 	if (Player->IsFallingDown())
 	{
@@ -51,15 +115,9 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 		
 	}
 
-	if (Player->bRunTriggered)
-	{
-		Player->ChangeState(Player->RunningState);
-		return;
-	}
-
 	if (Player->bCrouchTriggered)
 	{
-		Player->ChangeState(Player->WalkingState);
+		Player->ChangeState(Player->RunningState);
 		return;
 	}
 
@@ -69,6 +127,9 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 void USuraPlayerCrouchingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
+
+	Player->SetPreviousGroundedState(Player->CrouchingState);
+	bShouldUpdateSpeed = false;
 	
 }
 

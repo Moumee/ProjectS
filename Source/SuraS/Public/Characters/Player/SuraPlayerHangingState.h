@@ -14,6 +14,14 @@ class SURAS_API USuraPlayerHangingState : public USuraPlayerBaseState
 {
 	GENERATED_BODY()
 
+	float ElapsedTime;
+
+	bool bShouldMoveToHangPosition;
+
+	FVector StartPosition;
+
+	FVector HangPosition = FVector::ZeroVector;
+
 public:
 
 	USuraPlayerHangingState();

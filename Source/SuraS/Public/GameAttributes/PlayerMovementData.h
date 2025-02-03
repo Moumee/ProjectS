@@ -15,6 +15,24 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WalkSpeed;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WalkRunTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WalkDashTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float RunDashTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WalkCrouchTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CrouchRunTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CrouchDashTransitionDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RunSpeed;
@@ -41,9 +59,6 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashDistance;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
 	int DashMaxStack;

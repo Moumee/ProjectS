@@ -9,72 +9,70 @@
 
 USuraPlayerMantlingState::USuraPlayerMantlingState()
 {
-	bShouldMantleUp = false;
-	bShouldMantleForward = false;
 	StateDisplayName = "Mantling";
+	StateType = EPlayerState::Mantling;
 }
+
 
 void USuraPlayerMantlingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 	Player->GetCharacterMovement()->StopMovementImmediately();
-	Player->GetCharacterMovement()->GravityScale = 0.f;
-	bShouldMantleUp = true;
-	bShouldMantleForward = false;
-	UpMovementElapsedTime = 0;
-	ForwardMovementElapsedTime = 0;
+	bShouldMantle = true;
 	StartLocation = Player->GetActorLocation();
-	TargetLocation = Player->MantleHitResult.Location + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * FVector::UpVector;
-	UpMantleTarget = FVector(StartLocation.X, StartLocation.Y, TargetLocation.Z);
+	TargetLocation = Player->LedgeHitResult.ImpactPoint + Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * FVector::UpVector;
+
+	if (Player->LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z)
+	{
+		MantleDuration = 0.1f;
+	}
+	else
+	{
+		MantleDuration = 0.2f;
+	}
+	
+	
 	
 }
 
 void USuraPlayerMantlingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
-	if (bShouldMantleUp)
+
+	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
+	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
+	//
+	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
+	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
+	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
+	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
+	
+	if (bShouldMantle)
 	{
-		if (UpMovementElapsedTime < 0.15f)
+		if (ElapsedTime < MantleDuration)
 		{
-			float t = UpMovementElapsedTime / 0.15f;
-			UpMovementElapsedTime += DeltaTime;
-			FVector NewLocation = FMath::Lerp(StartLocation, UpMantleTarget,
+			float t = ElapsedTime / MantleDuration;
+			ElapsedTime += DeltaTime;
+			FVector NewLocation = FMath::Lerp(StartLocation, TargetLocation,
 				t);
 			Player->SetActorLocation(NewLocation);
 		}
 		else
 		{
-			bShouldMantleUp = false;
-			bShouldMantleForward = true;
-			Player->SetActorLocation(UpMantleTarget);
-			
-		}
-	}
-
-	if (bShouldMantleForward)
-	{
-		if (ForwardMovementElapsedTime < 0.1f)
-		{
-			float t = ForwardMovementElapsedTime / 0.1f;
-			ForwardMovementElapsedTime += DeltaTime;
-			FVector NewLocation = FMath::Lerp(UpMantleTarget, TargetLocation, t);
-			Player->SetActorLocation(NewLocation);
-		}
-		else
-		{
-			bShouldMantleForward = false;
+			bShouldMantle = false;
 			Player->SetActorLocation(TargetLocation);
 			Player->ChangeState(Player->DesiredGroundState);
+			return;
 		}
 	}
+	
 }
 
 void USuraPlayerMantlingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
 	Player->GetCharacterMovement()->GravityScale = 1.f;
-	bShouldMantleUp = false;
-	bShouldMantleForward = false;
-	ForwardMovementElapsedTime = 0;
-	UpMovementElapsedTime = 0;
+	bShouldMantle = false;
+	ElapsedTime = 0;
 }
