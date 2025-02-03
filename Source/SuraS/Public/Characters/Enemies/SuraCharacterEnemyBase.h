@@ -26,7 +26,10 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
 	virtual void OnDamagedTriggered();
+
+	UFUNCTION()
 	virtual void OnDeathTriggered();
 
 public:
