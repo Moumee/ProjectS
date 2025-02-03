@@ -31,3 +31,8 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("DEATH"));
 }
+
+bool ASuraCharacterEnemyBase::TakeDamage(FDamageData DamageData, AActor* DamageCauser)
+{
+	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
+}
