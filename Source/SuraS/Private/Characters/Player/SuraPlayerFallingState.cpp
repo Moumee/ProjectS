@@ -80,7 +80,7 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		ECC_GameTraceChannel1, FCollisionShape::MakeCapsule(Player->GetCapsuleComponent()->GetScaledCapsuleRadius(),
 			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
 	
-	if (bWallHit && Player->GetCharacterMovement()->IsFalling() && Player->JumpsLeft < Player->MaxJumps)
+	if (bWallHit && Player->GetCharacterMovement()->IsFalling() && Player->GetPreviousState()->GetStateType() == EPlayerState::Jumping)
 	{
 		Player->WallHitResult = WallHitResult;
 		FHitResult LedgeHitResult;

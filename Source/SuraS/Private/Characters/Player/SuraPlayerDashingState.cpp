@@ -28,7 +28,7 @@ void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 	
 
 	Player->DashesLeft--;
-	Player->JumpsLeft = Player->MaxJumps;
+	Player->JumpsLeft = Player->MaxJumps - 1;
 	
 	for (int i = 0; i < Player->DashCooldowns.Num(); i++)
 	{
