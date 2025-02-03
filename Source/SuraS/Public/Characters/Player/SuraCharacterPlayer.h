@@ -147,6 +147,7 @@ public:
 	// UACWallRun* GetWallRunComponent() const { return WallRunComponent; }
 
 	// Returns Player Movement Data Actor Component
+	UFUNCTION(BlueprintCallable)
 	UACPlayerMovementData* GetPlayerMovementData() const { return PlayerMovementData; }
 
 	UCameraComponent* GetCamera() const { return Camera; }
