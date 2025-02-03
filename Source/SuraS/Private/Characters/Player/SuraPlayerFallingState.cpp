@@ -8,6 +8,7 @@
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashingState.h"
 #include "Characters/Player/SuraPlayerHangingState.h"
+#include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
 #include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
@@ -106,19 +107,7 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		}
 	}
 
-	if (Player->GetPreviousState()->GetStateType() == EPlayerState::WallRunning)
-	{
-		ElapsedTimeFromWallRun += DeltaTime;
-		if (ElapsedTimeFromWallRun > 0.2f)
-		{
-			if (Player->ShouldEnterWallRunning(Player->WallRunDirection, Player->WallRunSide))
-			{
-				Player->ChangeState(Player->WallRunningState);
-				return;
-			}
-		}
-	}
-	else
+	if (Player->GetPreviousState()->GetStateType() != EPlayerState::WallRunning)
 	{
 		if (Player->ShouldEnterWallRunning(Player->WallRunDirection, Player->WallRunSide))
 		{
@@ -126,9 +115,12 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 			return;
 		}
 	}
-	
-	
-	
+
+	if (Player->bJumpTriggered)
+	{
+		Player->ChangeState(Player->JumpingState);
+		return;
+	}
 	
 
 	if (Player->bDashTriggered)
