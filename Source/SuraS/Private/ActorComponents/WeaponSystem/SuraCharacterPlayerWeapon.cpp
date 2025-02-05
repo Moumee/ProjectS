@@ -50,6 +50,18 @@ void ASuraCharacterPlayerWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedC
 
 }
 
+void ASuraCharacterPlayerWeapon::UpdateLookInputVector2D(const FInputActionValue& InputValue)
+{
+	PlayerLookInputVector2D = InputValue.Get<FVector2D>();
+
+	UE_LOG(LogTemp, Warning, TEXT("(Player Input Value) X: %f, Y: %f"), PlayerLookInputVector2D.X, PlayerLookInputVector2D.Y);
+}
+
+void ASuraCharacterPlayerWeapon::SetLookInputVector2DZero()
+{
+	PlayerLookInputVector2D = FVector2D::ZeroVector;
+}
+
 void ASuraCharacterPlayerWeapon::BeginPlay()
 {
 	Super::BeginPlay();
@@ -74,6 +86,9 @@ void ASuraCharacterPlayerWeapon::SetupPlayerInputComponent(UInputComponent* Play
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayerWeapon::Move);
+
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASuraCharacterPlayerWeapon::UpdateLookInputVector2D);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::None, this, &ASuraCharacterPlayerWeapon::SetLookInputVector2DZero);
 	}
 }
 

@@ -5,7 +5,6 @@
 
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
 
-//TODO: file path 수정하기
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 
@@ -68,11 +67,24 @@ void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 		//TODO: Weapon Type에 따라서 Bind되는 Action이 다르도록 설계하기
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
-			// Fire
-			LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UACWeapon::Fire);
+			if (WeaponName == EWeaponName::WeaponName_Rifle)
+			{
 
-			// Zoom Toggle
-			RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
+				
+				// FullAuto Shot
+				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot);
+				//EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Canceled, this, &UACWeapon::StopFullAutoShot);
+				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot);
+
+				// Zoom Toggle
+				RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
+			}
+			else if (WeaponName == EWeaponName::WeaponName_ShotGun)
+			{
+				// Fire
+				LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UACWeapon::Fire);
+			}
+
 		}
 	}
 
@@ -108,6 +120,8 @@ void UACWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	// ...
 
 	//TODO: UpdateState() 활성화시키기
+
+	UpdateRecoil(DeltaTime);
 }
 
 void UACWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -191,6 +205,8 @@ void UACWeapon::Fire()
 {
 	if (CurrentState != UnequippedState)
 	{
+		ChangeState(FiringState);
+
 		UE_LOG(LogTemp, Warning, TEXT("Fired!!!"));
 
 		if (Character == nullptr || Character->GetController() == nullptr)
@@ -255,6 +271,11 @@ void UACWeapon::Fire()
 				AnimInstance->Montage_Play(FireAnimation, 1.f);
 			}
 		}
+
+		// <Recoil>
+		AddRecoilValue();
+
+		ChangeState(IdleState);
 	}
 }
 
@@ -414,7 +435,7 @@ void UACWeapon::ActivateCrosshairWidget(bool bflag)
 }
 
 
-#pragma region FIreMode
+#pragma region FireMode
 
 void UACWeapon::HandleSingleFire()
 {
@@ -452,7 +473,193 @@ void UACWeapon::StopBurstFire()
 	}
 }
 
+#pragma endregion
+
+#pragma region FireMode/FullAuto
+
+void UACWeapon::StartFullAutoShot()
+{
+	UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Started!!!"));
+	if (!GetWorld()->GetTimerManager().IsTimerActive(FullAutoShotTimer))
+	{
+		Fire();
+		GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, this, &UACWeapon::Fire, FullAutoShotFireRate, true);
+	}
+}
+
+void UACWeapon::StopFullAutoShot()
+{
+	UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
+	GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
+}
 
 #pragma endregion
 
 
+#pragma region Recoil
+
+void UACWeapon::AddRecoilValue()
+{
+	bIsRecoiling = true;
+
+	//float RandRecoilPitch = FMath::RandRange(RecoilAmountPitch * 0.8f, RecoilAmountPitch * 1.2f) * (-1);
+	//float RandRecoilYaw = FMath::RandRange(-RecoilAmountYaw, RecoilAmountYaw);
+
+	float RandRecoilPitch = FMath::RandRange(RecoilAmountPitch * RecoilRangeMinPitch , RecoilAmountPitch * RecoilRangeMaxPitch) * (-1);
+	float RandRecoilYaw = FMath::RandRange(RecoilAmountYaw * RecoilRangeMinYaw, RecoilAmountYaw * RecoilRangeMaxYaw);
+
+	TotalTargetRecoilValuePitch += RandRecoilPitch;
+	TotalTargetRecoilValueYaw += RandRecoilYaw;
+}
+
+void UACWeapon::ApplyRecoil(float DeltaTime)
+{
+	if (Character)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+		if (!PlayerController) return;
+
+
+		// <Old Verision>
+		//float PitchRecoil = FMath::RandRange(RecoilAmountPitch * 0.8f, RecoilAmountPitch * 1.2f);
+		//float YawRecoil = FMath::RandRange(-RecoilAmountYaw, RecoilAmountYaw);
+
+		//PlayerController->AddPitchInput(-PitchRecoil);
+		//PlayerController->AddYawInput(YawRecoil);
+
+
+		//TotalRecoilValuePitch += (-PitchRecoil);
+		//TotalRecoilValueYaw += (YawRecoil);
+
+		//---------------------------------
+		// <New Version>
+		//float InterpRecoilTargetValue_Pitch = FMath::FInterpTo(CulmulatedRecoilValuePitch, TotalTargetRecoilValuePitch, DeltaTime, RecoilSpeed);
+		//float InterpRecoilTargetValue_Yaw = FMath::FInterpTo(CulmulatedRecoilValueYaw, TotalTargetRecoilValueYaw, DeltaTime, RecoilSpeed);;
+
+		float InterpRecoilTargetValue_Pitch = FMath::FInterpTo(0.f, TotalTargetRecoilValuePitch - CulmulatedRecoilValuePitch, DeltaTime, RecoilSpeed);
+		float InterpRecoilTargetValue_Yaw = FMath::FInterpTo(0.f, TotalTargetRecoilValueYaw- CulmulatedRecoilValueYaw, DeltaTime, RecoilSpeed);;
+
+		PlayerController->AddPitchInput(InterpRecoilTargetValue_Pitch);
+		PlayerController->AddYawInput(InterpRecoilTargetValue_Yaw);
+
+		CulmulatedRecoilValuePitch += InterpRecoilTargetValue_Pitch;
+		CulmulatedRecoilValueYaw += InterpRecoilTargetValue_Yaw;
+	}
+}
+
+void UACWeapon::RecoverRecoil(float DeltaTime)
+{
+	APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+	if (!PlayerController) return;
+
+	//float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(TotalTargetRecoilValuePitch, 0.f, DeltaTime, RecoilRecoverSpeed);
+	//float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(TotalTargetRecoilValueYaw, 0.f, DeltaTime, RecoilRecoverSpeed);;
+
+	//PlayerController->AddPitchInput(-InterpRecoilRecoverTargetValue_Pitch);
+	//PlayerController->AddYawInput(-InterpRecoilRecoverTargetValue_Yaw);
+
+	//TotalTargetRecoilValuePitch -= InterpRecoilRecoverTargetValue_Pitch;
+	//TotalTargetRecoilValueYaw -= InterpRecoilRecoverTargetValue_Yaw;
+
+	//-----------------------------------------------------
+
+	//float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(RecoveredRecoilValuePitch, CulmulatedRecoilValuePitch, DeltaTime, RecoilRecoverSpeed);
+	//float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(RecoveredRecoilValueYaw, CulmulatedRecoilValueYaw, DeltaTime, RecoilRecoverSpeed);;
+
+	if (bIsRecoilRecoverAffectedByPlayerInput)
+	{
+		FVector2D PlayerLookInputVector2D = Character->GetPlayerLookInputVector();
+
+		if (FMath::Sign(PlayerLookInputVector2D.Y) == FMath::Sign((CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch)*(-1)))
+		{
+			if (PlayerLookInputVector2D.Y >= 0)
+			{
+				RecoveredRecoilValuePitch += (-1) * FMath::Clamp(PlayerLookInputVector2D.Y, 0.f, (CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch)*(-1));
+			}
+			else
+			{
+				RecoveredRecoilValuePitch += (-1) * FMath::Clamp(PlayerLookInputVector2D.Y, (CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch) * (-1), 0.f);
+			}
+		}
+
+		if (FMath::Sign(PlayerLookInputVector2D.X) == FMath::Sign((CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw) * (-1)))
+		{
+			if (PlayerLookInputVector2D.X >= 0)
+			{
+				RecoveredRecoilValueYaw += (-1) * FMath::Clamp(PlayerLookInputVector2D.X, 0.f, (CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw) * (-1));
+			}
+			else
+			{
+				RecoveredRecoilValueYaw += (-1) * FMath::Clamp(PlayerLookInputVector2D.X, (CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw) * (-1), 0.f);
+			}
+		}
+
+		float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(0.f, CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch, DeltaTime, RecoilRecoverSpeed);
+		float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw, DeltaTime, RecoilRecoverSpeed);;
+
+		PlayerController->AddPitchInput(-InterpRecoilRecoverTargetValue_Pitch);
+		PlayerController->AddYawInput(-InterpRecoilRecoverTargetValue_Yaw);
+
+		RecoveredRecoilValuePitch += InterpRecoilRecoverTargetValue_Pitch;
+		RecoveredRecoilValueYaw += InterpRecoilRecoverTargetValue_Yaw;
+	}
+	else
+	{
+		float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(0.f, CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch, DeltaTime, RecoilRecoverSpeed);
+		float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw, DeltaTime, RecoilRecoverSpeed);;
+
+		PlayerController->AddPitchInput(-InterpRecoilRecoverTargetValue_Pitch);
+		PlayerController->AddYawInput(-InterpRecoilRecoverTargetValue_Yaw);
+
+		RecoveredRecoilValuePitch += InterpRecoilRecoverTargetValue_Pitch;
+		RecoveredRecoilValueYaw += InterpRecoilRecoverTargetValue_Yaw;
+	}
+
+	if (FMath::Abs(CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch) < KINDA_SMALL_NUMBER
+		&& FMath::Abs(CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw) < KINDA_SMALL_NUMBER)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Recoil has been perfectly Recovered!!!"));
+
+		// TODO: Reset recoil value 함수를 따로 만드는 것이 좋을 듯 함
+		TotalTargetRecoilValuePitch = 0.f;
+		TotalTargetRecoilValueYaw = 0.f;
+
+		CulmulatedRecoilValuePitch = 0.f;
+		CulmulatedRecoilValueYaw = 0.f;
+
+		RecoveredRecoilValuePitch = 0.f;
+		RecoveredRecoilValueYaw = 0.f;
+
+		bIsRecoiling = false;
+	}
+}
+
+void UACWeapon::UpdateRecoil(float DeltaTime)
+{
+	if (Character)
+	{
+		//APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+		//if (!PlayerController) return;
+
+		//float RecoilRecoverTargetValue_Pitch = TotalRecoilValuePitch - RecoveredRecoilValuePitch;
+		//float RecoilRecoverTargetValue_Yaw = TotalRecoilValueYaw - RecoveredRecoilValueYaw;
+
+		//float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(0.f, RecoilRecoverTargetValue_Pitch, DeltaTime, RecoilRecoverSpeed);
+		//float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, RecoilRecoverTargetValue_Yaw, DeltaTime, RecoilRecoverSpeed);;
+
+		//RecoveredRecoilValuePitch += InterpRecoilRecoverTargetValue_Pitch;
+		//RecoveredRecoilValueYaw += InterpRecoilRecoverTargetValue_Yaw;
+
+		//PlayerController->AddPitchInput(-RecoveredRecoilValuePitch);
+		//PlayerController->AddYawInput(-RecoveredRecoilValueYaw);
+
+		//-----------------------------------------------------------
+		if (bIsRecoiling)
+		{
+			ApplyRecoil(DeltaTime);
+			RecoverRecoil(DeltaTime);
+		}
+	}
+}
+
+#pragma endregion

@@ -48,7 +48,6 @@ public:
 	class UInputMappingContext* FireMappingContext;
 
 	/** Fire Input Action */
-	//TODO: FireMapping을 Character에서 처리하는 것이 나은지 고민해봐야함
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* FireAction;
 
@@ -173,7 +172,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CrosshairWidget")
 	TSubclassOf<UUserWidget> CrosshairWidgetClass;
 
-	// 생성된 위젯 인스턴스
 	UPROPERTY()
 	UUserWidget* CrosshairWidget;
 
@@ -226,6 +224,85 @@ protected: //내부 로직
 	void StopBurstFire();
 
 #pragma endregion
+
+#pragma region FireMode/FullAuto
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|FireMode")
+	float FullAutoShotFireRate = 0.1f;
+
+	FTimerHandle FullAutoShotTimer;
+
+public:
+
+	void StartFullAutoShot();
+
+	void StopFullAutoShot();
+
+#pragma endregion
+
+
+#pragma region Recoil
+
+protected:
+	
+	bool bIsRecoiling = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsRecoilRecoverAffectedByPlayerInput = false;
+
+	UPROPERTY(EditAnywhere)
+	float RecoilAmountPitch = 1.5f;
+
+	UPROPERTY(EditAnywhere)
+	float RecoilRangeMinPitch = 0.8f;
+
+	UPROPERTY(EditAnywhere)
+	float RecoilRangeMaxPitch = 1.2f;
+
+	UPROPERTY(EditAnywhere)
+	float RecoilAmountYaw = 0.8f;
+
+	UPROPERTY(EditAnywhere)
+	float RecoilRangeMinYaw = -1.f;
+
+	UPROPERTY(EditAnywhere)
+	float RecoilRangeMaxYaw = 1.f;
+
+	UPROPERTY(EditAnywhere)
+	float RecoilSpeed = 4.f;
+	UPROPERTY(EditAnywhere)
+	float RecoilRecoverSpeed = 3.5f;
+
+	FTimerHandle RecoilRecoverTimer;
+
+	float TotalTargetRecoilValuePitch = 0.f;
+	float TotalTargetRecoilValueYaw = 0.f;
+
+	float CulmulatedRecoilValuePitch = 0.f;
+	float CulmulatedRecoilValueYaw = 0.f;
+
+	float RecoveredRecoilValuePitch = 0.f;
+	float RecoveredRecoilValueYaw = 0.f;
+
+	//-----------------------------------
+	//FVector2D PlayerLookInputVector2D = { 0.f, 0.f };
+
+public:
+
+	void AddRecoilValue();
+
+	void ApplyRecoil(float DeltaTime);
+
+	void RecoverRecoil(float DeltaTime);
+
+	void UpdateRecoil(float DeltaTime);
+
+
+
+#pragma endregion
+
+
 
 
 };
