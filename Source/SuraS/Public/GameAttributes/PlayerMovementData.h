@@ -39,11 +39,13 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	// The Z value of the launch velocity when jumping
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float JumpZVelocity;
+	float PrimaryJumpZSpeed;
 
-	// The XY value of the launch velocity when jumping
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float JumpXYVelocity;
+	float DoubleJumpZSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DoubleJumpXYSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float AirControl;

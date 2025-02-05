@@ -106,24 +106,34 @@ float UACPlayerMovementData::GetCrouchSpeed() const
 	return PlayerRow->CrouchSpeed;
 }
 
-float UACPlayerMovementData::GetJumpZVelocity() const
+float UACPlayerMovementData::GetPrimaryJumpZSpeed() const
 {
 	if (!PlayerRow)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
 		return 0;
 	}
-	return PlayerRow->JumpZVelocity;
+	return PlayerRow->PrimaryJumpZSpeed;
 }
 
-float UACPlayerMovementData::GetJumpXYVelocity() const
+float UACPlayerMovementData::GetDoubleJumpZSpeed() const
 {
 	if (!PlayerRow)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
 		return 0;
 	}
-	return PlayerRow->JumpXYVelocity;
+	return PlayerRow->DoubleJumpZSpeed;
+}
+
+float UACPlayerMovementData::GetDoubleJumpXYSpeed() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->DoubleJumpXYSpeed;
 }
 
 float UACPlayerMovementData::GetAirControl() const
