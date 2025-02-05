@@ -50,6 +50,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* InteractAction;
 
+	FVector2D PlayerLookInputVector2D;
+
+public:
+	void UpdateLookInputVector2D(const FInputActionValue& InputValue);
+	void SetLookInputVector2DZero();
+
+	FVector2D GetPlayerLookInputVector() const { return PlayerLookInputVector2D; }
+
 #pragma endregion
 
 

@@ -52,6 +52,8 @@ ASuraProjectile::ASuraProjectile()
 	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	//ProjectileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 
+	ProjectileMesh->SetCastShadow(false);
+
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
 }
