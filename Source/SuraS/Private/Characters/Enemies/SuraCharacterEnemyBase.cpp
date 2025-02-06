@@ -1,9 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "Characters/Enemies/SuraCharacterEnemyBase.h"
+
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
-#include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
