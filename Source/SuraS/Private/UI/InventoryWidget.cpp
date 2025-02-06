@@ -1,6 +1,7 @@
 #include "UI/InventoryWidget.h"
 
-#include "Characters/Player/SuraCharacterPlayer.h"
+#include "ActorComponents/UISystem/ACInventoryManager.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet/GameplayStatics.h"
@@ -12,20 +13,51 @@ void UInventoryWidget::NativeConstruct()
     // 키보드 입력을 받기 위해 IsFocusable를 true로 설정
     this->SetIsFocusable(true);
     
-    // 기본갑 설정
+    // 기본값 설정
     CurrentTab = EInventoryTab::Weapon;
     SetActiveTab(CurrentTab);
-        
-    // Back 버튼에 클릭 이벤트 바인딩
-    if (BackButton)
-    {
-        // 버튼 클릭 시 OnBackButtonClicked() 함수 호출
-        BackButton->OnClicked.AddDynamic(this, &UInventoryWidget::OnBackButtonClicked);
-    }
 
-    // BackButton Hover, UnHover 이벤트 바인딩
-    if (BackButton) BackButton->OnHovered.AddDynamic(this, &UInventoryWidget::OnBackButtonHover);
-    if (BackButton) BackButton->OnUnhovered.AddDynamic(this, &UInventoryWidget::OnBackButtonUnHover);
+
+#pragma region Weapon
+
+    //const int32 MaxWeaponTypes = 3;  // 예: Rifle, Sniper, Pistol
+    //const int32 MaxWeaponSlots = 5;  // 각 무기 타입에 대해 5개의 슬롯
+
+    // Weapon 이미지 및 이름 배열 초기화
+    // WeaponImages.SetNum(MaxWeaponTypes);
+    // WeaponNames.SetNum(MaxWeaponSlots);
+
+    // for (int32 i = 0; i < MaxWeaponTypes; ++i)
+    // {
+    //     // WeaponImages[i].SetNum(MaxWeaponSlots);
+    //     // WeaponNames[i].SetNum(MaxWeaponSlots);
+    // }
+    
+    // 무기 타입별 슬롯에 해당하는 UI 위젯 할당
+    // 구현해야함
+
+    // 공통 Lock 이미지 (모든 잠긴 무기 위에 띄울 자물쇠)
+    //LockImage = Cast<UImage>(GetWidgetFromName(TEXT("Lock_Overlay")));
+
+    // 기본적으로 모든 무기 슬롯은 잠겨있다고 가정
+    // for (int32 i = 0; i < MaxWeaponTypes; ++i)
+    // {
+    //     for (int32 j = 0; j < MaxWeaponSlots; ++j)
+    //     {
+    //         if (WeaponStates[i][j] == false)
+    //         {
+    //             // 잠금 이미지 보이기
+    //             if (WeaponImages[i][j])
+    //             {
+    //                 WeaponImages[i][j]->SetVisibility(ESlateVisibility::Visible);
+    //             }
+    //         }
+    //     }
+    // }
+    
+#pragma endregion Weapon
+ 
+    
     
 }
 
@@ -43,15 +75,27 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
         return FReply::Handled();  // 이벤트 처리 완료
     }
 
-    // 키 입력 처리: I 키를 눌러서 인벤토리 닫기
-    if (InKeyEvent.GetKey() == EKeys::One)
+    // 키 입력 처리: I와 Tab 키를 눌러서 인벤토리 닫기
+    if (InKeyEvent.GetKey() == EKeys::I || InKeyEvent.GetKey() == EKeys::Tab)
     {
-        CloseInventoryByInput();
+        UInventoryWidget::CloseUI();
         return FReply::Handled();
     }
 
-    // 기본 처리된 결과를 반환
-    return Super::NativeOnKeyDown(InGeometry, InKeyEvent);  // 부모 클래스의 기본 동작을 호출
+    if (InKeyEvent.GetKey() == EKeys::T)  // T 키를 눌렀을 때
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 2.f , FColor::Red, TEXT("weapon unlocked"));
+        
+        // 무기 언락 처리
+        if (UACInventoryManager* InventoryManager = GetOwningPlayerPawn()->FindComponentByClass<UACInventoryManager>())
+        {
+            InventoryManager->UnlockWeapon();  // 예시로 UnlockWeapon 함수 호출
+        }
+    
+        return FReply::Handled();
+    }
+
+    return FReply::Handled();  // Tab 키 기본 동작 방지
 }
 
 
@@ -87,27 +131,6 @@ void UInventoryWidget::SwitchToChipTab()
     }
 }
 
-void UInventoryWidget::OnBackButtonClicked()
-{
-    CloseInventoryByInput();
-}
-
-// SuraCharacterPlayer의 CloseInventory 메서드를 호출하는 함수(키입력, 마우스 입력 둘 다 공통적으로 씀)
-void UInventoryWidget::CloseInventoryByInput()
-{
-    // UI를 제거 (인벤토리 창 닫기)
-    RemoveFromParent();
-
-    // 플레이어 캐릭터에게 알림 (게임 상태 관리 위임)
-    if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-    {
-        if (ASuraCharacterPlayer* Player = Cast<ASuraCharacterPlayer>(PlayerController->GetPawn()))
-        {
-            Player->CloseInventory(); // 캐릭터에서 상태 관리
-        }
-    }
-}
-
 void UInventoryWidget::ShowTabContent() const
 {
     // 현재 탭에 따라 Widget Switcher의 Index를 전환
@@ -125,16 +148,25 @@ void UInventoryWidget::ShowTabContent() const
    
 }
 
-void UInventoryWidget::OnBackButtonHover()
+void UInventoryWidget::OpenUI()
 {
-    if (BtnHover) PlayAnimation(BtnHover);
+    Super::OpenUI();
+    GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, "OpenInventory");
 }
 
-void UInventoryWidget::OnBackButtonUnHover()
+void UInventoryWidget::CloseUI()
 {
-    if (BtnHover) PlayAnimation(BtnHover, 0.0f, 1, EUMGSequencePlayMode::Reverse);
+    Super::CloseUI();
+    GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, "CloseInventory");
 }
 
-
-
+void UInventoryWidget::UpdateWeaponSlot(int32 WeaponType, int32 WeaponIndex, bool bIsUnlocked)
+{
+    if (WeaponImages[WeaponType][WeaponIndex] && WeaponNames[WeaponType][WeaponIndex])
+    {
+        // 무기가 Unlock되면 value를 1로, lock 상태면 value를 0으로
+        WeaponImages[WeaponType][WeaponIndex]->SetRenderOpacity(bIsUnlocked ? 1.0f : 0.0f);
+        WeaponNames[WeaponType][WeaponIndex]->SetRenderOpacity(bIsUnlocked ? 1.0f : 0.5f);
+    }
+}
 

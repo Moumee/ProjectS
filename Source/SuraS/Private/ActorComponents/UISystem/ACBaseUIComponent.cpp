@@ -2,15 +2,16 @@
 
 
 #include "ActorComponents/UISystem/ACBaseUIComponent.h"
+#include "EnhancedInputComponent.h"
+
 
 // Sets default values for this component's properties
 UACBaseUIComponent::UACBaseUIComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	PrimaryComponentTick.bCanEverTick = false;
+	
 }
 
 
@@ -18,41 +19,65 @@ UACBaseUIComponent::UACBaseUIComponent()
 void UACBaseUIComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	SetupInput();
+}
 
-	// ...
+void UACBaseUIComponent::SetupInput()
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetOwner()->GetInstigatorController()))
+	{
+		if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PC->InputComponent))
+		{
+			EnhancedInput->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &UACBaseUIComponent::OpenUI, EUIType::Inventory);
+			//EnhancedInput->BindAction(OpenPauseMenuAction, ETriggerEvent::Started, this, &UACBaseUIComponent::ToggleUI, EUIType::PauseMenu);
+		}
+	}
+}
+
+UBaseUIWidget* UACBaseUIComponent::GetOrCreateWidget(EUIType UIType)
+{
+	// if (UIWidgets.Contains(UIType))
+	// {
+	// 	return UIWidgets[UIType];
+	// }
+	//
+	// if (UIWidgetClasses.Contains(UIType))
+	// {
+	// 	UBaseUIWidget* NewWidget = CreateWidget<UBaseUIWidget>(GetWorld(), UIWidgetClasses[UIType]);
+	// 	if (NewWidget)
+	// 	{
+	// 		UIWidgets.Add(UIType, NewWidget);
+	// 	}
+	// 	return NewWidget;
+	// }
+	// UIWidgetClasses에서 UIType에 맞는 위젯 클래스를 가져와서 생성
 	
-}
-
-
-// Called every frame
-void UACBaseUIComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-
-void UACBaseUIComponent::ShowUI()
-{
-	// UinventoryWidget을 인스턴스화하고 화면에 표시
-	if (!InventoryWidget)
+	if (UIWidgetClasses.Contains(UIType))
 	{
-		// UI 위젯 인스턴스화
-		InventoryWidget = CreateWidget<UInventoryWidget>(GetWorld(), UInventoryWidget::StaticClass());
+		UBaseUIWidget* NewWidget = CreateWidget<UBaseUIWidget>(GetWorld(), UIWidgetClasses[UIType]);
+		if (NewWidget)
+		{
+			UIWidgets.Add(UIType, NewWidget);
+		}
+		return NewWidget;
 	}
+	
+	return nullptr;
+}
 
-	if (InventoryWidget)
+void UACBaseUIComponent::OpenUI(EUIType UIType)
+{
+	UBaseUIWidget* TargetWidget = GetOrCreateWidget(UIType);
+	if (!TargetWidget) return;
+
+	if (!TargetWidget->IsInViewport())
 	{
-		InventoryWidget->AddToViewport(); // 화면에 UI 추가
+		TargetWidget->OpenUI();
 	}
 }
 
-void UACBaseUIComponent::HideUI()
-{
-	if (InventoryWidget)
-	{
-		InventoryWidget->RemoveFromParent(); // UI를 화면에서 제거
-	}
-}
+
+
+
 
 

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "SuraPlayerEnums.h"
+#include "ActorComponents/UISystem/ACBaseUIComponent.h"
+#include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
@@ -37,6 +39,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes", meta = (AllowPrivateAccess = "true"))
 	UACPlayerAttributes* PlayerAttributes;
 
+	// UI component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
+	UACBaseUIComponent* UIComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	UACInventoryManager* InventoryManager;
+
+
 #pragma region Input
 	
 	/** MappingContext */
@@ -63,11 +73,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* RunAction;
-
-	/** Inventory **/
-	// Open Inventory
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* OpenInventoryAction;
 
 	float ForwardAxisInputValue;
 	
@@ -163,21 +168,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetBaseMovementSpeed(EMovementState NewMovementState);
-
-
-	/** 인벤토리 관련 **/
-	void OpenInventory();
-	void CloseInventory();
-	void SwitchToWeaponTab(const FInputActionValue& Value);
-	void SwitchToChipTab(const FInputActionValue& Value);
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
-	TSubclassOf<UUserWidget> InventoryWidgetClass; // 위젯 블루프린트 클래스
-
-	UPROPERTY()
-	UUserWidget* InventoryWidget; // 생성된 위젯의 참조
-	
-	
 };
 
 

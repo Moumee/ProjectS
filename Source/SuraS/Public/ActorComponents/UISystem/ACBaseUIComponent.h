@@ -5,9 +5,19 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "UI/InventoryWidget.h"
-
 #include "ACBaseUIComponent.generated.h"
 
+class UInputAction;
+class UEnhancedInputComponent;
+class UBaseUIWidget;
+
+UENUM(BlueprintType)
+enum class EUIType : uint8
+{
+	None UMETA(DisplayName = "None"),
+	Inventory UMETA(DisplayName = "Inventory"),
+	Pause UMETA(DisplayName = "Pause")
+};
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -23,20 +33,36 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	void SetupInput();
+
 public:	
 	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	// virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	/** 특정 UI 열기/ 닫기 **/
+	void OpenUI(EUIType UIType);
+
+
+	
 private:
-	// UI 위젯을 저장할 변수
-	UInventoryWidget* InventoryWidget;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* OpenInventoryAction;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* OpenPauseMenuAction;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TMap<EUIType, TSubclassOf<UBaseUIWidget>> UIWidgetClasses; // 위젯 블루프린트 클래스
+
+	/** 생성된 UI 위젯 관리 **/
+	UPROPERTY()
+	TMap<EUIType, UBaseUIWidget*> UIWidgets;
+
+	UBaseUIWidget* GetOrCreateWidget(EUIType UIType);
 
 public:
-	// UI를 띄우는 함수
-	void ShowUI();
 
-	// UI를 숨기는 함수
-	void HideUI();
+	
 
 		
 };
