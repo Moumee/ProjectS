@@ -110,7 +110,6 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 #pragma region WeaponState
-
 protected:
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponBaseState* CurrentState;
@@ -128,8 +127,10 @@ protected:
 	USuraWeaponReloadingState* ReloadingState;
 
 public:
-	void ChangeState(USuraWeaponBaseState* NewState);
+	UFUNCTION()
+	USuraWeaponBaseState* GetCurrentState() const { return CurrentState; }
 
+	void ChangeState(USuraWeaponBaseState* NewState);
 #pragma endregion
 
 protected:
@@ -201,6 +202,10 @@ public:
 	void EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
 
 	void UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
+
+	void SetInputActionBinding();
+
+	void ResetInputActionBinding();
 #pragma endregion
 
 #pragma region Reload

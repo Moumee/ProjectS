@@ -5,6 +5,7 @@
 
 USuraWeaponUnequippedState::USuraWeaponUnequippedState()
 {
+	WeaponStateType = EWeaponStateType::WeaponStateType_Unequipped;
 }
 
 USuraWeaponUnequippedState::~USuraWeaponUnequippedState()

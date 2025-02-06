@@ -3,9 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/Player/SuraPlayerEnums.h"
+#include "ActorComponents/WeaponSystem/WeaponStateType.h"
 #include "Animation/AnimInstance.h"
 #include "SuraPlayerAnimInstance_Weapon.generated.h"
-
 
 class USuraPlayerBaseState;
 class ASuraCharacterPlayerWeapon;
@@ -35,7 +36,16 @@ public:
 	float GroundSpeed;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	FVector Velocity;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float RunSpeed;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsInAir;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bCrouchTriggered;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float Direction;
@@ -46,9 +56,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	USuraPlayerBaseState* CurrentState;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	EPlayerState CurrentStateType;
+
 
 	//-------------------------------------------------
 	// <이재형 Weapon system 관련>
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	EWeaponStateType CurrentWeaponStateType;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	bool bIsZoomIn;
