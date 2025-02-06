@@ -110,7 +110,6 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 #pragma region WeaponState
-
 protected:
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponBaseState* CurrentState;
@@ -128,14 +127,44 @@ protected:
 	USuraWeaponReloadingState* ReloadingState;
 
 public:
-	void ChangeState(USuraWeaponBaseState* NewState);
+	UFUNCTION()
+	USuraWeaponBaseState* GetCurrentState() const { return CurrentState; }
 
+	void ChangeState(USuraWeaponBaseState* NewState);
 #pragma endregion
 
 protected:
 	/** The Character holding this weapon*/
 	ASuraCharacterPlayerWeapon* Character;
 	
+#pragma region Animation
+protected:
+	void StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation);
+#pragma endregion
+
+#pragma region Animation/Character
+protected:
+	UPROPERTY()
+	UAnimInstance* CharacterAnimInstance;
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
+	UAnimMontage* AM_Fire_Character;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
+	UAnimMontage* AM_Reload_Character;
+#pragma endregion
+
+#pragma region Animation/Weapon
+protected:
+	UPROPERTY()
+	UAnimInstance* WeaponAnimInstance;
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Weapon")
+	UAnimMontage* AM_Fire_Weapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Weapon")
+	UAnimMontage* AM_Reload_Weapon;
+#pragma endregion
 
 #pragma region Aim
 
@@ -173,6 +202,10 @@ public:
 	void EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
 
 	void UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
+
+	void SetInputActionBinding();
+
+	void ResetInputActionBinding();
 #pragma endregion
 
 #pragma region Reload

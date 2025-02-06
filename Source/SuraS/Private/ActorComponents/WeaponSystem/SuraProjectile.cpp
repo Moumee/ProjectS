@@ -26,6 +26,7 @@ ASuraProjectile::ASuraProjectile()
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Ignore); //Weapon
+	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel4, ECR_Ignore); //Player
 	CollisionComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	CollisionComp->OnComponentHit.AddDynamic(this, &ASuraProjectile::OnHit);		// set up a notification for when this component hits something blocking
@@ -51,7 +52,7 @@ ASuraProjectile::ASuraProjectile()
 	ProjectileMesh->SetupAttachment(RootComponent);
 	//ProjectileMesh->SetCollisionObjectType(ECC_GameTraceChannel1);
 	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	//ProjectileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	ProjectileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 
 	ProjectileMesh->SetCastShadow(false);
 

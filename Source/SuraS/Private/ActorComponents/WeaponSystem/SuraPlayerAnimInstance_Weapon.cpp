@@ -1,16 +1,23 @@
 
-
-
+//---------------------------------------------------
+//<이재형>
 #include "ActorComponents/WeaponSystem/SuraPlayerAnimInstance_Weapon.h"
 
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
 
 #include "KismetAnimationLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+
+//<승환님>
+#include "ActorComponents/ACPlayerMovmentData.h"
+#include "Characters/Player/SuraPlayerBaseState.h"
+#include "Characters/Player/SuraPlayerCrouchingState.h"
+
 
 //SuraPlayerAnimInstance_Weapon::SuraPlayerAnimInstance_Weapon()
 //{
@@ -28,7 +35,13 @@ void USuraPlayerAnimInstance_Weapon::NativeInitializeAnimation()
 
 	if (Character)
 	{
+		// <승환님>
+		RunSpeed = Character->GetPlayerMovementData()->GetRunSpeed();
+
+		//--------------------------------------
+		// <이재형>
 		SetAimPoint();
+		CurrentWeaponStateType = EWeaponStateType::WeaponStateType_None;
 	}
 
 	if (Character && Character->GetWeaponSystem())
@@ -43,6 +56,8 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 
 	if (Character)
 	{
+		Velocity = Character->GetCharacterMovement()->Velocity;
+
 		GroundSpeed = UKismetMathLibrary::VSizeXY(Character->GetCharacterMovement()->Velocity);
 
 		Direction = UKismetAnimationLibrary::CalculateDirection(Character->GetCharacterMovement()->Velocity,
@@ -50,7 +65,12 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 
 		Pitch = UKismetMathLibrary::NormalizeAxis(Character->GetControlRotation().Pitch);
 
-		CurrentState = Character->GetCurrentState();
+		if (Character->GetCurrentState())
+		{
+			CurrentState = Character->GetCurrentState();
+			CurrentStateType = Character->GetCurrentState()->GetStateType();
+			bCrouchTriggered = Character->bCrouchTriggered;
+		}
 
 		if (Character->GetCharacterMovement()->MovementMode == MOVE_Flying)
 		{
@@ -106,6 +126,15 @@ void USuraPlayerAnimInstance_Weapon::UpdateWeapon()
 			&& Character->GetWeaponSystem()->GetCurrentWeapon() != nullptr)
 		{
 			AimSocketRelativeTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetAimSocketRelativeTransform();
+
+			//-------------------------------------------------------------
+
+			CurrentWeaponStateType = Character->GetWeaponSystem()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType();
+
+			if (CurrentWeaponStateType == EWeaponStateType::WeaponStateType_Firing)
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Firing State!!!!!!!!!!"));
+			}
 		}
 
 
@@ -198,17 +227,17 @@ void USuraPlayerAnimInstance_Weapon::SetTargetRightHandTransform()
 			&& Character->GetWeaponSystem()->GetCurrentWeapon() != nullptr)
 		{
 			//FTransform RootTransform = Character->GetMesh()->GetBoneTransform(FName(TEXT("ik_hand_root")), ERelativeTransformSpace::RTS_World);
-			FTransform RootTransform = Character->GetMesh()->GetComponentTransform();
+			FTransform RootTransform = Character->GetArmMesh()->GetComponentTransform();
 
 			FTransform CameraTransform = Character->GetCamera()->GetComponentTransform();
 			FTransform WeaponAimSocketTransform = Character->GetWeaponSystem()->GetCurrentWeapon()->GetSocketTransform(FName(TEXT("Aim")));
-			FTransform RightHandTransform = Character->GetMesh()->GetBoneTransform(FName(TEXT("hand_r")));
+			FTransform RightHandTransform = Character->GetArmMesh()->GetBoneTransform(FName(TEXT("hand_r")));
 
 			FTransform CameraRelativeTransform = CameraTransform.GetRelativeTransform(RootTransform);
 			FTransform WeaponAimSocketRelativeTransform = WeaponAimSocketTransform.GetRelativeTransform(RootTransform);
 			FTransform RightHandRelativeTransform = RightHandTransform.GetRelativeTransform(RootTransform);
 
-			float CamOffset = 50.f; //TODO: 임시로 설정했음. 설정가능한 변수로 바꾸기
+			float CamOffset = 20.f; //TODO: 임시로 설정했음. 설정가능한 변수로 바꾸기
 
 
 			AimPointRelativeLocation = CameraRelativeTransform.GetLocation() + CameraRelativeTransform.GetRotation().GetForwardVector() * CamOffset;

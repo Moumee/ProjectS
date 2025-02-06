@@ -6,6 +6,7 @@
 
 USuraWeaponIdleState::USuraWeaponIdleState()
 {
+	WeaponStateType = EWeaponStateType::WeaponStateType_Idle;
 }
 
 USuraWeaponIdleState::~USuraWeaponIdleState()

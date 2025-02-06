@@ -354,7 +354,6 @@ FTransform UWeaponSystemComponent::GetWeaponAimSocketRelativeTransform()
 
 
 #pragma region SwitchWeapon
-
 void UWeaponSystemComponent::SwitchToPreviousWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Wheel Down"));
@@ -394,5 +393,4 @@ void UWeaponSystemComponent::EquipWeapon(int32 WeaponIndex)
 		CurrentWeapon = WeaponInventory[WeaponIndex];
 	}
 }
-
 #pragma endregion

@@ -31,7 +31,9 @@ ASuraCharacterPlayerWeapon::ASuraCharacterPlayerWeapon()
 	//ArmMesh->CastShadow = false;
 	//ArmMesh->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+
+	GetArmMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	//WeaponSystem
 	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
@@ -54,7 +56,7 @@ void ASuraCharacterPlayerWeapon::UpdateLookInputVector2D(const FInputActionValue
 {
 	PlayerLookInputVector2D = InputValue.Get<FVector2D>();
 
-	UE_LOG(LogTemp, Warning, TEXT("(Player Input Value) X: %f, Y: %f"), PlayerLookInputVector2D.X, PlayerLookInputVector2D.Y);
+	//UE_LOG(LogTemp, Warning, TEXT("(Player Input Value) X: %f, Y: %f"), PlayerLookInputVector2D.X, PlayerLookInputVector2D.Y);
 }
 
 void ASuraCharacterPlayerWeapon::SetLookInputVector2DZero()

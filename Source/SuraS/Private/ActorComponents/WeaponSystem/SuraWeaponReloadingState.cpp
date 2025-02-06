@@ -5,6 +5,7 @@
 
 USuraWeaponReloadingState::USuraWeaponReloadingState()
 {
+	WeaponStateType = EWeaponStateType::WeaponStateType_Reloading;
 }
 
 USuraWeaponReloadingState::~USuraWeaponReloadingState()

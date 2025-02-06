@@ -33,7 +33,7 @@ UACWeapon::UACWeapon()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true; //TODO: Tick 활용하면 활성화해야함.
 
-	// ...
+	WeaponAnimInstance = GetAnimInstance();
 
 	//TODO: Muzzle Offset은 weapon Type에 따라서 다를듯
 	// 현재는 기본적으로 Weapon Mesh의"Muzzle" Socket의 위치를 이용하고 있어서 MuzzleOffset는 사용 안하는 중임
@@ -47,13 +47,18 @@ UACWeapon::UACWeapon()
 	WeaponFireMode = EWeaponFireMode::WeaponFireMode_Single;
 	
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	//SetCollisionObjectType(ECC_GameTraceChannel3); //Weapon
-	//SetCollisionResponseToAllChannels(ECR_Ignore);
+	SetCollisionObjectType(ECC_GameTraceChannel3); //Weapon
+	SetCollisionResponseToAllChannels(ECR_Ignore);
 }
 
 void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 {
 	Character = NewCharacter;
+	if (Character)
+	{
+		//CharacterAnimInstance = Character->GetMesh()->GetAnimInstance();
+		CharacterAnimInstance = Character->GetArmMesh()->GetAnimInstance();
+	}
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
@@ -65,31 +70,31 @@ void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 			Subsystem->AddMappingContext(FireMappingContext, 1);
 		}
 
-		//TODO: Weapon Type에 따라서 Bind되는 Action이 다르도록 설계하기
-		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
-		{
-			if (WeaponName == EWeaponName::WeaponName_Rifle)
-			{
-				// FullAuto Shot
-				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot);
-				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot);
+		////TODO: Weapon Type에 따라서 Bind되는 Action이 다르도록 설계하기
+		//if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
+		//{
+		//	if (WeaponName == EWeaponName::WeaponName_Rifle)
+		//	{
+		//		// FullAuto Shot
+		//		LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot);
+		//		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot);
 
-				//TODO: Zoom을 Holding 방식으로 바꿔야함
-				// Zoom Toggle
-				RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
-			}
-			else if (WeaponName == EWeaponName::WeaponName_ShotGun)
-			{
-				// Fire Single Shot
-				LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::FireMultiProjectile);
+		//		//TODO: Zoom을 Holding 방식으로 바꿔야함
+		//		// Zoom Toggle
+		//		RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
+		//	}
+		//	else if (WeaponName == EWeaponName::WeaponName_ShotGun)
+		//	{
+		//		// Fire Single Shot
+		//		LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::FireMultiProjectile);
 
-				// Fire Burst Shot
-				EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire);
+		//		// Fire Burst Shot
+		//		RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire);
 
-				// Reload
-				EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
-			}
-		}
+		//		// Reload
+		//		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+		//	}
+		//}
 	}
 
 	// Set Aim Socket Relative Transform
@@ -108,6 +113,8 @@ void UACWeapon::BeginPlay()
 	FiringState = NewObject<USuraWeaponFiringState>(this, USuraWeaponFiringState::StaticClass());
 	UnequippedState = NewObject<USuraWeaponUnequippedState>(this, USuraWeaponUnequippedState::StaticClass());
 	ReloadingState = NewObject<USuraWeaponReloadingState>(this, USuraWeaponReloadingState::StaticClass());
+
+	WeaponAnimInstance = GetAnimInstance();
 
 	ChangeState(UnequippedState);
 
@@ -154,12 +161,28 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	// AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("GripPoint")));
-	AttachToComponent(Character->GetMesh(), AttachmentRules, FName(TEXT("Gun")));
+	//AttachToComponent(Character->GetMesh(), AttachmentRules, FName(TEXT("Gun")));
+
+	//TODO: 방식 바꾸기
+	if (WeaponName == EWeaponName::WeaponName_Rifle)
+	{
+		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_Rifle")));
+	}
+	else if (WeaponName == EWeaponName::WeaponName_ShotGun)
+	{
+
+		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
+	}
+	else
+	{
+		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
+	}
+
 
 	//TODO: 더 좋은 방법을 생각해 봐야함
 	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetSocketLocation(FName("Gun"));
-	RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetBoneLocation(FName(TEXT("hand_r")));
+	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetBoneLocation(FName(TEXT("hand_r")));
+	RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetArmMesh()->GetBoneLocation(FName(TEXT("hand_r")));
 	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
 		Character->GetWeaponSystem()->SetRightHandToAimSocketOffset(RightHandToAimSocketOffset);
@@ -199,7 +222,7 @@ void UACWeapon::DetachWeaponFromPlayer()
 		}
 
 		DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-		Character = nullptr;
+		//Character = nullptr;
 
 		//ActivateCrosshairWidget(false);
 
@@ -242,6 +265,7 @@ void UACWeapon::FireSingleProjectile()
 				//// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				//const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
 
+				//----------------------------------------------------
 				// <New Version>
 				const FVector SpawnLocation = this->GetSocketLocation(FName(TEXT("Muzzle")));
 				const FRotator SpawnRotation = (TargetLocationOfProjectile - SpawnLocation).Rotation();
@@ -263,16 +287,18 @@ void UACWeapon::FireSingleProjectile()
 		}
 
 		// Try and play a firing animation if specified
-		if (FireAnimation != nullptr)
-		{
-			// Get the animation object for the arms mesh
-			//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
-			UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-			if (AnimInstance != nullptr)
-			{
-				AnimInstance->Montage_Play(FireAnimation, 1.f);
-			}
-		}
+		//if (FireAnimation != nullptr)
+		//{
+		//	// Get the animation object for the arms mesh
+		//	//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
+		//	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+		//	if (AnimInstance != nullptr)
+		//	{
+		//		AnimInstance->Montage_Play(FireAnimation, 1.f);
+		//	}
+		//}
+		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
+
 
 		// <Recoil>
 		AddRecoilValue();
@@ -331,16 +357,17 @@ void UACWeapon::FireMultiProjectile()
 		}
 
 		// Try and play a firing animation if specified
-		if (FireAnimation != nullptr)
-		{
-			// Get the animation object for the arms mesh
-			//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
-			UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-			if (AnimInstance != nullptr)
-			{
-				AnimInstance->Montage_Play(FireAnimation, 1.f);
-			}
-		}
+		//if (FireAnimation != nullptr)
+		//{
+		//	// Get the animation object for the arms mesh
+		//	//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
+		//	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+		//	if (AnimInstance != nullptr)
+		//	{
+		//		AnimInstance->Montage_Play(FireAnimation, 1.f);
+		//	}
+		//}
+		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 
 		// <Recoil>
 		AddRecoilValue();
@@ -352,6 +379,8 @@ void UACWeapon::ZoomToggle()
 {
 	if (CurrentState != UnequippedState)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Zoom!!!"));
+
 		if (bIsZoomIn)
 		{
 			ZoomOut();
@@ -367,6 +396,7 @@ void UACWeapon::ZoomIn()
 {
 	bIsZoomIn = true;
 
+	//TODO: 아래에서 런타임 에러 발생했음. 수정해야함
 	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
 		Character->GetWeaponSystem()->ZoomIn(true);
@@ -396,6 +426,31 @@ void UACWeapon::ChangeState(USuraWeaponBaseState* NewState)
 	}
 	CurrentState = NewState;
 	CurrentState->EnterState(this);
+}
+#pragma endregion
+
+#pragma region Animation
+void UACWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation)
+{
+	if (CharacterAnimInstance != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Fire Character Animation!!!"));
+
+		if (!CharacterAnimInstance->Montage_IsPlaying(CharacterFireAnimation))
+		{
+			CharacterAnimInstance->Montage_Play(CharacterFireAnimation, 0.5f);
+		}
+	}
+
+	if (WeaponAnimInstance != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Fire Weapon Animation!!!"));
+		//WeaponAnimInstance->Montage_Play(WeaponFireAnimation, 1.f);
+		if (!GetAnimInstance()->Montage_IsPlaying(WeaponFireAnimation))
+		{
+			GetAnimInstance()->Montage_Play(WeaponFireAnimation, 1.f);
+		}
+	}
 }
 #pragma endregion
 
@@ -479,7 +534,8 @@ bool UACWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection
 void UACWeapon::SetAimSocketTransform()
 {
 	FTransform AimSocketTransform = GetSocketTransform(FName(TEXT("Aim")));
-	FTransform IKHandGunTransform = Character->GetMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
+	//FTransform IKHandGunTransform = Character->GetMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
+	FTransform IKHandGunTransform = Character->GetArmMesh()->GetSocketTransform(FName(TEXT("ik_hand_gun")));
 
 	AimSocketRelativeTransform = AimSocketTransform.GetRelativeTransform(IKHandGunTransform);
 }
@@ -501,16 +557,79 @@ void UACWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 	UE_LOG(LogTemp, Warning, TEXT("Equip Weapon!!!"));
 	AttachWeaponToPlayer(TargetCharacter);
 
+	SetInputActionBinding();
+
 	ChangeState(IdleState);
 }
 
 void UACWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	// TODO: Detach 전에 처리해야하는 것들 처리해야함
-	UE_LOG(LogTemp, Warning, TEXT("Unequip Weapon!!!"));
+	ResetInputActionBinding();
+
 	DetachWeaponFromPlayer();
 
+	UE_LOG(LogTemp, Warning, TEXT("Unequip Weapon!!!"));
 	ChangeState(UnequippedState);
+}
+
+void UACWeapon::SetInputActionBinding()
+{
+	if (Character)
+	{
+		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+		{
+			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
+			{
+				if (WeaponName == EWeaponName::WeaponName_Rifle)
+				{
+					// FullAuto Shot
+					LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot);
+					EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot);
+
+					//TODO: Zoom을 Holding 방식으로 바꿔야함
+					// Zoom Toggle
+					RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
+				}
+				else if (WeaponName == EWeaponName::WeaponName_ShotGun)
+				{
+					// Fire Single Shot
+					LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::FireMultiProjectile);
+
+					// Fire Burst Shot
+					RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire);
+
+					// Reload
+					EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+				}
+			}
+		}
+	}
+}
+
+void UACWeapon::ResetInputActionBinding()
+{
+	if (Character)
+	{
+		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+		{
+			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
+			{
+				//EnhancedInputComponent->RemoveBinding(*RightMouseButtonActionBinding);
+				//EnhancedInputComponent->RemoveBinding(*LeftMouseButtonActionBinding);
+				if (EnhancedInputComponent->RemoveBinding(*RightMouseButtonActionBinding))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Left Action Binding Removed!"));
+				}
+				if (EnhancedInputComponent->RemoveBinding(*LeftMouseButtonActionBinding))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Right Action Binding Removed!"));
+				}
+			}
+		}
+	}
+
+	//SetInputActionBinding();
 }
 #pragma endregion
 
@@ -614,6 +733,8 @@ void UACWeapon::StopBurstFire()
 
 void UACWeapon::StartFullAutoShot()
 {
+	ChangeState(FiringState);
+
 	UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Started!!!"));
 	if (!GetWorld()->GetTimerManager().IsTimerActive(FullAutoShotTimer))
 	{
@@ -626,6 +747,8 @@ void UACWeapon::StopFullAutoShot()
 {
 	UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
 	GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
+
+	ChangeState(IdleState);
 }
 
 #pragma endregion

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WeaponStateType.h"
 #include "SuraWeaponBaseState.generated.h"
 
 class UACWeapon;
@@ -16,7 +17,12 @@ class SURAS_API USuraWeaponBaseState : public UObject
 
 public:
 
+	UPROPERTY(BlueprintReadOnly, Category = "WeaponState")
+	EWeaponStateType WeaponStateType;
+
 	FName StateDisplayName;
+
+	virtual EWeaponStateType GetWeaponStateType() const;
 
 	virtual void EnterState(UACWeapon* Weapon);
 

@@ -5,6 +5,11 @@
 
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 
+EWeaponStateType USuraWeaponBaseState::GetWeaponStateType() const
+{
+    return WeaponStateType;
+}
+
 void USuraWeaponBaseState::EnterState(UACWeapon* Weapon)
 {
 }

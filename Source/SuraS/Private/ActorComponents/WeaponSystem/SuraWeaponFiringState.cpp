@@ -6,6 +6,7 @@
 
 USuraWeaponFiringState::USuraWeaponFiringState()
 {
+	WeaponStateType = EWeaponStateType::WeaponStateType_Firing;
 }
 
 USuraWeaponFiringState::~USuraWeaponFiringState()
