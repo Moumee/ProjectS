@@ -4,7 +4,6 @@
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 
 #include "ActorComponents/WeaponSystem/SuraProjectile.h"
-
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 
@@ -12,9 +11,11 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponIdleState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponFiringState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponUnequippedState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponReloadingState.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Animation/AnimInstance.h"
@@ -69,22 +70,25 @@ void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 		{
 			if (WeaponName == EWeaponName::WeaponName_Rifle)
 			{
-
-				
 				// FullAuto Shot
 				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot);
-				//EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Canceled, this, &UACWeapon::StopFullAutoShot);
 				EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot);
 
+				//TODO: Zoom을 Holding 방식으로 바꿔야함
 				// Zoom Toggle
 				RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
 			}
 			else if (WeaponName == EWeaponName::WeaponName_ShotGun)
 			{
-				// Fire
-				LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UACWeapon::Fire);
-			}
+				// Fire Single Shot
+				LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::FireMultiProjectile);
 
+				// Fire Burst Shot
+				EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire);
+
+				// Reload
+				EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+			}
 		}
 	}
 
@@ -103,6 +107,7 @@ void UACWeapon::BeginPlay()
 	IdleState = NewObject<USuraWeaponIdleState>(this, USuraWeaponIdleState::StaticClass());
 	FiringState = NewObject<USuraWeaponFiringState>(this, USuraWeaponFiringState::StaticClass());
 	UnequippedState = NewObject<USuraWeaponUnequippedState>(this, USuraWeaponUnequippedState::StaticClass());
+	ReloadingState = NewObject<USuraWeaponReloadingState>(this, USuraWeaponReloadingState::StaticClass());
 
 	ChangeState(UnequippedState);
 
@@ -117,9 +122,10 @@ void UACWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
-
-	//TODO: UpdateState() 활성화시키기
+	if (CurrentState)
+	{
+		CurrentState->UpdateState(this, DeltaTime);
+	}
 
 	UpdateRecoil(DeltaTime);
 }
@@ -201,14 +207,10 @@ void UACWeapon::DetachWeaponFromPlayer()
 	}
 }
 
-void UACWeapon::Fire()
+void UACWeapon::FireSingleProjectile()
 {
 	if (CurrentState != UnequippedState)
 	{
-		ChangeState(FiringState);
-
-		UE_LOG(LogTemp, Warning, TEXT("Fired!!!"));
-
 		if (Character == nullptr || Character->GetController() == nullptr)
 		{
 			return;
@@ -274,17 +276,77 @@ void UACWeapon::Fire()
 
 		// <Recoil>
 		AddRecoilValue();
-
-		ChangeState(IdleState);
 	}
 }
 
-void UACWeapon::StopFire()
+void UACWeapon::FireMultiProjectile()
 {
-	//TODO: 연발 타이머 초기화
+	if (CurrentState != UnequippedState)
+	{
+		if (Character == nullptr || Character->GetController() == nullptr)
+		{
+			return;
+		}
 
+		FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
+		FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
+		FVector LineTraceHitLocation;
 
+		if (PerformSphereTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, SphereTraceRadius, LineTraceHitLocation))
+		{
+			TargetLocationOfProjectile = LineTraceHitLocation;
+		}
+		else
+		{
+			TargetLocationOfProjectile = LineTraceHitLocation;
+		}
+
+		// Try and fire a projectile
+		if (ProjectileClass != nullptr)
+		{
+			UWorld* const World = GetWorld();
+			if (World != nullptr)
+			{
+				const FVector SpawnLocation = this->GetSocketLocation(FName(TEXT("Muzzle")));
+
+				for (int pellet = 0; pellet < PelletsNum; pellet++)
+				{			
+					const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfProjectileSpread).Rotation();
+
+					//Set Spawn Collision Handling Override
+					FActorSpawnParameters ActorSpawnParams;
+					ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+					// Spawn the projectile at the muzzle
+					ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+					Projectile->InitializeProjectile(Character);
+				}
+			}
+		}
+
+		// Try and play the sound if specified
+		if (FireSound != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+		}
+
+		// Try and play a firing animation if specified
+		if (FireAnimation != nullptr)
+		{
+			// Get the animation object for the arms mesh
+			//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
+			UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+			if (AnimInstance != nullptr)
+			{
+				AnimInstance->Montage_Play(FireAnimation, 1.f);
+			}
+		}
+
+		// <Recoil>
+		AddRecoilValue();
+	}
 }
+
 
 void UACWeapon::ZoomToggle()
 {
@@ -324,7 +386,6 @@ void UACWeapon::ZoomOut()
 }
 
 #pragma region WeaponState
-
 void UACWeapon::ChangeState(USuraWeaponBaseState* NewState)
 {
 	if (!NewState || NewState == CurrentState) return;
@@ -336,7 +397,6 @@ void UACWeapon::ChangeState(USuraWeaponBaseState* NewState)
 	CurrentState = NewState;
 	CurrentState->EnterState(this);
 }
-
 #pragma endregion
 
 bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation)
@@ -371,6 +431,51 @@ bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, f
 	return bHit;
 }
 
+bool UACWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation)
+{
+	FVector Start = StartLocation;
+	FVector End = StartLocation + TraceDirection * MaxDistance;
+
+	FHitResult HitResult;
+
+	FCollisionObjectQueryParams ObjectQueryParams;
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_Visibility);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	ObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredComponent(this);
+	Params.AddIgnoredActor(Character);
+
+	bool bHit = GetWorld()->SweepSingleByObjectType(
+		HitResult,
+		Start,
+		End,
+		FQuat::Identity,
+		ObjectQueryParams,
+		FCollisionShape::MakeSphere(SphereRadius),
+		Params
+	);
+
+	if (bHit)
+	{
+		FVector TraceEndedPoint = Start + TraceDirection * FVector::Distance(Start, End) * HitResult.Time;
+
+		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 1.f, 12, FColor::Red, false, 50.f);
+		DrawDebugSphere(GetWorld(), TraceEndedPoint, 1.f, 12, FColor::Blue, false, 50.f);
+
+		//UE_LOG(LogTemp, Warning, TEXT("phere Trace Hit: %s"), *HitResult.GetActor()->GetName());
+		//HitLocation = HitResult.ImpactPoint;
+		HitLocation = TraceEndedPoint;
+	}
+	else
+	{
+		HitLocation = End;
+	}
+
+	return bHit;
+}
+
 void UACWeapon::SetAimSocketTransform()
 {
 	FTransform AimSocketTransform = GetSocketTransform(FName(TEXT("Aim")));
@@ -390,7 +495,6 @@ FTransform UACWeapon::GetAimSocketRelativeTransform()
 }
 
 #pragma region Equip/Unequip
-
 void UACWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	// TODO: 함수 최적화 해야함
@@ -408,7 +512,16 @@ void UACWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 
 	ChangeState(UnequippedState);
 }
+#pragma endregion
 
+#pragma region Reload
+void UACWeapon::HandleReload()
+{
+	if (CurrentState == IdleState)
+	{
+		ChangeState(ReloadingState);
+	}
+}
 #pragma endregion
 
 void UACWeapon::ActivateCrosshairWidget(bool bflag)
@@ -434,29 +547,50 @@ void UACWeapon::ActivateCrosshairWidget(bool bflag)
 	}
 }
 
-
 #pragma region FireMode
-
 void UACWeapon::HandleSingleFire()
 {
 }
 
 void UACWeapon::HandleBurstFire()
 {
-	GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, this, &UACWeapon::StartBurstFire, BurstShotFireRate, true);
+	if (CurrentState != UnequippedState
+		&& CurrentState != FiringState)
+	{
+		ChangeState(FiringState);
+
+		if (WeaponName == EWeaponName::WeaponName_Rifle)
+		{
+			StartBurstFire(false);
+		}
+		else if (WeaponName == EWeaponName::WeaponName_ShotGun)
+		{
+			StartBurstFire(true);
+		}
+	}
 }
 
 void UACWeapon::HandleFullAutoFire()
 {
 
 }
+#pragma endregion
 
-void UACWeapon::StartBurstFire()
+#pragma region FireMode/BurstShot
+void UACWeapon::StartBurstFire(bool bMultiProjectile)
 {
 	if (BurstShotFired < BurstShotCount)
 	{
-		Fire();
+		if (bMultiProjectile)
+		{
+			FireMultiProjectile();
+		}
+		else
+		{
+			FireSingleProjectile();
+		}
 		BurstShotFired++;
+		GetWorld()->GetTimerManager().SetTimer(BurstShotTimer, [this, bMultiProjectile]() {StartBurstFire(bMultiProjectile); }, BurstShotFireRate, true);
 	}
 	else
 	{
@@ -471,8 +605,9 @@ void UACWeapon::StopBurstFire()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(BurstShotTimer);
 	}
-}
 
+	ChangeState(IdleState);
+}
 #pragma endregion
 
 #pragma region FireMode/FullAuto
@@ -482,8 +617,8 @@ void UACWeapon::StartFullAutoShot()
 	UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Started!!!"));
 	if (!GetWorld()->GetTimerManager().IsTimerActive(FullAutoShotTimer))
 	{
-		Fire();
-		GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, this, &UACWeapon::Fire, FullAutoShotFireRate, true);
+		FireSingleProjectile();
+		GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, this, &UACWeapon::FireSingleProjectile, FullAutoShotFireRate, true);
 	}
 }
 
@@ -497,7 +632,6 @@ void UACWeapon::StopFullAutoShot()
 
 
 #pragma region Recoil
-
 void UACWeapon::AddRecoilValue()
 {
 	bIsRecoiling = true;
@@ -519,23 +653,6 @@ void UACWeapon::ApplyRecoil(float DeltaTime)
 		APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
 		if (!PlayerController) return;
 
-
-		// <Old Verision>
-		//float PitchRecoil = FMath::RandRange(RecoilAmountPitch * 0.8f, RecoilAmountPitch * 1.2f);
-		//float YawRecoil = FMath::RandRange(-RecoilAmountYaw, RecoilAmountYaw);
-
-		//PlayerController->AddPitchInput(-PitchRecoil);
-		//PlayerController->AddYawInput(YawRecoil);
-
-
-		//TotalRecoilValuePitch += (-PitchRecoil);
-		//TotalRecoilValueYaw += (YawRecoil);
-
-		//---------------------------------
-		// <New Version>
-		//float InterpRecoilTargetValue_Pitch = FMath::FInterpTo(CulmulatedRecoilValuePitch, TotalTargetRecoilValuePitch, DeltaTime, RecoilSpeed);
-		//float InterpRecoilTargetValue_Yaw = FMath::FInterpTo(CulmulatedRecoilValueYaw, TotalTargetRecoilValueYaw, DeltaTime, RecoilSpeed);;
-
 		float InterpRecoilTargetValue_Pitch = FMath::FInterpTo(0.f, TotalTargetRecoilValuePitch - CulmulatedRecoilValuePitch, DeltaTime, RecoilSpeed);
 		float InterpRecoilTargetValue_Yaw = FMath::FInterpTo(0.f, TotalTargetRecoilValueYaw- CulmulatedRecoilValueYaw, DeltaTime, RecoilSpeed);;
 
@@ -551,20 +668,6 @@ void UACWeapon::RecoverRecoil(float DeltaTime)
 {
 	APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
 	if (!PlayerController) return;
-
-	//float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(TotalTargetRecoilValuePitch, 0.f, DeltaTime, RecoilRecoverSpeed);
-	//float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(TotalTargetRecoilValueYaw, 0.f, DeltaTime, RecoilRecoverSpeed);;
-
-	//PlayerController->AddPitchInput(-InterpRecoilRecoverTargetValue_Pitch);
-	//PlayerController->AddYawInput(-InterpRecoilRecoverTargetValue_Yaw);
-
-	//TotalTargetRecoilValuePitch -= InterpRecoilRecoverTargetValue_Pitch;
-	//TotalTargetRecoilValueYaw -= InterpRecoilRecoverTargetValue_Yaw;
-
-	//-----------------------------------------------------
-
-	//float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(RecoveredRecoilValuePitch, CulmulatedRecoilValuePitch, DeltaTime, RecoilRecoverSpeed);
-	//float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(RecoveredRecoilValueYaw, CulmulatedRecoilValueYaw, DeltaTime, RecoilRecoverSpeed);;
 
 	if (bIsRecoilRecoverAffectedByPlayerInput)
 	{
@@ -638,22 +741,6 @@ void UACWeapon::UpdateRecoil(float DeltaTime)
 {
 	if (Character)
 	{
-		//APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-		//if (!PlayerController) return;
-
-		//float RecoilRecoverTargetValue_Pitch = TotalRecoilValuePitch - RecoveredRecoilValuePitch;
-		//float RecoilRecoverTargetValue_Yaw = TotalRecoilValueYaw - RecoveredRecoilValueYaw;
-
-		//float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(0.f, RecoilRecoverTargetValue_Pitch, DeltaTime, RecoilRecoverSpeed);
-		//float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, RecoilRecoverTargetValue_Yaw, DeltaTime, RecoilRecoverSpeed);;
-
-		//RecoveredRecoilValuePitch += InterpRecoilRecoverTargetValue_Pitch;
-		//RecoveredRecoilValueYaw += InterpRecoilRecoverTargetValue_Yaw;
-
-		//PlayerController->AddPitchInput(-RecoveredRecoilValuePitch);
-		//PlayerController->AddYawInput(-RecoveredRecoilValueYaw);
-
-		//-----------------------------------------------------------
 		if (bIsRecoiling)
 		{
 			ApplyRecoil(DeltaTime);
@@ -661,5 +748,4 @@ void UACWeapon::UpdateRecoil(float DeltaTime)
 		}
 	}
 }
-
 #pragma endregion

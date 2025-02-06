@@ -13,12 +13,12 @@
 
 //TODO: Character Class를 ASuraCharacterBase로 할지 고민해봐야함
 // 근데 우선은 상속받은 클래스로 구현
-//class ASuraCharacterPlayer
 class ASuraCharacterPlayerWeapon;
 class USuraWeaponBaseState;
 class USuraWeaponIdleState;
 class USuraWeaponFiringState;
 class USuraWeaponUnequippedState;
+class USuraWeaponReloadingState;
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURAS_API UACWeapon : public USkeletalMeshComponent
@@ -52,7 +52,16 @@ public:
 	class UInputAction* FireAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* FireSingleShotAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* FireBurstShotAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ZoomAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ReloadAction;
 
 	struct FInputBindingHandle* LeftMouseButtonActionBinding;
 
@@ -72,10 +81,9 @@ public:
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void Fire();
+	void FireSingleProjectile();
 
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void StopFire();
+	void FireMultiProjectile();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void ZoomToggle();
@@ -116,6 +124,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponUnequippedState* UnequippedState;
 
+	UPROPERTY(VisibleAnywhere)
+	USuraWeaponReloadingState* ReloadingState;
+
 public:
 	void ChangeState(USuraWeaponBaseState* NewState);
 
@@ -139,31 +150,41 @@ protected:
 protected:
 	float LineTraceMaxDistance = 10000.f;
 
+	UPROPERTY(EditAnywhere)
+	float SphereTraceRadius = 20.f;
+
 	FVector TargetLocationOfProjectile;
 
 public:
 	bool PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation);
 
-	void PerformMultiLineTrace(FVector StartLocation, FVector EndLocation);
+	bool PerformSphereTrace(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
 
 	void SetAimSocketTransform();
 
 	void SetAimSocketRelativeTransform();
 
 	FTransform GetAimSocketRelativeTransform();
-
-
 #pragma endregion
 
 
 #pragma region Equip/Unequip
-
 public:
 	void EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
 
 	void UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
+#pragma endregion
 
+#pragma region Reload
+protected:
+	//TODO: Reloading Animation 적용하기
+	//TODO: GetReloadingAnimMontage() 함수 만들기
 
+	UPROPERTY(EditAnywhere)
+	float ReloadingTime = 1.5f;
+
+protected:
+	void HandleReload();
 #pragma endregion
 
 #pragma region UI
@@ -197,29 +218,34 @@ public:
 #pragma endregion
 
 #pragma region FireMode
-
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponFireMode WeaponFireMode;
 
-	//<Burst Mode>
-	FTimerHandle BurstShotTimer;
-
-	float BurstShotFireRate = 0.05f; //TODO: 일단 임시 설정
-
-	const int32 BurstShotCount = 5;
-
-	int32 BurstShotFired = 0;
-
-protected: //내부 로직
+protected: //내부 로직 //TODO: 아래 함수들 정리하기
 	void HandleSingleFire();
 
 	void HandleBurstFire();
 
 	void HandleFullAutoFire();
+#pragma endregion
 
-	// <Busrt Shot>
-	void StartBurstFire();
+#pragma region FireMode/BurstShot
+
+protected:
+	FTimerHandle BurstShotTimer;
+
+	UPROPERTY(EditAnywhere)
+	float BurstShotFireRate = 0.1f;
+
+	UPROPERTY(EditAnywhere)
+	int32 BurstShotCount = 3;
+
+	int32 BurstShotFired = 0;
+
+protected:
+
+	void StartBurstFire(bool bMultiProjectile = false);
 
 	void StopBurstFire();
 
@@ -233,7 +259,7 @@ protected:
 
 	FTimerHandle FullAutoShotTimer;
 
-public:
+protected:
 
 	void StartFullAutoShot();
 
@@ -241,11 +267,8 @@ public:
 
 #pragma endregion
 
-
 #pragma region Recoil
-
 protected:
-	
 	bool bIsRecoiling = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -285,9 +308,6 @@ protected:
 	float RecoveredRecoilValuePitch = 0.f;
 	float RecoveredRecoilValueYaw = 0.f;
 
-	//-----------------------------------
-	//FVector2D PlayerLookInputVector2D = { 0.f, 0.f };
-
 public:
 
 	void AddRecoilValue();
@@ -297,12 +317,14 @@ public:
 	void RecoverRecoil(float DeltaTime);
 
 	void UpdateRecoil(float DeltaTime);
-
-
-
 #pragma endregion
 
+#pragma region Projectile/Spread
+protected:
+	UPROPERTY(EditAnywhere)
+	int32 PelletsNum = 9;
 
-
-
+	UPROPERTY(EditAnywhere)
+	float MaxAngleOfProjectileSpread = 15.f;
+#pragma endregion
 };
