@@ -58,6 +58,16 @@ void UACDamageSystem::SetIsDead(bool val)
 	bIsDead = val;
 }
 
+float UACDamageSystem::GetHealth()
+{
+	return Health;
+}
+
+float UACDamageSystem::GetMaxHealth()
+{
+	return MaxHealth;
+}
+
 bool UACDamageSystem::TakeDamage(FDamageData DamageData, AActor* DamageCauser)
 {
 	if (!bIsDead && (!bIsInvincible || DamageData.bCanForceDamage))

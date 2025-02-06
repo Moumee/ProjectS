@@ -42,6 +42,10 @@ public:
 	void SetIsInvincible(bool bIsInvincible);
 	void SetIsDead(bool bIsDead);
 
+	// Getters
+	float GetHealth();
+	float GetMaxHealth();
+
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnDamaged OnDamaged;
 
