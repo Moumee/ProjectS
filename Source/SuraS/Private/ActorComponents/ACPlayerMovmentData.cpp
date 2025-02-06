@@ -196,3 +196,13 @@ float UACPlayerMovementData::GetDashCooldown() const
 	return PlayerRow->DashCooldown;
 }
 
+float UACPlayerMovementData::GetSlidingAdditionalSpeed() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->SlidingAdditionalSpeed;
+}
+

@@ -47,6 +47,8 @@ void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		CurrentSlideSpeed = FMath::Max(CurrentSlideSpeed - SlideDeltaSpeed * DeltaTime, CrouchSpeed);
 	}
 
+	Player->InterpCapsuleAndCameraHeight(0.6f, DeltaTime, 7.f);
+
 	
 	Player->GetCharacterMovement()->Velocity = SlideDirection * CurrentSlideSpeed;
 

@@ -143,9 +143,6 @@ protected:
 public:
 	ASuraCharacterPlayer();
 
-	/** Returns WallRunComponent subobject **/
-	// UACWallRun* GetWallRunComponent() const { return WallRunComponent; }
-
 	// Returns Player Movement Data Actor Component
 	UFUNCTION(BlueprintCallable)
 	UACPlayerMovementData* GetPlayerMovementData() const { return PlayerMovementData; }
@@ -156,8 +153,7 @@ public:
 	// If floor angle is 45 degrees downward slope, returns -45.f
 	float FindFloorAngle() const;
 
-
-	// DesiredGroundState is set when player enters Walking, Running, Dashing state
+	
 	// It is used to change state to desired ground state when transitioning from Falling State
 	UPROPERTY()
 	USuraPlayerBaseState* DesiredGroundState;
@@ -254,7 +250,9 @@ public:
 
 	bool ShouldEnterWallRunning(FVector& OutWallRunDirection, EWallSide& OutWallRunSide);
 
-	void InterpPlayerRoll(float TargetRoll, float DeltaTime, float InterpSpeed);
+	void InterpCapsuleAndCameraHeight(float TargetScale, float DeltaTime, float InterpSpeed);
+
+	void InterpControllerRoll(float TargetRoll, float DeltaTime, float InterpSpeed);
 
 };
 

@@ -80,5 +80,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	float GetDashCooldown() const;
+
+	float GetSlidingAdditionalSpeed() const;
 	
 };

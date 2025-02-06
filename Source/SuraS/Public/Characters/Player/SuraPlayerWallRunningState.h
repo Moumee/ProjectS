@@ -28,11 +28,13 @@ class SURAS_API USuraPlayerWallRunningState : public USuraPlayerBaseState
 	
 	float TargetRoll = 0.f;
 
+
 	
 public:
 
 	bool bShouldRotateCamera = false;
 
+	
 	USuraPlayerWallRunningState();
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;

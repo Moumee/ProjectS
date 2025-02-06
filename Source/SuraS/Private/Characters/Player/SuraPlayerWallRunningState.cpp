@@ -11,6 +11,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+
 USuraPlayerWallRunningState::USuraPlayerWallRunningState()
 {
 	StateDisplayName = "Wall Running";
@@ -32,7 +33,6 @@ void USuraPlayerWallRunningState::EnterState(ASuraCharacterPlayer* Player)
 	// Need to make variable for minimum wall run velocity!! Currently set to WalkSpeed for testing purposes.
 	StateEnterVelocity = FMath::Max(Player->GetCharacterMovement()->Velocity.Size(), Player->GetPlayerMovementData()->GetRunSpeed());
 	TargetRoll = Player->WallRunSide == EWallSide::Left ? 15.f : -15.f;
-
 }
 
 
@@ -41,7 +41,7 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	Player->InterpPlayerRoll(TargetRoll, DeltaTime, 7.f);
+	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
 
 	SetPlayerWallOffsetLocation(Player, DeltaTime);
 
@@ -175,13 +175,12 @@ void USuraPlayerWallRunningState::ExitState(ASuraCharacterPlayer* Player)
 	Player->WallRunSide = EWallSide::None;
 	bFrontWallFound = false;
 	bShouldRotateCamera = false;
-	
 }
 
 void USuraPlayerWallRunningState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)
 {
 	Super::Look(Player, InputVector);
-	// if (bShouldRotateCamera) return;
+	if (bShouldRotateCamera) return;
 	Player->AddControllerYawInput(InputVector.X);
 	Player->AddControllerPitchInput(InputVector.Y);
 }

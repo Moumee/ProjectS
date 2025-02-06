@@ -78,16 +78,8 @@ void USuraPlayerDashingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 	
-	Player->InterpPlayerRoll(0.f, DeltaTime, 7.f);
-	
-	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 10.f);
-	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-	//
-	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
-	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
-	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 10.f);
-	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
+	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
+
 
 	if (DashImpulseElapsedTime < DashImpulseDuration)
 	{

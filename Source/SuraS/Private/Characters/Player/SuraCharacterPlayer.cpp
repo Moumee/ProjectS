@@ -25,7 +25,6 @@
 ASuraCharacterPlayer::ASuraCharacterPlayer()
 {
 
-	bUseControllerRotationYaw = true;
 
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 
@@ -37,12 +36,12 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	bUseControllerRotationRoll = false;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(GetMesh(), FName(TEXT("Camera")));
-	Camera->bUsePawnControlRotation = false;
+	Camera->SetupAttachment(GetRootComponent(), FName(TEXT("Camera")));
+	Camera->bUsePawnControlRotation = true;
+	Camera->SetRelativeLocation(FVector(0.f, 0.f, 70.f));
 
 	ArmMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Arm Mesh"));
-	ArmMesh->SetupAttachment(GetMesh());
-	ArmMesh->SetLeaderPoseComponent(GetMesh());
+	ArmMesh->SetupAttachment(Camera);
 
 	DefaultCapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	DefaultCameraLocation = Camera->GetRelativeLocation();
@@ -457,26 +456,35 @@ bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, 
 	
 }
 
-void ASuraCharacterPlayer::InterpPlayerRoll(float TargetRoll, float DeltaTime, float InterpSpeed)
+void ASuraCharacterPlayer::InterpCapsuleAndCameraHeight(float TargetScale, float DeltaTime, float InterpSpeed)
 {
-	FRotator CurrentRotation = GetRootComponent()->GetRelativeRotation();
-	
-	if (FMath::IsNearlyEqual(CurrentRotation.Roll, TargetRoll, 0.001f))
+
+	if (FMath::IsNearlyEqual(GetCapsuleComponent()->GetScaledCapsuleHalfHeight(), GetDefaultCapsuleHalfHeight() * TargetScale, 0.1f) &&
+		FMath::IsNearlyEqual(GetCamera()->GetRelativeLocation().Z, GetDefaultCameraLocation().Z * TargetScale, 0.1f))
 	{
-		if (CurrentRotation.Roll == TargetRoll) return;
-		
-		GetRootComponent()->SetRelativeRotation(FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, TargetRoll));
+		if (GetCapsuleComponent()->GetScaledCapsuleHalfHeight() == GetDefaultCapsuleHalfHeight() * TargetScale &&
+			GetCamera()->GetRelativeLocation().Z == GetDefaultCameraLocation().Z * TargetScale)
+		{
+			return;
+		}
+		GetCapsuleComponent()->SetCapsuleHalfHeight(GetDefaultCapsuleHalfHeight() * TargetScale);
+		GetCamera()->SetRelativeLocation(
+			FVector(GetCamera()->GetRelativeLocation().X, GetCamera()->GetRelativeLocation().Y, GetDefaultCameraLocation().Z * TargetScale));
 		
 	}
-	
-	float NewRoll = FMath::FInterpTo(CurrentRotation.Roll, TargetRoll, DeltaTime, InterpSpeed);
-	FRotator NewRotation = FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, NewRoll);
-	GetRootComponent()->SetRelativeRotation(NewRotation);
 
-	
-		
+	float NewCapsuleHeight = FMath::FInterpTo(GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+		GetDefaultCapsuleHalfHeight() * TargetScale, DeltaTime, InterpSpeed);
+	GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
 
+	FVector CurrentCameraLocation = GetCamera()->GetRelativeLocation();
+	float NewCameraZ = FMath::FInterpTo(GetCamera()->GetRelativeLocation().Z,
+		GetDefaultCameraLocation().Z * TargetScale, DeltaTime, InterpSpeed);
+
+	GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.Y, NewCameraZ));
 	
 }
+
+
 
 
