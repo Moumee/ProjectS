@@ -33,7 +33,7 @@ UACWeapon::UACWeapon()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true; //TODO: Tick 활용하면 활성화해야함.
 
-	// ...
+	WeaponAnimInstance = GetAnimInstance();
 
 	//TODO: Muzzle Offset은 weapon Type에 따라서 다를듯
 	// 현재는 기본적으로 Weapon Mesh의"Muzzle" Socket의 위치를 이용하고 있어서 MuzzleOffset는 사용 안하는 중임
@@ -54,6 +54,10 @@ UACWeapon::UACWeapon()
 void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 {
 	Character = NewCharacter;
+	if (Character)
+	{
+		CharacterAnimInstance = Character->GetMesh()->GetAnimInstance();
+	}
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
@@ -242,6 +246,7 @@ void UACWeapon::FireSingleProjectile()
 				//// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				//const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
 
+				//----------------------------------------------------
 				// <New Version>
 				const FVector SpawnLocation = this->GetSocketLocation(FName(TEXT("Muzzle")));
 				const FRotator SpawnRotation = (TargetLocationOfProjectile - SpawnLocation).Rotation();
@@ -263,16 +268,18 @@ void UACWeapon::FireSingleProjectile()
 		}
 
 		// Try and play a firing animation if specified
-		if (FireAnimation != nullptr)
-		{
-			// Get the animation object for the arms mesh
-			//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
-			UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-			if (AnimInstance != nullptr)
-			{
-				AnimInstance->Montage_Play(FireAnimation, 1.f);
-			}
-		}
+		//if (FireAnimation != nullptr)
+		//{
+		//	// Get the animation object for the arms mesh
+		//	//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
+		//	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+		//	if (AnimInstance != nullptr)
+		//	{
+		//		AnimInstance->Montage_Play(FireAnimation, 1.f);
+		//	}
+		//}
+		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
+
 
 		// <Recoil>
 		AddRecoilValue();
@@ -331,16 +338,17 @@ void UACWeapon::FireMultiProjectile()
 		}
 
 		// Try and play a firing animation if specified
-		if (FireAnimation != nullptr)
-		{
-			// Get the animation object for the arms mesh
-			//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
-			UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-			if (AnimInstance != nullptr)
-			{
-				AnimInstance->Montage_Play(FireAnimation, 1.f);
-			}
-		}
+		//if (FireAnimation != nullptr)
+		//{
+		//	// Get the animation object for the arms mesh
+		//	//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
+		//	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+		//	if (AnimInstance != nullptr)
+		//	{
+		//		AnimInstance->Montage_Play(FireAnimation, 1.f);
+		//	}
+		//}
+		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 
 		// <Recoil>
 		AddRecoilValue();
@@ -396,6 +404,17 @@ void UACWeapon::ChangeState(USuraWeaponBaseState* NewState)
 	}
 	CurrentState = NewState;
 	CurrentState->EnterState(this);
+}
+#pragma endregion
+
+#pragma region Animation
+void UACWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation)
+{
+	if (CharacterAnimInstance != nullptr && WeaponAnimInstance != nullptr)
+	{
+		CharacterAnimInstance->Montage_Play(CharacterFireAnimation, 1.f);
+		WeaponAnimInstance->Montage_Play(WeaponFireAnimation, 1.f);
+	}
 }
 #pragma endregion
 
