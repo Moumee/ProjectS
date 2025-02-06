@@ -8,6 +8,7 @@
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/DecalComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -136,8 +137,9 @@ void ASuraProjectile::SpawnDecalEffect(FVector SpawnLocation, FRotator SpawnRota
 {
 	if (DecalMaterial)
 	{
-		FVector DecalSize = FVector(32.0f, 64.0f, 64.0f);     // X: 두께, YZ: 크기
+		FVector DecalSize = FVector(2.0f, 8.0f, 8.0f);     // X: 두께, YZ: 크기
 
+		UDecalComponent* ProjectileDecal =
 		UGameplayStatics::SpawnDecalAtLocation(
 			GetWorld(),          // 월드 컨텍스트
 			DecalMaterial,       // 데칼 머티리얼
@@ -146,6 +148,7 @@ void ASuraProjectile::SpawnDecalEffect(FVector SpawnLocation, FRotator SpawnRota
 			SpawnRotation,       // 회전
 			10.0f                // 수명 (초 단위)
 		);
+		ProjectileDecal->SetFadeScreenSize(0.0001f);
 	}
 }
 
