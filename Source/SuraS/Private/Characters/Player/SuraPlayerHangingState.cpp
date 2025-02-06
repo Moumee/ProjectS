@@ -9,6 +9,7 @@
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -25,6 +26,8 @@ void USuraPlayerHangingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	PlayerController = Player->GetController<APlayerController>();
+
 	StartPosition = Player->GetActorLocation();
 	Player->JumpsLeft = Player->MaxJumps;
 	Player->GetCharacterMovement()->StopMovementImmediately();
@@ -39,7 +42,12 @@ void USuraPlayerHangingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 	
-	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
+	if (Player->HangingCamShake && PlayerController)
+	{
+		PlayerController->ClientStartCameraShake(Player->HangingCamShake);
+	}
+	
+	Player->InterpCapsuleHeight(1.f, DeltaTime);
 
 	if (Player->ForwardAxisInputValue > 0.f)
 	{

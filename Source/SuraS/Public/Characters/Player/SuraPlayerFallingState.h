@@ -21,6 +21,8 @@ class SURAS_API USuraPlayerFallingState : public USuraPlayerBaseState
 	float SpeedTransitionTime = 0;
 
 	float ElapsedTimeFromWallRun = 0.f;
+
+	APlayerController* PlayerController;
 	
 public:
 

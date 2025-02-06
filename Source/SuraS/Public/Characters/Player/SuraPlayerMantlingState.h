@@ -25,6 +25,8 @@ class SURAS_API USuraPlayerMantlingState : public USuraPlayerBaseState
 
 	float MantleDuration = 0;
 
+	APlayerController* PlayerController;
+
 public:
 
 	USuraPlayerMantlingState();

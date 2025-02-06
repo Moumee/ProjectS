@@ -9,6 +9,7 @@
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 USuraPlayerDashingState::USuraPlayerDashingState()
@@ -23,8 +24,9 @@ void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 	
 	Super::EnterState(Player);
 
+	PlayerController = Player->GetController<APlayerController>();
 	
-	DashImpulseElapsedTime = 0.f;
+	DashElapsedTime = 0.f;
 	
 
 	Player->DashesLeft--;
@@ -41,36 +43,44 @@ void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 
 	const float NewBaseMovementSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
 	Player->SetBaseMovementSpeed(NewBaseMovementSpeed);
-
-
-	FVector DashImpulseDirection;
 	
 	if (FMath::IsNearlyEqual(Player->RightAxisInputValue, 0.f))
 	{
 		if (Player->ForwardAxisInputValue >= 0.f)
 		{
-			DashImpulseDirection = Player->GetCamera()->GetForwardVector();
+			DashDirection = Player->GetCamera()->GetForwardVector();
 		}
 		else
 		{
-			DashImpulseDirection = Player->GetCamera()->GetForwardVector() * -1.f;
+			DashDirection = Player->GetCamera()->GetForwardVector() * -1.f;
 		}
 		
 	}
 	else
 	{
-		DashImpulseDirection = (Player->GetActorForwardVector() * Player->ForwardAxisInputValue +
+		DashDirection = (Player->GetActorForwardVector() * Player->ForwardAxisInputValue +
 			Player->GetActorRightVector() * Player->RightAxisInputValue).GetSafeNormal();
 		
 		if (Player->ForwardAxisInputValue < 0.f)
 		{
-			DashImpulseDirection.Z = Player->GetCamera()->GetForwardVector().Z * -1.f;
+			DashDirection.Z = Player->GetCamera()->GetForwardVector().Z * -1.f;
 		}
 	}
 	Player->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-	const float DashImpulseSpeed = Player->GetPlayerMovementData()->GetDashImpulseSpeed();
-	DashImpulseDuration = Player->GetPlayerMovementData()->GetDashDistance() / DashImpulseSpeed;
-	Player->GetCharacterMovement()->Velocity = DashImpulseDirection * DashImpulseSpeed;
+	
+	DashImpulseSpeed = Player->GetPlayerMovementData()->GetDashImpulseSpeed();
+	DashStartSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
+	DashEndSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
+
+	StartTransitionDuration = Player->GetPlayerMovementData()->GetDashImpulseTransitionStartDuration();
+	EndTransitionDuration = Player->GetPlayerMovementData()->GetDashImpulseTransitionEndDuration();
+
+	float StartDistance = ((DashStartSpeed + DashImpulseSpeed) / 2.f) * StartTransitionDuration;
+	float EndDistance = ((DashImpulseSpeed + DashEndSpeed) / 2.f) * EndTransitionDuration;
+
+	float DashImpulseDistance = Player->GetPlayerMovementData()->GetDashDistance() - (StartDistance + EndDistance);
+	DashImpulseDuration = DashImpulseDistance / DashImpulseSpeed;
+	Player->GetCharacterMovement()->Velocity = DashDirection * DashStartSpeed;
 	
 }
 
@@ -78,12 +88,34 @@ void USuraPlayerDashingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 	
-	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
+	Player->InterpCapsuleHeight(1.f, DeltaTime);
 
-
-	if (DashImpulseElapsedTime < DashImpulseDuration)
+	if (Player->DashCamShake && PlayerController)
 	{
-		DashImpulseElapsedTime += DeltaTime;
+		PlayerController->ClientStartCameraShake(Player->DashCamShake);
+	}
+	
+	
+	
+	if (DashElapsedTime < StartTransitionDuration + DashImpulseDuration + EndTransitionDuration)
+	{
+		DashElapsedTime += DeltaTime;
+		if (DashElapsedTime < StartTransitionDuration)
+		{
+			float NewSpeed = FMath::Lerp(DashStartSpeed, DashImpulseSpeed, DashElapsedTime / StartTransitionDuration);
+			Player->GetCharacterMovement()->Velocity = NewSpeed * DashDirection;
+		}
+		else if (StartTransitionDuration <= DashElapsedTime && DashElapsedTime < StartTransitionDuration + DashImpulseDuration)
+		{
+			Player->GetCharacterMovement()->Velocity = DashImpulseSpeed * DashDirection;
+		}
+		else if (StartTransitionDuration + DashImpulseDuration <=
+			DashElapsedTime && DashElapsedTime < StartTransitionDuration + DashImpulseDuration + EndTransitionDuration)
+		{
+			float NewSpeed = FMath::Lerp(DashImpulseSpeed, DashEndSpeed,
+				(DashElapsedTime - (StartTransitionDuration + DashImpulseDuration)) / EndTransitionDuration);
+			Player->GetCharacterMovement()->Velocity = NewSpeed * DashDirection;
+		}
 	}
 	else
 	{
@@ -121,7 +153,7 @@ void USuraPlayerDashingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
 	Player->SetPreviousGroundedState(this);
-	DashImpulseElapsedTime = 0.f;
+	DashElapsedTime = 0.f;
 }
 
 void USuraPlayerDashingState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)

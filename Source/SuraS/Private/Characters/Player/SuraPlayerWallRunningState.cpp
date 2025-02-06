@@ -23,15 +23,21 @@ void USuraPlayerWallRunningState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	PlayerController = Player->GetController<APlayerController>();
+
+	MaxDuration = Player->GetPlayerMovementData()->GetWallRunningMaxDuration();
+	
+	
+	ElapsedTime = 0.f;
+	bShouldTilt = true;
 	bShouldRotateCamera = false;
 	bFrontWallFound = false;
 	Player->GetCharacterMovement()->GravityScale = 0.f;
 	Player->GetCharacterMovement()->AirControl = 1.f;
-	Player->GetCharacterMovement()->SetPlaneConstraintNormal(FVector::UpVector);
 	Player->JumpsLeft = Player->MaxJumps;
 	WallRunSide = Player->WallRunSide;
 	// Need to make variable for minimum wall run velocity!! Currently set to WalkSpeed for testing purposes.
-	StateEnterVelocity = FMath::Max(Player->GetCharacterMovement()->Velocity.Size(), Player->GetPlayerMovementData()->GetRunSpeed());
+	StateEnterVelocity = Player->GetBaseMovementSpeed();
 	TargetRoll = Player->WallRunSide == EWallSide::Left ? 15.f : -15.f;
 }
 
@@ -41,9 +47,44 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
+	if (Player->WallRunCamShake && PlayerController)
+	{
+		PlayerController->ClientStartCameraShake(Player->WallRunCamShake);
+	}
+
+	if (ElapsedTime < MaxDuration)
+	{
+		ElapsedTime += DeltaTime;
+	}
+	else
+	{
+		Player->ChangeState(Player->FallingState);
+		return;
+	}
+
+	Player->InterpCapsuleHeight(1.f, DeltaTime);
 
 	SetPlayerWallOffsetLocation(Player, DeltaTime);
+
+	if (Player->ForwardAxisInputValue <= 0.f)
+	{
+		Player->ChangeState(Player->FallingState);
+		return;
+	}
+
+	if (bShouldTilt)
+	{
+		FRotator CurrentControlRotation = Player->GetControlRotation();
+		FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation,
+			FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, TargetRoll), DeltaTime, 10.f);
+		Player->GetController()->SetControlRotation(NewRotation);
+		if (FMath::Abs(Player->GetControlRotation().Roll - TargetRoll) < 0.1f)
+		{
+			FRotator CurrentRotation = Player->GetControlRotation();
+			Player->GetController()->SetControlRotation(FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, TargetRoll));
+			bShouldTilt = false;
+		}
+	}
 
 	
 	if (Player->bJumpTriggered)
@@ -52,14 +93,11 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		return;
 	}
 
-	if (!bShouldRotateCamera)
+	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Player->WallRunDirection, Player->GetActorForwardVector())));
+	if (Angle > 120.f)
 	{
-		float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(Player->WallRunDirection, Player->GetActorForwardVector())));
-		if (Angle > 120.f)
-		{
-			Player->ChangeState(Player->FallingState);
-			return;
-		}
+		Player->ChangeState(Player->FallingState);
+		return;
 	}
 
 	
@@ -71,7 +109,7 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		bool bFrontWallHit = GetWorld()->LineTraceSingleByChannel(
 		FrontWallHit,
 		Player->GetActorLocation(),
-		Player->GetActorLocation() + Player->WallRunDirection * 100.f,
+		Player->GetActorLocation() + Player->WallRunDirection * 75.f,
 		ECC_Visibility,
 		Params);
 
@@ -86,20 +124,30 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 
 	if (bFrontWallFound && FrontWallHit.IsValidBlockingHit())
 	{
+		
 		if (WallRunSide == EWallSide::Left)
 		{
 			Player->WallRunDirection = FVector::CrossProduct(FrontWallHit.ImpactNormal, FVector::UpVector).GetSafeNormal();
-			if (FVector::CrossProduct(Player->WallRunDirection, Player->GetActorForwardVector()).Z < 0.f)
+			float ForwardAndWallAngle = FMath::RadiansToDegrees(
+				FMath::Acos(FVector::DotProduct(Player->WallRunDirection, Player->GetActorForwardVector())));
+			
+			if (FVector::CrossProduct(Player->WallRunDirection, Player->GetActorForwardVector()).Z < 0.f &&
+				ForwardAndWallAngle > 60.f)
 			{
-				bShouldRotateCamera = true;
+				Player->ChangeState(Player->FallingState);
+				return;
 			}
 		}
 		else if (WallRunSide == EWallSide::Right)
 		{
 			Player->WallRunDirection = FVector::CrossProduct(FrontWallHit.ImpactNormal, FVector::DownVector).GetSafeNormal();
-			if (FVector::CrossProduct(Player->WallRunDirection, Player->GetActorForwardVector()).Z > 0.f)
+			float ForwardAndWallAngle = FMath::RadiansToDegrees(
+				FMath::Acos(FVector::DotProduct(Player->WallRunDirection, Player->GetActorForwardVector())));
+			if (FVector::CrossProduct(Player->WallRunDirection, Player->GetActorForwardVector()).Z > 0.f &&
+				ForwardAndWallAngle > 60.f)
 			{
-				bShouldRotateCamera = true;
+				Player->ChangeState(Player->FallingState);
+				return;
 			}
 		}
 		bFrontWallFound = false;
@@ -138,7 +186,12 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 			NewWallRunDirection = FVector::CrossProduct(WallNormalXY, FVector::DownVector).GetSafeNormal();
 		}
 		Player->WallRunDirection = NewWallRunDirection;
-		Player->GetCharacterMovement()->Velocity = FVector(NewWallRunDirection.X, NewWallRunDirection.Y, 0.f) * StateEnterVelocity;
+		FVector NewVelocity = FVector(NewWallRunDirection.X, NewWallRunDirection.Y, 0.f) * StateEnterVelocity;
+		if (ElapsedTime < 0.75f)
+		{
+			NewVelocity += FVector::UpVector * 75.f;
+		}
+		Player->GetCharacterMovement()->Velocity = NewVelocity;
 	}
 	else
 	{
@@ -146,20 +199,20 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 		return;
 	}
 
-	if (bShouldRotateCamera)
-	{
-		FRotator CurrentRotation = Player->GetControlRotation();
-		float TargetYaw = Player->WallRunDirection.Rotation().Yaw;
-		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll),
-			DeltaTime, 20.f);
-		Player->GetController()->SetControlRotation(NewRotation);
-
-		if (FMath::IsNearlyEqual(Player->GetActorRotation().Yaw, TargetYaw, 1.f))
-		{
-			Player->GetController()->SetControlRotation(FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll));
-			bShouldRotateCamera = false;
-		}
-	}
+	// if (bShouldRotateCamera)
+	// {
+	// 	FRotator CurrentRotation = Player->GetControlRotation();
+	// 	float TargetYaw = Player->WallRunDirection.Rotation().Yaw;
+	// 	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll),
+	// 		DeltaTime, 20.f);
+	// 	Player->GetController()->SetControlRotation(NewRotation);
+	//
+	// 	if (FMath::IsNearlyEqual(Player->GetActorRotation().Yaw, TargetYaw, 1.f))
+	// 	{
+	// 		Player->GetController()->SetControlRotation(FRotator(CurrentRotation.Pitch, TargetYaw, CurrentRotation.Roll));
+	// 		bShouldRotateCamera = false;
+	// 	}
+	// }
 
 	
 	
@@ -171,16 +224,16 @@ void USuraPlayerWallRunningState::ExitState(ASuraCharacterPlayer* Player)
 	Super::ExitState(Player);
 	Player->GetCharacterMovement()->GravityScale = Player->DefaultGravityScale;
 	Player->GetCharacterMovement()->AirControl = Player->GetPlayerMovementData()->GetAirControl();
-	Player->GetCharacterMovement()->SetPlaneConstraintNormal(FVector::ZeroVector);
 	Player->WallRunSide = EWallSide::None;
+	ElapsedTime = 0.f;
 	bFrontWallFound = false;
 	bShouldRotateCamera = false;
+	Player->bShouldRestoreCameraTilt = true;
 }
 
 void USuraPlayerWallRunningState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)
 {
 	Super::Look(Player, InputVector);
-	if (bShouldRotateCamera) return;
 	Player->AddControllerYawInput(InputVector.X);
 	Player->AddControllerPitchInput(InputVector.Y);
 }

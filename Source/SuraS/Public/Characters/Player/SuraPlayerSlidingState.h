@@ -16,13 +16,15 @@ class SURAS_API USuraPlayerSlidingState : public USuraPlayerBaseState
 
 	FVector SlideDirection = FVector::ZeroVector;
 
-	float SlideDeltaSpeed = 1500.f;
+	float SlideDeltaSpeed;
 
 	float StartSpeed = 0.f;
 
 	float CurrentSlideSpeed = 0.f;
 	
 	float CrouchSpeed = 0.f;
+
+	APlayerController* PlayerController;
 
 public:
 
