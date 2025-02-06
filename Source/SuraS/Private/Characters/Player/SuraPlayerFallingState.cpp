@@ -10,8 +10,6 @@
 #include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
-#include "Characters/Player/SuraPlayerRunningState.h"
-#include "Characters/Player/SuraPlayerSlidingState.h"
 #include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -25,6 +23,11 @@ USuraPlayerFallingState::USuraPlayerFallingState()
 void USuraPlayerFallingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
+
+	PlayerController = Player->GetController<APlayerController>();
+
+	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(Player->GetDefaultCapsuleHalfHeight());
+
 	if (Player->GetPreviousGroundedState()->GetStateType() == EPlayerState::Dashing)
 	{
 		bShouldUpdateSpeed = true;
@@ -59,11 +62,12 @@ void USuraPlayerFallingState::UpdateBaseMovementSpeed(ASuraCharacterPlayer* Play
 void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
-
-	UpdateBaseMovementSpeed(Player, DeltaTime);
 	
-	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
+	
+	UpdateBaseMovementSpeed(Player, DeltaTime);
 
+	Player->InterpCapsuleHeight(1.f, DeltaTime);
+	
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
 	WallParams.AddIgnoredActor(Player);
@@ -125,7 +129,11 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bLandedTriggered)
 	{
-		Player->ChangeState(Player->RunningState);
+		if (Player->LandCamShake)
+		{
+			PlayerController->ClientStartCameraShake(Player->LandCamShake);
+		}
+		Player->ChangeState(Player->DesiredGroundState);
 		return;
 	}
 

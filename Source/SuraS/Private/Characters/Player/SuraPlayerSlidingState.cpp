@@ -10,6 +10,8 @@
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerRunningState.h"
+#include "Characters/Player/SuraPlayerWalkingState.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 USuraPlayerSlidingState::USuraPlayerSlidingState()
@@ -22,13 +24,20 @@ void USuraPlayerSlidingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	PlayerController = Player->GetController<APlayerController>();
+
 	Player->GetCharacterMovement()->GroundFriction = 0.f;
 	Player->GetCharacterMovement()->BrakingDecelerationWalking = 0.f;
+	Player->SetBaseMovementSpeed(Player->GetPlayerMovementData()->GetWalkSpeed());
+
+	Player->DesiredGroundState = Player->SlidingState;
 
 
-	StartSpeed = Player->GetVelocity().Size() + 800.f;
+	StartSpeed = Player->GetVelocity().Size() + Player->GetPlayerMovementData()->GetSlidingAdditionalSpeed();
 	CurrentSlideSpeed = StartSpeed;
 	CrouchSpeed = Player->GetPlayerMovementData()->GetCrouchSpeed();
+
+	SlideDeltaSpeed = Player->GetPlayerMovementData()->GetSlidingDecreaseSpeed();
 	
 	FVector ForwardVector = Player->GetActorForwardVector();
 	FVector RightVector = Player->GetActorRightVector();
@@ -42,20 +51,52 @@ void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 
+	if (Player->SlideCamShake && PlayerController)
+	{
+		PlayerController->ClientStartCameraShake(Player->SlideCamShake);
+	}
+
+	FHitResult UpperHit;
+	FCollisionQueryParams UpperParams;
+	UpperParams.AddIgnoredActor(Player);
+	FVector Start = Player->GetCharacterMovement()->CurrentFloor.HitResult.Location;
+	FVector End = Start + FVector::UpVector * Player->GetDefaultCapsuleHalfHeight() * 2.f + 30.f;
+	bool bUpperHit = GetWorld()->SweepSingleByChannel(UpperHit, Start, End, FQuat::Identity, ECC_Visibility,
+		FCollisionShape::MakeSphere(50.f), UpperParams);
+
 	if (Player->FindFloorAngle() >= -0.1f)
 	{
 		CurrentSlideSpeed = FMath::Max(CurrentSlideSpeed - SlideDeltaSpeed * DeltaTime, CrouchSpeed);
 	}
 
-	Player->InterpCapsuleAndCameraHeight(0.6f, DeltaTime, 7.f);
+	Player->InterpCapsuleHeight(0.6f, DeltaTime);
 
 	
 	Player->GetCharacterMovement()->Velocity = SlideDirection * CurrentSlideSpeed;
 
 	if (CurrentSlideSpeed <= CrouchSpeed)
 	{
+		Player->SetBaseMovementSpeed(CrouchSpeed);
 		Player->ChangeState(Player->CrouchingState);
 		return;
+	}
+
+	// Only for sliding jumping because of the capsule size reset
+	// The order matters
+	if (Player->bJumpTriggered)
+	{
+		if (Player->JumpsLeft > 0)
+		{
+			Player->JumpsLeft--;
+			FVector ForwardVector = Player->GetActorForwardVector();
+			FVector JumpVector = ForwardVector * Player->GetPlayerMovementData()->GetDoubleJumpXYSpeed() * 2.f +
+				FVector::UpVector * Player->GetPlayerMovementData()->GetPrimaryJumpZSpeed();
+			Player->LaunchCharacter(JumpVector, false, true);
+		}
+		Player->DesiredGroundState = Player->RunningState;
+		Player->ChangeState(Player->JumpingState);
+		return;
+		
 	}
 
 	if (Player->IsFallingDown() || !Player->GetCharacterMovement()->CurrentFloor.bBlockingHit)
@@ -70,17 +111,16 @@ void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		return;
 	}
 
-	if (Player->bJumpTriggered)
-	{
-		Player->DesiredGroundState = Player->RunningState;
-		Player->ChangeState(Player->JumpingState);
-		return;
-		
-	}
+	
 
 	if (!Player->bCrouchTriggered)
 	{
-		Player->ChangeState(Player->RunningState);
+		if (bUpperHit)
+		{
+			Player->ChangeState(Player->CrouchingState);
+			return;
+		}
+		Player->ChangeState(Player->WalkingState);
 		return;
 	}
 }
@@ -90,13 +130,13 @@ void USuraPlayerSlidingState::ExitState(ASuraCharacterPlayer* Player)
 	Super::ExitState(Player);
 	Player->GetCharacterMovement()->GroundFriction = Player->DefaultGroundFriction;
 	Player->GetCharacterMovement()->BrakingDecelerationWalking = Player->DefaultBrakingDecelerationWalking;
+	Player->SetPreviousGroundedState(this);
 }
 
 
 void USuraPlayerSlidingState::StartJumping(ASuraCharacterPlayer* Player)
 {
 	Super::StartJumping(Player);
-	Player->PrimaryJump();
 }
 
 void USuraPlayerSlidingState::Look(ASuraCharacterPlayer* Player, const FVector2D& InputVector)

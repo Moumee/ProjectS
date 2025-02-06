@@ -102,6 +102,8 @@ protected:
 
 	bool bShouldUpdateAdditionalMovementSpeed;
 
+	
+
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -152,8 +154,30 @@ public:
 	// Returns the angle of the current floor
 	// If floor angle is 45 degrees downward slope, returns -45.f
 	float FindFloorAngle() const;
+	void RestoreCameraTilt(float DeltaTime);
 
-	
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> IdleCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> WalkCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> WallRunCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> RunCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> LandCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> SlideCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> CrouchCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> DashCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> MantleCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> HangingCamShake;
+
+
 	// It is used to change state to desired ground state when transitioning from Falling State
 	UPROPERTY()
 	USuraPlayerBaseState* DesiredGroundState;
@@ -218,7 +242,11 @@ public:
 	float DefaultBrakingDecelerationWalking;
 	float DefaultBrakingDecelerationFalling;
 	float DefaultBrakingFriction;
+	
 
+	bool bShouldRestoreCameraTilt = false;
+	bool bShouldRestoreCapsuleHalfHeight = false;
+	
 	UFUNCTION(BlueprintCallable)
 	void SetBaseMovementSpeed(float MovementSpeed);
 
@@ -250,9 +278,7 @@ public:
 
 	bool ShouldEnterWallRunning(FVector& OutWallRunDirection, EWallSide& OutWallRunSide);
 
-	void InterpCapsuleAndCameraHeight(float TargetScale, float DeltaTime, float InterpSpeed);
-
-	void InterpControllerRoll(float TargetRoll, float DeltaTime, float InterpSpeed);
+	void InterpCapsuleHeight(float TargetScale, float DeltaTime);
 
 };
 

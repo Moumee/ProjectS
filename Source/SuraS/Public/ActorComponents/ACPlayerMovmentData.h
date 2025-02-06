@@ -82,5 +82,13 @@ public:
 	float GetDashCooldown() const;
 
 	float GetSlidingAdditionalSpeed() const;
+
+	float GetDashImpulseTransitionStartDuration() const;
+
+	float GetDashImpulseTransitionEndDuration() const;
+
+	float GetSlidingDecreaseSpeed() const;
+
+	float GetWallRunningMaxDuration() const;
 	
 };

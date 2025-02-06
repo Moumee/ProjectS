@@ -20,6 +20,8 @@ class SURAS_API USuraPlayerWalkingState : public USuraPlayerBaseState
 
 	float SpeedTransitionTime = 0;
 
+	APlayerController* PlayerController;
+
 public:
 
 	USuraPlayerWalkingState();

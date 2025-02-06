@@ -25,7 +25,11 @@ void USuraPlayerRunningState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	PlayerController = Player->GetController<APlayerController>();
+
 	bShouldUpdateSpeed = true;
+
+	
 
 	float RunSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
 
@@ -65,6 +69,13 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 
+	Player->InterpCapsuleHeight(1.f, DeltaTime);
+
+	if (Player->RunCamShake && PlayerController)
+	{
+		PlayerController->ClientStartCameraShake(Player->RunCamShake);
+	}
+	
 	if (bShouldUpdateSpeed)
 	{
 		float CurrentBaseSpeed = Player->GetBaseMovementSpeed();
@@ -81,8 +92,6 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 			bShouldUpdateSpeed = false;
 		}
 	}
-
-	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
 
 	if (Player->IsFallingDown())
 	{
