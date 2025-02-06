@@ -70,6 +70,9 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0"))
 	float DashCooldown;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SlidingAdditionalSpeed;
 	
 	
 };

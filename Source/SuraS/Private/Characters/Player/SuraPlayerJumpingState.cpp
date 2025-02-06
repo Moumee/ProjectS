@@ -10,6 +10,7 @@
 #include "Characters/Player/SuraPlayerFallingState.h"
 #include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
+#include "Characters/Player/SuraPlayerRunningState.h"
 #include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -59,28 +60,19 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
-	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-	//
-	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
-	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
-	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
-	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
-
 	UpdateBaseMovementSpeed(Player, DeltaTime);
 
-	Player->InterpPlayerRoll(0.f, DeltaTime, 7.f);
+	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
 
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
 	WallParams.AddIgnoredActor(Player);
 
 	const FVector WallDetectStart = Player->GetActorLocation();
-	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 75.f;
+	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 35.f;
 	const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
-		ECC_GameTraceChannel1, FCollisionShape::MakeCapsule(Player->GetCapsuleComponent()->GetScaledCapsuleRadius(),
-			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
+		ECC_GameTraceChannel2, FCollisionShape::MakeCapsule(34.f,
+			88.f * 0.85f), WallParams);
 
 	if (bWallHit && Player->GetCharacterMovement()->IsFalling())
 	{
@@ -89,7 +81,8 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		FCollisionQueryParams LedgeParams;
 		LedgeParams.AddIgnoredActor(Player);
 		
-		FVector LedgeDetectStart = Player->GetCamera()->GetComponentLocation() + FVector::UpVector * 100.f;
+		FVector LedgeDetectStart = FVector(WallHitResult.ImpactPoint.X, WallHitResult.ImpactPoint.Y,
+			Player->GetCamera()->GetComponentLocation().Z + 100.f);
 		FVector LedgeDetectEnd = FVector(LedgeDetectStart.X, LedgeDetectStart.Y, WallHitResult.ImpactPoint.Z);
 
 		bool bLedgeHit = GetWorld()->SweepSingleByChannel(LedgeHitResult, LedgeDetectStart, LedgeDetectEnd, FQuat::Identity,
@@ -145,7 +138,7 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bLandedTriggered)
 	{
-		Player->ChangeState(Player->DesiredGroundState);
+		Player->ChangeState(Player->RunningState);
 		return;
 	}
 }

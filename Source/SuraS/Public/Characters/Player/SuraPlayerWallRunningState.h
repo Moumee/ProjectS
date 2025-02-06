@@ -21,10 +21,20 @@ class SURAS_API USuraPlayerWallRunningState : public USuraPlayerBaseState
 	FVector WallRunDirection = FVector::ZeroVector;
 
 	FHitResult WallHit;
+
+	FHitResult FrontWallHit;
+
+	bool bFrontWallFound = false;
 	
 	float TargetRoll = 0.f;
+
+
+	
 public:
 
+	bool bShouldRotateCamera = false;
+
+	
 	USuraPlayerWallRunningState();
 
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;

@@ -24,12 +24,18 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float GroundSpeed;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	FVector Velocity;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	float RunSpeed;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsInAir;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	bool bIsCrouching;
+	bool bCrouchTriggered;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float Direction;

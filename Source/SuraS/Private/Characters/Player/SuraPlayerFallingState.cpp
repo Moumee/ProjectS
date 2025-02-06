@@ -8,7 +8,10 @@
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerDashingState.h"
 #include "Characters/Player/SuraPlayerHangingState.h"
+#include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
+#include "Characters/Player/SuraPlayerRunningState.h"
+#include "Characters/Player/SuraPlayerSlidingState.h"
 #include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -57,28 +60,19 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	// float NewCapsuleHeight = FMath::FInterpTo(Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-	// Player->GetDefaultCapsuleHalfHeight(), DeltaTime, 5.f);
-	// Player->GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-	//
-	// FVector CurrentCameraLocation = Player->GetCamera()->GetRelativeLocation();
-	// float NewCameraZ = FMath::FInterpTo(Player->GetCamera()->GetRelativeLocation().Z,
-	// 	Player->GetDefaultCameraLocation().Z, DeltaTime, 5.f);
-	// Player->GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.X, NewCameraZ));
-
 	UpdateBaseMovementSpeed(Player, DeltaTime);
 	
-	Player->InterpPlayerRoll(0.f, DeltaTime, 7.f);
+	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
 
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
 	WallParams.AddIgnoredActor(Player);
 	
 	const FVector WallDetectStart = Player->GetActorLocation();
-	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 75.f;
+	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 35.f;
 	const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
-		ECC_GameTraceChannel1, FCollisionShape::MakeCapsule(Player->GetCapsuleComponent()->GetScaledCapsuleRadius(),
-			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
+		ECC_GameTraceChannel2, FCollisionShape::MakeCapsule(34,
+			88.f * 0.85f), WallParams);
 	
 	if (bWallHit && Player->GetCharacterMovement()->IsFalling() && Player->GetPreviousState()->GetStateType() == EPlayerState::Jumping)
 	{
@@ -87,7 +81,8 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		FCollisionQueryParams LedgeParams;
 		LedgeParams.AddIgnoredActor(Player);
 		
-		FVector LedgeDetectStart = Player->GetCamera()->GetComponentLocation() + FVector::UpVector * 100.f;
+		FVector LedgeDetectStart = FVector(WallHitResult.ImpactPoint.X, WallHitResult.ImpactPoint.Y,
+			Player->GetCamera()->GetComponentLocation().Z + 100.f);
 		FVector LedgeDetectEnd = FVector(LedgeDetectStart.X, LedgeDetectStart.Y, WallHitResult.ImpactPoint.Z);
 	
 		bool bLedgeHit = GetWorld()->SweepSingleByChannel(LedgeHitResult, LedgeDetectStart, LedgeDetectEnd, FQuat::Identity,
@@ -106,19 +101,7 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		}
 	}
 
-	if (Player->GetPreviousState()->GetStateType() == EPlayerState::WallRunning)
-	{
-		ElapsedTimeFromWallRun += DeltaTime;
-		if (ElapsedTimeFromWallRun > 0.2f)
-		{
-			if (Player->ShouldEnterWallRunning(Player->WallRunDirection, Player->WallRunSide))
-			{
-				Player->ChangeState(Player->WallRunningState);
-				return;
-			}
-		}
-	}
-	else
+	if (Player->GetPreviousState()->GetStateType() != EPlayerState::WallRunning)
 	{
 		if (Player->ShouldEnterWallRunning(Player->WallRunDirection, Player->WallRunSide))
 		{
@@ -126,9 +109,12 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 			return;
 		}
 	}
-	
-	
-	
+
+	if (Player->bJumpTriggered)
+	{
+		Player->ChangeState(Player->JumpingState);
+		return;
+	}
 	
 
 	if (Player->bDashTriggered)
@@ -139,7 +125,7 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bLandedTriggered)
 	{
-		Player->ChangeState(Player->DesiredGroundState);
+		Player->ChangeState(Player->RunningState);
 		return;
 	}
 
