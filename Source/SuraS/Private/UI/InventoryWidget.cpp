@@ -162,11 +162,11 @@ void UInventoryWidget::CloseUI()
 
 void UInventoryWidget::UpdateWeaponSlot(int32 WeaponType, int32 WeaponIndex, bool bIsUnlocked)
 {
-    if (WeaponImages[WeaponType][WeaponIndex] && WeaponNames[WeaponType][WeaponIndex])
-    {
-        // 무기가 Unlock되면 value를 1로, lock 상태면 value를 0으로
-        WeaponImages[WeaponType][WeaponIndex]->SetRenderOpacity(bIsUnlocked ? 1.0f : 0.0f);
-        WeaponNames[WeaponType][WeaponIndex]->SetRenderOpacity(bIsUnlocked ? 1.0f : 0.5f);
-    }
+    // if (WeaponImages[WeaponType][WeaponIndex] && WeaponNames[WeaponType][WeaponIndex])
+    // {
+    //     // 무기가 Unlock되면 value를 1로, lock 상태면 value를 0으로
+    //     WeaponImages[WeaponType][WeaponIndex]->SetRenderOpacity(bIsUnlocked ? 1.0f : 0.0f);
+    //     WeaponNames[WeaponType][WeaponIndex]->SetRenderOpacity(bIsUnlocked ? 1.0f : 0.5f);
+    // }
 }
 
