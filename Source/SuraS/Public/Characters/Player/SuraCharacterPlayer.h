@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "SuraPlayerEnums.h"
+#include "ActorComponents/UISystem/ACBaseUIComponent.h"
+#include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
 
@@ -47,6 +49,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
 	UACPlayerMovementData* PlayerMovementData;
+
+	// UI component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
+	UACBaseUIComponent* UIComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	UACInventoryManager* InventoryManager;
+
+
 
 #pragma region Input
 	
