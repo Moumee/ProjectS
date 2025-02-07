@@ -4,14 +4,56 @@
 
 #include "CoreMinimal.h"
 #include "Characters/SuraCharacterBase.h"
+#include "Interfaces/Damageable.h"
+#include "Structures/DamageData.h"
+#include "Components/WidgetComponent.h"
 #include "SuraCharacterEnemyBase.generated.h"
+
+class UACDamageSystem;
 
 /**
  * 
  */
 UCLASS()
-class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase
+class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDamageable
 {
 	GENERATED_BODY()
 	
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor Components", meta = (AllowPrivateAccess = "true"))
+	UACDamageSystem* DamageSystemComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* HealthBarWidget;
+
+	UPROPERTY(EditAnywhere, Category="Animations")
+	UAnimMontage* HitAnimation;
+
+	UPROPERTY(EditAnywhere, Category = "Animations")
+	UAnimMontage* DeathAnimation;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
+
+	UFUNCTION()
+	virtual void OnDamagedTriggered();
+
+	UFUNCTION()
+	virtual void OnDeathTriggered();
+
+	virtual void UpdateHealthBarValue();
+
+public:
+	ASuraCharacterEnemyBase();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "EnemyAttributesData"))
+	FDataTableRowHandle EnemyAttributesDT;
+
+	// damage system comp getter
+	UACDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
+
+	bool TakeDamage(FDamageData DamageData, AActor* DamageCauser);
 };

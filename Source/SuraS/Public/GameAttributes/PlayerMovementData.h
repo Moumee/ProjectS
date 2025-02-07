@@ -15,17 +15,43 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WalkSpeed;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WalkRunTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WalkDashTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float RunDashTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WalkCrouchTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CrouchRunTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CrouchDashTransitionDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DashImpulseTransitionStartDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DashImpulseTransitionEndDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RunSpeed;
 
 	// The Z value of the launch velocity when jumping
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float JumpZVelocity;
+	float PrimaryJumpZSpeed;
 
-	// The XY value of the launch velocity when jumping
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float JumpXYVelocity;
+	float DoubleJumpZSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DoubleJumpXYSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float AirControl;
@@ -42,22 +68,22 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashDistance;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashDuration;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0"))
 	int DashMaxStack;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashAdditionalSpeed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashKnockBackDistance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0"))
 	float DashCooldown;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SlidingAdditionalSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SlidingDecreaseSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WallRunningMaxDuration;
 	
 };

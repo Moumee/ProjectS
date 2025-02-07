@@ -38,6 +38,10 @@ void ASuraSProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, U
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
+		FString name = OtherActor->GetName();
+
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Hit Actor: %s"), *name));
+
 		Destroy();
 	}
 }
