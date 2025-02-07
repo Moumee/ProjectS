@@ -58,6 +58,7 @@ protected:
 	UACInventoryManager* InventoryManager;
 
 
+
 #pragma region Input
 	
 	/** MappingContext */
