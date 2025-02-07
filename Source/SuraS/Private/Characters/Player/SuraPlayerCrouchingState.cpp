@@ -82,8 +82,8 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 	FHitResult UpperHit;
 	FCollisionQueryParams UpperParams;
 	UpperParams.AddIgnoredActor(Player);
-	FVector Start = Player->GetCharacterMovement()->CurrentFloor.HitResult.Location;
-	FVector End = Start + FVector::UpVector * Player->GetDefaultCapsuleHalfHeight() * 2.f + 30.f;
+	FVector Start = Player->GetCharacterMovement()->CurrentFloor.HitResult.Location + 30.f;
+	FVector End = Start + FVector::UpVector * Player->GetDefaultCapsuleHalfHeight() * 2.f - 30.f;
 	bool bUpperHit = GetWorld()->SweepSingleByChannel(UpperHit, Start, End, FQuat::Identity, ECC_Visibility,
 		FCollisionShape::MakeSphere(50.f), UpperParams);
 
