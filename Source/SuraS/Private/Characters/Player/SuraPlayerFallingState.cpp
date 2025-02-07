@@ -26,6 +26,17 @@ void USuraPlayerFallingState::EnterState(ASuraCharacterPlayer* Player)
 
 	PlayerController = Player->GetController<APlayerController>();
 
+	if (Player->GetPreviousState()->GetStateType() == EPlayerState::Hanging ||
+		Player->GetPreviousState()->GetStateType() == EPlayerState::Running ||
+		Player->GetPreviousState()->GetStateType() == EPlayerState::WallRunning ||
+		Player->GetPreviousState()->GetStateType() == EPlayerState::Walking)
+	{
+		if (Player->JumpsLeft > 0)
+		{
+			Player->JumpsLeft--;
+		}
+	}
+
 	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(Player->GetDefaultCapsuleHalfHeight());
 
 	if (Player->GetPreviousGroundedState()->GetStateType() == EPlayerState::Dashing)
@@ -168,11 +179,7 @@ void USuraPlayerFallingState::StartJumping(ASuraCharacterPlayer* Player)
 {
 	Super::StartJumping(Player);
 	
-	if (Player->JumpsLeft > 0 && Player->JumpsLeft != Player->MaxJumps ||
-		Player->GetPreviousGroundedState()->GetStateType() == EPlayerState::Dashing)
-	{
-		Player->DoubleJump();
-	}
+	Player->DoubleJump();
 }
 
 void USuraPlayerFallingState::Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult)
