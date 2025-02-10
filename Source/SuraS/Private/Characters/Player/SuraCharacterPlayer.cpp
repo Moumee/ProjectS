@@ -20,6 +20,9 @@
 #include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ActorComponents/UISystem/ACInventoryManager.h"
+#include "ActorComponents/UISystem/ACBaseUIComponent.h"
+#include "Extensions/UIComponent.h"
 
 
 ASuraCharacterPlayer::ASuraCharacterPlayer()
@@ -55,7 +58,9 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	// Initialize JumpsLeft
 	JumpsLeft = MaxJumps;
 
-
+	// inventory actor components
+	UIComponent = CreateDefaultSubobject<UACBaseUIComponent>(TEXT("UI Component"));
+	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("UI Manager Component"));
 
 }
 
@@ -288,11 +293,31 @@ float ASuraCharacterPlayer::FindFloorAngle() const
 	
 }
 
+void ASuraCharacterPlayer::RestoreCameraTilt(float DeltaTime)
+{
+	if (bShouldRestoreCameraTilt)
+	{
+		FRotator CurrentControlRotation = GetControlRotation();
+		FRotator NewRotation = FMath::RInterpTo(CurrentControlRotation,
+		                                        FRotator(CurrentControlRotation.Pitch, CurrentControlRotation.Yaw, 0.f), DeltaTime, 10.f);
+		GetController()->SetControlRotation(NewRotation);
+		if (FMath::Abs(GetControlRotation().Roll) < 0.1f)
+		{
+			FRotator CurrentRotation = GetControlRotation();
+			GetController()->SetControlRotation(FRotator(CurrentRotation.Pitch, CurrentRotation.Yaw, 0.f));
+			bShouldRestoreCameraTilt = false;
+		}
+	}
+}
+
+
 void ASuraCharacterPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	UpdateDashCooldowns(DeltaTime);
+
+	RestoreCameraTilt(DeltaTime);
 
 	PrintPlayerDebugInfo();
 
@@ -456,33 +481,14 @@ bool ASuraCharacterPlayer::ShouldEnterWallRunning(FVector& OutWallRunDirection, 
 	
 }
 
-void ASuraCharacterPlayer::InterpCapsuleAndCameraHeight(float TargetScale, float DeltaTime, float InterpSpeed)
+void ASuraCharacterPlayer::InterpCapsuleHeight(float TargetScale, float DeltaTime)
 {
-
-	if (FMath::IsNearlyEqual(GetCapsuleComponent()->GetScaledCapsuleHalfHeight(), GetDefaultCapsuleHalfHeight() * TargetScale, 0.1f) &&
-		FMath::IsNearlyEqual(GetCamera()->GetRelativeLocation().Z, GetDefaultCameraLocation().Z * TargetScale, 0.1f))
-	{
-		if (GetCapsuleComponent()->GetScaledCapsuleHalfHeight() == GetDefaultCapsuleHalfHeight() * TargetScale &&
-			GetCamera()->GetRelativeLocation().Z == GetDefaultCameraLocation().Z * TargetScale)
-		{
-			return;
-		}
-		GetCapsuleComponent()->SetCapsuleHalfHeight(GetDefaultCapsuleHalfHeight() * TargetScale);
-		GetCamera()->SetRelativeLocation(
-			FVector(GetCamera()->GetRelativeLocation().X, GetCamera()->GetRelativeLocation().Y, GetDefaultCameraLocation().Z * TargetScale));
-		
-	}
-
-	float NewCapsuleHeight = FMath::FInterpTo(GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-		GetDefaultCapsuleHalfHeight() * TargetScale, DeltaTime, InterpSpeed);
-	GetCapsuleComponent()->SetCapsuleHalfHeight(NewCapsuleHeight);
-
-	FVector CurrentCameraLocation = GetCamera()->GetRelativeLocation();
-	float NewCameraZ = FMath::FInterpTo(GetCamera()->GetRelativeLocation().Z,
-		GetDefaultCameraLocation().Z * TargetScale, DeltaTime, InterpSpeed);
-
-	GetCamera()->SetRelativeLocation(FVector(CurrentCameraLocation.X, CurrentCameraLocation.Y, NewCameraZ));
+	float CurrentHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	float TargetHeight = GetDefaultCapsuleHalfHeight() * TargetScale;
+	float NewHeight = FMath::FInterpTo(CurrentHeight, TargetHeight, DeltaTime, 10.f);
+	GetCapsuleComponent()->SetCapsuleHalfHeight(NewHeight);
 	
+
 }
 
 

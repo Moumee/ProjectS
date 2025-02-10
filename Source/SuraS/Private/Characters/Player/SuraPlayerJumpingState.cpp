@@ -25,6 +25,7 @@ USuraPlayerJumpingState::USuraPlayerJumpingState()
 void USuraPlayerJumpingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
+
 	if (Player->GetPreviousGroundedState()->GetStateType() == EPlayerState::Dashing)
 	{
 		bShouldUpdateSpeed = true;
@@ -59,10 +60,10 @@ void USuraPlayerJumpingState::UpdateBaseMovementSpeed(ASuraCharacterPlayer* Play
 void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
+	
+	Player->InterpCapsuleHeight(1.f, DeltaTime);
 
 	UpdateBaseMovementSpeed(Player, DeltaTime);
-
-	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
 
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
@@ -72,7 +73,7 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 35.f;
 	const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
 		ECC_GameTraceChannel2, FCollisionShape::MakeCapsule(34.f,
-			88.f * 0.85f), WallParams);
+			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
 
 	if (bWallHit && Player->GetCharacterMovement()->IsFalling())
 	{
@@ -138,7 +139,7 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bLandedTriggered)
 	{
-		Player->ChangeState(Player->RunningState);
+		Player->ChangeState(Player->DesiredGroundState);
 		return;
 	}
 }

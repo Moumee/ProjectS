@@ -6,6 +6,7 @@
 #include "Characters/SuraCharacterBase.h"
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
+#include "Components/WidgetComponent.h"
 #include "SuraCharacterEnemyBase.generated.h"
 
 class UACDamageSystem;
@@ -22,9 +23,20 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor Components", meta = (AllowPrivateAccess = "true"))
 	UACDamageSystem* DamageSystemComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* HealthBarWidget;
+
+	UPROPERTY(EditAnywhere, Category="Animations")
+	UAnimMontage* HitAnimation;
+
+	UPROPERTY(EditAnywhere, Category = "Animations")
+	UAnimMontage* DeathAnimation;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION()
 	virtual void OnDamagedTriggered();
@@ -32,8 +44,13 @@ protected:
 	UFUNCTION()
 	virtual void OnDeathTriggered();
 
+	virtual void UpdateHealthBarValue();
+
 public:
 	ASuraCharacterEnemyBase();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "EnemyAttributesData"))
+	FDataTableRowHandle EnemyAttributesDT;
 
 	// damage system comp getter
 	UACDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }

@@ -28,7 +28,13 @@ class SURAS_API USuraPlayerWallRunningState : public USuraPlayerBaseState
 	
 	float TargetRoll = 0.f;
 
+	bool bShouldTilt = false;
 
+	float ElapsedTime = 0.f;
+
+	float MaxDuration;
+
+	APlayerController* PlayerController;
 	
 public:
 

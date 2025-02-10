@@ -18,6 +18,9 @@ void USuraPlayerMantlingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 	Player->GetCharacterMovement()->StopMovementImmediately();
+
+	PlayerController = Player->GetController<APlayerController>();
+
 	Player->JumpsLeft = Player->MaxJumps;
 	bShouldMantle = true;
 	StartLocation = Player->GetActorLocation();
@@ -40,7 +43,13 @@ void USuraPlayerMantlingState::UpdateState(ASuraCharacterPlayer* Player, float D
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
+	if (Player->MantleCamShake && PlayerController)
+	{
+		PlayerController->ClientStartCameraShake(Player->MantleCamShake);
+	}
+	
+
+	Player->InterpCapsuleHeight(1.f, DeltaTime);
 
 	if (bShouldMantle)
 	{

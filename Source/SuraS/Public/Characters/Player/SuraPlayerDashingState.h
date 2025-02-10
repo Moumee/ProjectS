@@ -16,7 +16,21 @@ class SURAS_API USuraPlayerDashingState : public USuraPlayerBaseState
 
 	float DashImpulseDuration = 0.f;
 
-	float DashImpulseElapsedTime = 0.f;
+	float DashElapsedTime = 0.f;
+
+	float StartTransitionDuration = 0.f;
+
+	float EndTransitionDuration = 0.f;
+
+	float DashImpulseSpeed;
+
+	float DashStartSpeed;
+
+	float DashEndSpeed;
+
+	FVector DashDirection;
+
+	APlayerController* PlayerController;
 	
 public:
 

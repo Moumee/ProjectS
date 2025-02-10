@@ -10,8 +10,6 @@
 #include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
-#include "Characters/Player/SuraPlayerRunningState.h"
-#include "Characters/Player/SuraPlayerSlidingState.h"
 #include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -25,6 +23,22 @@ USuraPlayerFallingState::USuraPlayerFallingState()
 void USuraPlayerFallingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
+
+	PlayerController = Player->GetController<APlayerController>();
+
+	if (Player->GetPreviousState()->GetStateType() == EPlayerState::Hanging ||
+		Player->GetPreviousState()->GetStateType() == EPlayerState::Running ||
+		Player->GetPreviousState()->GetStateType() == EPlayerState::WallRunning ||
+		Player->GetPreviousState()->GetStateType() == EPlayerState::Walking)
+	{
+		if (Player->JumpsLeft > 0)
+		{
+			Player->JumpsLeft--;
+		}
+	}
+
+	Player->GetCapsuleComponent()->SetCapsuleHalfHeight(Player->GetDefaultCapsuleHalfHeight());
+
 	if (Player->GetPreviousGroundedState()->GetStateType() == EPlayerState::Dashing)
 	{
 		bShouldUpdateSpeed = true;
@@ -59,11 +73,12 @@ void USuraPlayerFallingState::UpdateBaseMovementSpeed(ASuraCharacterPlayer* Play
 void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
-
-	UpdateBaseMovementSpeed(Player, DeltaTime);
 	
-	Player->InterpCapsuleAndCameraHeight(1.f, DeltaTime, 7.f);
+	
+	UpdateBaseMovementSpeed(Player, DeltaTime);
 
+	Player->InterpCapsuleHeight(1.f, DeltaTime);
+	
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
 	WallParams.AddIgnoredActor(Player);
@@ -125,7 +140,11 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bLandedTriggered)
 	{
-		Player->ChangeState(Player->RunningState);
+		if (Player->LandCamShake)
+		{
+			PlayerController->ClientStartCameraShake(Player->LandCamShake);
+		}
+		Player->ChangeState(Player->DesiredGroundState);
 		return;
 	}
 
@@ -160,11 +179,7 @@ void USuraPlayerFallingState::StartJumping(ASuraCharacterPlayer* Player)
 {
 	Super::StartJumping(Player);
 	
-	if (Player->JumpsLeft > 0 && Player->JumpsLeft != Player->MaxJumps ||
-		Player->GetPreviousGroundedState()->GetStateType() == EPlayerState::Dashing)
-	{
-		Player->DoubleJump();
-	}
+	Player->DoubleJump();
 }
 
 void USuraPlayerFallingState::Landed(ASuraCharacterPlayer* Player, const FHitResult& HitResult)

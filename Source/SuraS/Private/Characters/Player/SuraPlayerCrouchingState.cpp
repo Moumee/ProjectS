@@ -12,6 +12,7 @@
 #include "Characters/Player/SuraPlayerRunningState.h"
 #include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 USuraPlayerCrouchingState::USuraPlayerCrouchingState()
@@ -27,7 +28,7 @@ void USuraPlayerCrouchingState::EnterState(ASuraCharacterPlayer* Player)
 
 	bShouldUpdateSpeed = true;
 
-	bShouldUpdateAnimation = true;
+	PlayerController = Player->GetController<APlayerController>();
 
 	float CrouchSpeed = Player->GetPlayerMovementData()->GetCrouchSpeed();
 
@@ -56,6 +57,10 @@ void USuraPlayerCrouchingState::EnterState(ASuraCharacterPlayer* Player)
 			SpeedChangePerSecond = (CrouchSpeed - RunSpeed) / SpeedTransitionTime;
 			break;
 		}
+	case EPlayerState::Sliding:
+		{
+			bShouldUpdateSpeed = false;
+		}
 	default:
 		break;
 	}
@@ -67,7 +72,20 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	Player->InterpCapsuleAndCameraHeight(0.6f, DeltaTime, 7.f);
+	Player->InterpCapsuleHeight(0.6f, DeltaTime);
+
+	if (Player->DashCamShake && PlayerController)
+	{
+		PlayerController->ClientStartCameraShake(Player->DashCamShake);
+	}
+
+	FHitResult UpperHit;
+	FCollisionQueryParams UpperParams;
+	UpperParams.AddIgnoredActor(Player);
+	FVector Start = Player->GetCharacterMovement()->CurrentFloor.HitResult.Location;
+	FVector End = Start + FVector::UpVector * Player->GetDefaultCapsuleHalfHeight() * 2.f + 30.f;
+	bool bUpperHit = GetWorld()->SweepSingleByChannel(UpperHit, Start, End, FQuat::Identity, ECC_Visibility,
+		FCollisionShape::MakeSphere(50.f), UpperParams);
 
 
 	if (bShouldUpdateSpeed)
@@ -102,15 +120,17 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 		return;
 	}
 
+	// Only for crouching and sliding set jumping in update
 	if (Player->bJumpTriggered)
 	{
+		Player->PrimaryJump();
 		Player->DesiredGroundState = Player->WalkingState;
 		Player->ChangeState(Player->JumpingState);
 		return;
 		
 	}
 
-	if (!Player->bCrouchTriggered)
+	if (!Player->bCrouchTriggered && !bUpperHit)
 	{
 		Player->ChangeState(Player->RunningState);
 		return;
@@ -143,7 +163,6 @@ void USuraPlayerCrouchingState::Look(ASuraCharacterPlayer* Player, const FVector
 void USuraPlayerCrouchingState::StartJumping(ASuraCharacterPlayer* Player)
 {
 	Super::StartJumping(Player);
-	Player->PrimaryJump();
 }
 
 

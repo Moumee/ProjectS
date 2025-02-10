@@ -35,6 +35,12 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	float CrouchDashTransitionDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DashImpulseTransitionStartDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DashImpulseTransitionEndDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float RunSpeed;
 
 	// The Z value of the launch velocity when jumping
@@ -73,6 +79,11 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SlidingAdditionalSpeed;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SlidingDecreaseSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WallRunningMaxDuration;
 	
 };
