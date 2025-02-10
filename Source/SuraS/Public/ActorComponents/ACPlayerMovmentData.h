@@ -95,4 +95,6 @@ public:
 
 	float GetMaxCameraFOVSpeed() const;
 
+	float GetMaxWallRunSpeed() const;
+
 };

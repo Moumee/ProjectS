@@ -23,6 +23,8 @@ class SURAS_API USuraPlayerJumpingState : public USuraPlayerBaseState
 
 	float ElapsedTimeFromWallRun = 0.f;
 
+	APlayerController* PlayerController;
+
 public:
 
 	USuraPlayerJumpingState();

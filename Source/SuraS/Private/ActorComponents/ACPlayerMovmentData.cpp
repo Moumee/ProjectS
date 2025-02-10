@@ -266,5 +266,15 @@ float UACPlayerMovementData::GetMaxCameraFOVSpeed() const
 	return PlayerRow->MaxCameraFOVSpeed;
 }
 
+float UACPlayerMovementData::GetMaxWallRunSpeed() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->MaxWallRunSpeed;
+}
+
 
 

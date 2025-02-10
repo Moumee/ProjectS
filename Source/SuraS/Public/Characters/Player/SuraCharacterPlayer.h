@@ -177,6 +177,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TSubclassOf<UCameraShakeBase> RunCamShake;
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> PrimaryJumpCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
+	TSubclassOf<UCameraShakeBase> DoubleJumpCamShake;
+	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TSubclassOf<UCameraShakeBase> LandCamShake;
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TSubclassOf<UCameraShakeBase> SlideCamShake;

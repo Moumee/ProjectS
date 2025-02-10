@@ -26,6 +26,21 @@ void USuraPlayerJumpingState::EnterState(ASuraCharacterPlayer* Player)
 {
 	Super::EnterState(Player);
 
+	PlayerController = Player->GetController<APlayerController>();
+
+	if (PlayerController && Player->PrimaryJumpCamShake && Player->DoubleJumpCamShake)
+	{
+		if (Player->JumpsLeft == 1)
+		{
+			PlayerController->ClientStartCameraShake(Player->PrimaryJumpCamShake);
+		}
+		else if (Player->JumpsLeft == 0)
+		{
+			PlayerController->ClientStartCameraShake(Player->DoubleJumpCamShake);
+		}
+	}
+	
+
 	if (Player->GetPreviousGroundedState()->GetStateType() == EPlayerState::Dashing)
 	{
 		bShouldUpdateSpeed = true;

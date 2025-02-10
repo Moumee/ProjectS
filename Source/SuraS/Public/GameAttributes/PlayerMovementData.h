@@ -91,5 +91,8 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxCameraFOVSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxWallRunSpeed;
 	
 };
