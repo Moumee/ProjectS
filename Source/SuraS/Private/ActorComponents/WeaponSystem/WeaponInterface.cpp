@@ -13,3 +13,7 @@ void IWeaponInterface::SetRightHandToAimSocketOffset(FVector offset)
 void IWeaponInterface::ZoomIn(bool bZoomIn)
 {
 }
+
+void IWeaponInterface::ReloadingEnd()
+{
+}

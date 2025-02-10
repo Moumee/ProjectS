@@ -8,6 +8,9 @@
 #include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "ActorComponents/WeaponSystem/WeaponType.h"
 #include "ActorComponents/WeaponSystem/WeaponFireMode.h"
+#include "ActorComponents/WeaponSystem/WeaponCamSettingValue.h"
+
+#include "ActorComponents/WeaponSystem/WeaponInterface.h"
 
 #include "ACWeapon.generated.h"
 
@@ -19,9 +22,10 @@ class USuraWeaponIdleState;
 class USuraWeaponFiringState;
 class USuraWeaponUnequippedState;
 class USuraWeaponReloadingState;
+class UWeaponCameraShakeBase;
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SURAS_API UACWeapon : public USkeletalMeshComponent
+class SURAS_API UACWeapon : public USkeletalMeshComponent, public IWeaponInterface
 {
 	GENERATED_BODY()
 
@@ -64,13 +68,15 @@ public:
 	class UInputAction* ReloadAction;
 
 	struct FInputBindingHandle* LeftMouseButtonActionBinding;
-
 	struct FInputBindingHandle* RightMouseButtonActionBinding;
+	struct FInputBindingHandle* RButtonActionBinding;
 
 	/** Sets default values for this component's properties */
 	UACWeapon();
 
 	void InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter);
+	void InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter);
+	void InitializeUI();
 
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
@@ -94,7 +100,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void ZoomOut();
 
-
 protected:
 	// Called when the game starts
 	UFUNCTION()
@@ -110,7 +115,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 #pragma region WeaponState
-protected:
+protected: //TODO: public으로 수정하기
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponBaseState* CurrentState;
 
@@ -140,13 +145,15 @@ protected:
 #pragma region Animation
 protected:
 	void StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation);
+
+	void StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate);
 #pragma endregion
 
 #pragma region Animation/Character
 protected:
 	UPROPERTY()
 	UAnimInstance* CharacterAnimInstance;
-protected:
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
 	UAnimMontage* AM_Fire_Character;
 
@@ -158,7 +165,7 @@ protected:
 protected:
 	UPROPERTY()
 	UAnimInstance* WeaponAnimInstance;
-protected:
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Weapon")
 	UAnimMontage* AM_Fire_Weapon;
 
@@ -167,9 +174,7 @@ protected:
 #pragma endregion
 
 #pragma region Aim
-
 protected:
-
 	FTransform AimSocketRelativeTransform;
 
 	bool bIsZoomIn = false;
@@ -196,7 +201,6 @@ public:
 	FTransform GetAimSocketRelativeTransform();
 #pragma endregion
 
-
 #pragma region Equip/Unequip
 public:
 	void EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
@@ -211,17 +215,17 @@ public:
 #pragma region Reload
 protected:
 	//TODO: Reloading Animation 적용하기
-	//TODO: GetReloadingAnimMontage() 함수 만들기
-
+	//TODO: GetReloadingAnimMontage() 함수 만들기 -> 왜 만들어야 한다고 했는지 기억이 안남 
+	// -> Reloading State에서 사용하려고 만든다고 했음
 	UPROPERTY(EditAnywhere)
 	float ReloadingTime = 1.5f;
-
 protected:
 	void HandleReload();
+
+	virtual void ReloadingEnd() override;
 #pragma endregion
 
 #pragma region UI
-
 protected:
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CrosshairWidget")
 	TSubclassOf<UUserWidget> CrosshairWidgetClass;
@@ -230,9 +234,7 @@ protected:
 	UUserWidget* CrosshairWidget;
 
 public:
-
 	void ActivateCrosshairWidget(bool bflag);
-
 #pragma endregion
 
 #pragma region WeaponType
@@ -359,5 +361,42 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float MaxAngleOfProjectileSpread = 15.f;
+#pragma endregion
+
+#pragma region Camera
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FWeaponCamSettingValue CamSetting_Default = FWeaponCamSettingValue(
+		90.f,
+		{ 0.f, 0.f, 0.f },
+		{ 0.f, 0.f, 70.f },
+		1.f, 1.f, 15.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FWeaponCamSettingValue CamSetting_ZoomIn = FWeaponCamSettingValue(
+		90.f,
+		{ 0.f, 0.f, 0.f },
+		{ 50.f, 0.f, 70.f },
+		1.f, 1.f, 15.f);
+
+	FTimerHandle CamSettingTimer;
+public:
+	void StartCameraSettingChange(FWeaponCamSettingValue* CamSetting);
+
+	void UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting);
+
+	void StopCameraSettingChange();
+#pragma endregion
+
+#pragma region CameraShake
+protected:
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> CameraShakeClass;
+
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CameraShake")
+	UWeaponCameraShakeBase* CameraShake;
+
+public:
+	void ApplyCameraShake();
 #pragma endregion
 };

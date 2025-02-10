@@ -12,7 +12,8 @@ public class SuraS : ModuleRules
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
 			"AnimGraphRuntime",
-			"UMG"
+			"UMG",
+            "EngineCameras"
         });
 	}
 }
