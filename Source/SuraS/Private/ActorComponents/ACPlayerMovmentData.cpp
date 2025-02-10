@@ -13,6 +13,16 @@ void UACPlayerMovementData::BeginPlay()
 	
 }
 
+float UACPlayerMovementData::GetGravityScale() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->GravityScale;
+}
+
 float UACPlayerMovementData::GetWalkSpeed() const
 {
 	if (!PlayerRow)

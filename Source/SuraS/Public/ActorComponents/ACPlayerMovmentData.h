@@ -27,6 +27,8 @@ protected:
 
 public:
 
+	float GetGravityScale() const;
+	
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	float GetWalkSpeed() const;
 

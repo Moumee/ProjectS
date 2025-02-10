@@ -49,12 +49,6 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	DefaultCapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	DefaultCameraLocation = Camera->GetRelativeLocation();
 
-	DefaultGravityScale = GetCharacterMovement()->GravityScale;
-	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
-	DefaultBrakingFriction = GetCharacterMovement()->BrakingFriction;
-	DefaultBrakingDecelerationFalling = GetCharacterMovement()->BrakingDecelerationFalling;
-	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
-	
 	// Initialize JumpsLeft
 	JumpsLeft = MaxJumps;
 
@@ -78,6 +72,12 @@ void ASuraCharacterPlayer::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	DefaultGravityScale = PlayerMovementData->GetGravityScale();
+	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
+	DefaultBrakingFriction = GetCharacterMovement()->BrakingFriction;
+	DefaultBrakingDecelerationFalling = GetCharacterMovement()->BrakingDecelerationFalling;
+	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
 
 	DefaultCameraFOV = GetCamera()->FieldOfView;
 	

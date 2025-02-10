@@ -14,6 +14,9 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float GravityScale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WalkSpeed;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
