@@ -12,6 +12,7 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponFiringState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponUnequippedState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponReloadingState.h"
+#include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -23,6 +24,7 @@
 #include "Engine/World.h"
 
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
 //#include "Components/WidgetComponent.h"
 #include "Blueprint/UserWidget.h"
 
@@ -49,6 +51,9 @@ UACWeapon::UACWeapon()
 	SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetCollisionObjectType(ECC_GameTraceChannel3); //Weapon
 	SetCollisionResponseToAllChannels(ECR_Ignore);
+
+
+	CameraShake = CreateDefaultSubobject<UWeaponCameraShakeBase>(TEXT("CameraShake"));
 }
 
 void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
@@ -56,9 +61,10 @@ void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 	Character = NewCharacter;
 	if (Character)
 	{
-		//CharacterAnimInstance = Character->GetMesh()->GetAnimInstance();
 		CharacterAnimInstance = Character->GetArmMesh()->GetAnimInstance();
+		InitializeCamera(Character);
 	}
+	InitializeUI();
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
@@ -101,6 +107,24 @@ void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 	SetAimSocketRelativeTransform();
 }
 
+void UACWeapon::InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter)
+{
+	if (NewCharacter)
+	{
+		CamSetting_Default.CameraRelativeLocation = NewCharacter->GetCamera()->GetRelativeLocation();
+		CamSetting_Default.CameraRelativeRotation = NewCharacter->GetCamera()->GetRelativeRotation();
+		CamSetting_Default.FOV = NewCharacter->GetCamera()->FieldOfView;
+	}
+}
+
+void UACWeapon::InitializeUI()
+{
+	if (CrosshairWidgetClass)
+	{
+		CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
+	}
+}
+
 // Called when the game starts
 void UACWeapon::BeginPlay()
 {
@@ -116,7 +140,11 @@ void UACWeapon::BeginPlay()
 
 	WeaponAnimInstance = GetAnimInstance();
 
-	ChangeState(UnequippedState);
+	CurrentState = UnequippedState;
+
+	//TODO: BeginPlay에서 ChangeState를 사용하면, ChangeState -> EnterState -> 여기에 무언가 있을 때 오류가 발생함
+	// 생성관련 오류인 것 같은데, 아직 정확한 이유를 찾지 못했음
+	//ChangeState(UnequippedState);
 
 
 	//SetCollisionObjectType(ECC_EngineTraceChannel2);
@@ -146,9 +174,8 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 {
 	Character = TargetCharacter;
 
-	//TODO: 무기 소지 확인 방법 수정하기. 다수 무기를 소지할 수도 있기 때문에,
-	// 그리고 WeaponSystemComponent에서 weapon 관련 로직을 다룰 것이기 때문에 따로 설정해야함
-	// 그리고 플레이어가 한번 획득한 무기는 WeaponSystem의 WeaponInventory에 저장되어 영구적으로 사용 가능하도록 해야함
+	//TODO: 무기 소지 확인 방법 수정하기. 
+	// 그리고 WeaponSystemComponent에서 weapon Inventory에 해당 무기가 존재하는지 확인해야함
 	// Check that the character is valid, and has no weapon component yet
 	//if (Character == nullptr || Character->GetInstanceComponents().FindItemByClass<UACWeapon>())
 	//{
@@ -161,7 +188,6 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	//AttachToComponent(Character->GetMesh(), AttachmentRules, FName(TEXT("Gun")));
 
 	//TODO: 방식 바꾸기
 	if (WeaponName == EWeaponName::WeaponName_Rifle)
@@ -170,7 +196,6 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 	}
 	else if (WeaponName == EWeaponName::WeaponName_ShotGun)
 	{
-
 		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
 	}
 	else
@@ -181,7 +206,6 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 
 	//TODO: 더 좋은 방법을 생각해 봐야함
 	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetSocketLocation(FName("Gun"));
-	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetBoneLocation(FName(TEXT("hand_r")));
 	RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetArmMesh()->GetBoneLocation(FName(TEXT("hand_r")));
 	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
@@ -192,6 +216,7 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 	SetAimSocketTransform();
 
 	// Set Up Widget UI Class
+	// TODO: WidgetInstance 생성은 Weapon Initialize에서만 진행하고, 키고 끄는 기능만 ActivateCrosshairWidget에서 하기
 	ActivateCrosshairWidget(true);
 
 	SetVisibility(true);
@@ -207,25 +232,8 @@ void UACWeapon::DetachWeaponFromPlayer()
 	}
 	else
 	{
-		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
-		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-			{
-				//Subsystem->RemoveMappingContext(FireMappingContext);
-			}
-
-			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
-			{
-				//EnhancedInputComponent->RemoveBinding(*LeftMouseButtonActionBinding);
-				//EnhancedInputComponent->RemoveBinding(*RightMouseButtonActionBinding);
-			}
-		}
-
 		DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
-		//Character = nullptr;
-
 		//ActivateCrosshairWidget(false);
-
 		SetVisibility(false);
 	}
 }
@@ -299,6 +307,7 @@ void UACWeapon::FireSingleProjectile()
 		//}
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 
+		ApplyCameraShake();
 
 		// <Recoil>
 		AddRecoilValue();
@@ -369,6 +378,8 @@ void UACWeapon::FireMultiProjectile()
 		//}
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 
+		ApplyCameraShake();
+
 		// <Recoil>
 		AddRecoilValue();
 	}
@@ -400,6 +411,7 @@ void UACWeapon::ZoomIn()
 	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
 		Character->GetWeaponSystem()->ZoomIn(true);
+		StartCameraSettingChange(&CamSetting_ZoomIn);
 	}
 	ActivateCrosshairWidget(false);
 }
@@ -411,6 +423,7 @@ void UACWeapon::ZoomOut()
 	if (Character->GetWeaponSystem() && Character->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
 	{
 		Character->GetWeaponSystem()->ZoomIn(false);
+		StartCameraSettingChange(&CamSetting_Default);
 	}
 	ActivateCrosshairWidget(true);
 }
@@ -449,6 +462,24 @@ void UACWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMo
 		if (!GetAnimInstance()->Montage_IsPlaying(WeaponFireAnimation))
 		{
 			GetAnimInstance()->Montage_Play(WeaponFireAnimation, 1.f);
+		}
+	}
+}
+void UACWeapon::StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate)
+{
+	if (CharacterAnimInstance != nullptr)
+	{
+		if (!CharacterAnimInstance->Montage_IsPlaying(CharacterAnimation))
+		{
+			CharacterAnimInstance->Montage_Play(CharacterAnimation, CharacterAnimPlayRate / CharacterAnimation->GetPlayLength());
+		}
+	}
+
+	if (WeaponAnimInstance != nullptr)
+	{
+		if (!GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
+		{
+			GetAnimInstance()->Montage_Play(WeaponAnimation, WeaponAnimPlayRate / WeaponAnimation->GetPlayLength());
 		}
 	}
 }
@@ -590,6 +621,9 @@ void UACWeapon::SetInputActionBinding()
 					//TODO: Zoom을 Holding 방식으로 바꿔야함
 					// Zoom Toggle
 					RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
+
+					// Reload
+					RButtonActionBinding = &EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
 				}
 				else if (WeaponName == EWeaponName::WeaponName_ShotGun)
 				{
@@ -600,7 +634,7 @@ void UACWeapon::SetInputActionBinding()
 					RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire);
 
 					// Reload
-					EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+					RButtonActionBinding = &EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
 				}
 			}
 		}
@@ -625,11 +659,14 @@ void UACWeapon::ResetInputActionBinding()
 				{
 					UE_LOG(LogTemp, Warning, TEXT("Right Action Binding Removed!"));
 				}
+				if (EnhancedInputComponent->RemoveBinding(*RButtonActionBinding))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("R Action Binding Removed!"));
+				}
+
 			}
 		}
 	}
-
-	//SetInputActionBinding();
 }
 #pragma endregion
 
@@ -639,21 +676,42 @@ void UACWeapon::HandleReload()
 	if (CurrentState == IdleState)
 	{
 		ChangeState(ReloadingState);
+		StartAnimation(AM_Reload_Character, AM_Reload_Weapon, ReloadingTime, ReloadingTime);
 	}
+}
+void UACWeapon::ReloadingEnd()
+{
+	ChangeState(IdleState);
 }
 #pragma endregion
 
 void UACWeapon::ActivateCrosshairWidget(bool bflag)
 {
+	//if (bflag)
+	//{
+	//	if (CrosshairWidgetClass)
+	//	{
+	//		CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
+	//		if (CrosshairWidget)
+	//		{
+	//			CrosshairWidget->AddToViewport();
+	//		}
+	//	}
+	//}
+	//else
+	//{
+	//	if (CrosshairWidget)
+	//	{
+	//		CrosshairWidget->RemoveFromViewport();
+	//		CrosshairWidget = nullptr;
+	//	}
+	//}
+
 	if (bflag)
 	{
-		if (CrosshairWidgetClass)
+		if (CrosshairWidget)
 		{
-			CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
-			if (CrosshairWidget)
-			{
-				CrosshairWidget->AddToViewport();
-			}
+			CrosshairWidget->AddToViewport();
 		}
 	}
 	else
@@ -661,7 +719,6 @@ void UACWeapon::ActivateCrosshairWidget(bool bflag)
 		if (CrosshairWidget)
 		{
 			CrosshairWidget->RemoveFromViewport();
-			CrosshairWidget = nullptr;
 		}
 	}
 }
@@ -730,7 +787,6 @@ void UACWeapon::StopBurstFire()
 #pragma endregion
 
 #pragma region FireMode/FullAuto
-
 void UACWeapon::StartFullAutoShot()
 {
 	ChangeState(FiringState);
@@ -750,7 +806,6 @@ void UACWeapon::StopFullAutoShot()
 
 	ChangeState(IdleState);
 }
-
 #pragma endregion
 
 
@@ -868,6 +923,71 @@ void UACWeapon::UpdateRecoil(float DeltaTime)
 		{
 			ApplyRecoil(DeltaTime);
 			RecoverRecoil(DeltaTime);
+		}
+	}
+}
+#pragma endregion
+
+#pragma region Camera
+void UACWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
+{
+	if (GetWorld()->GetTimerManager().IsTimerActive(CamSettingTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CamSettingTimer);
+	}
+
+	UpdateCameraSetting(GetWorld()->GetDeltaSeconds(), CamSetting);
+}
+void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting)
+{
+	if (Character)
+	{
+		UCameraComponent* Camera = Character->GetCamera();
+		if (Camera)
+		{
+			FRotator NewCamRotation = FMath::RInterpTo(Camera->GetRelativeRotation(), CamSetting->CameraRelativeRotation, DeltaTime, CamSetting->CameraRelativeRotation_InterpSpeed_ToThisState);
+			FVector NewCamLocation = FMath::VInterpTo(Camera->GetRelativeLocation(), CamSetting->CameraRelativeLocation, DeltaTime, CamSetting->CameraRelativeLocation_InterpSpeed_ToThisState);
+			float NewCamFOV = FMath::FInterpTo(Camera->FieldOfView, CamSetting->FOV, DeltaTime, CamSetting->FOV_InterpSpeed_ToThisState);
+
+			Camera->SetRelativeRotation(NewCamRotation);
+			Camera->SetRelativeLocation(NewCamLocation);
+			Camera->SetFieldOfView(NewCamFOV);
+
+			FRotator CameraRelativeRotation_Error = CamSetting->CameraRelativeRotation - Camera->GetRelativeRotation();
+			CameraRelativeRotation_Error.Normalize();
+
+			if (CameraRelativeRotation_Error.IsNearlyZero()
+				&& FVector::Dist(CamSetting->CameraRelativeLocation, Camera->GetRelativeLocation()) < 0.01
+				//&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < KINDA_SMALL_NUMBER
+				&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < 0.01)
+			{
+				StopCameraSettingChange();
+			}
+			else
+			{
+				float DeltaSecond = GetWorld()->GetDeltaSeconds();
+				GetWorld()->GetTimerManager().SetTimer(CamSettingTimer, [this, DeltaSecond, CamSetting]() {UpdateCameraSetting(DeltaSecond, CamSetting); }, DeltaSecond, false);
+			}
+		}
+	}
+}
+void UACWeapon::StopCameraSettingChange()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Zoom In Completed!!!"));
+}
+void UACWeapon::ApplyCameraShake()
+{
+	if (Character)
+	{
+		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+		{
+			//PlayerController->ClientStartCameraShake(CameraShake->GetClass());
+			//PlayerController->PlayerCameraManager->StartCameraShake(CameraShake->GetClass());
+
+			if (CameraShakeClass)
+			{
+				PlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass);
+			}
 		}
 	}
 }

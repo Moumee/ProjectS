@@ -357,7 +357,6 @@ FTransform UWeaponSystemComponent::GetWeaponAimSocketRelativeTransform()
 void UWeaponSystemComponent::SwitchToPreviousWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Wheel Down"));
-
 	if (WeaponInventory.Num() > 1)
 	{
 		CurrentWeaponIndex--;
@@ -372,7 +371,6 @@ void UWeaponSystemComponent::SwitchToPreviousWeapon()
 void UWeaponSystemComponent::SwitchToNextWeapon()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Wheel Up"));
-
 	if (WeaponInventory.Num() > 1)
 	{
 		CurrentWeaponIndex = (CurrentWeaponIndex + 1) % WeaponInventory.Num();
@@ -388,7 +386,6 @@ void UWeaponSystemComponent::EquipWeapon(int32 WeaponIndex)
 		{
 			CurrentWeapon->UnequipWeapon(PlayerOwner);
 		}
-
 		WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
 		CurrentWeapon = WeaponInventory[WeaponIndex];
 	}
