@@ -140,7 +140,6 @@ public:
 #pragma endregion
 
 #pragma region SwitchWeapon
-
 protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapons")
@@ -154,7 +153,6 @@ protected:
 
 
 public:
-
 	UACWeapon* GetCurrentWeapon() { return CurrentWeapon; }
 
 	int32 GetWeaponNum() { return WeaponInventory.Num(); }
@@ -164,8 +162,5 @@ public:
 	void SwitchToNextWeapon();
 
 	void EquipWeapon(int32 WeaponIndex);
-
 #pragma endregion
-
-
 };

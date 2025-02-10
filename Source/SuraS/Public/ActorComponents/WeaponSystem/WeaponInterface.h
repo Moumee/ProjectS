@@ -26,4 +26,6 @@ public:
 	virtual void SetRightHandToAimSocketOffset(FVector offset);
 
 	virtual void ZoomIn(bool bZoomIn);
+
+	virtual void ReloadingEnd();
 };
