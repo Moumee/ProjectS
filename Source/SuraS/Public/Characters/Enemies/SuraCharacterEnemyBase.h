@@ -26,12 +26,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* HealthBarWidget;
 
-	UPROPERTY(EditAnywhere, Category="Animations")
-	UAnimMontage* HitAnimation;
-
-	UPROPERTY(EditAnywhere, Category = "Animations")
-	UAnimMontage* DeathAnimation;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -56,4 +50,10 @@ public:
 	UACDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
 
 	bool TakeDamage(FDamageData DamageData, AActor* DamageCauser);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	UAnimMontage* HitAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	UAnimMontage* DeathAnimation;
 };

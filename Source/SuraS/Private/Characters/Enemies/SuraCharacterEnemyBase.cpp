@@ -53,11 +53,11 @@ void ASuraCharacterEnemyBase::BeginPlay()
 
 	if (EnemyAttributesData)
 	{
-		GetDamageSystemComp()->SetMaxHealth((*EnemyAttributesData).MaxHealth);
-		GetDamageSystemComp()->SetHealth((*EnemyAttributesData).MaxHealth);
+		GetDamageSystemComp()->SetMaxHealth(EnemyAttributesData->MaxHealth);
+		GetDamageSystemComp()->SetHealth(EnemyAttributesData->MaxHealth);
 
-		HitAnimation = (*EnemyAttributesData).HitAnimation;
-		DeathAnimation = (*EnemyAttributesData).DeathAnimation;
+		HitAnimation = EnemyAttributesData->HitAnimation;
+		DeathAnimation = EnemyAttributesData->DeathAnimation;
 	}
 }
 
@@ -78,7 +78,19 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 	UpdateHealthBarValue();
 
 	if (HitAnimation)
-		PlayAnimMontage(HitAnimation);
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
+
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+		if (AnimInstance)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("anim instance found"));
+			AnimInstance->Montage_Play(HitAnimation, 1.f);
+		}
+
+		// PlayAnimMontage(HitAnimation, 1, NAME_None);
+	}
 }
 
 void ASuraCharacterEnemyBase::OnDeathTriggered()
