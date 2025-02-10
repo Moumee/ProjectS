@@ -38,14 +38,16 @@ void ASuraCharacterEnemyBase::BeginPlay()
 
 	UpdateHealthBarValue();
 
+	HealthBarWidget->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	if (DamageSystemComp)
 	{
 		GetDamageSystemComp()->OnDamaged.AddDynamic(this, &ASuraCharacterEnemyBase::OnDamagedTriggered);
 		GetDamageSystemComp()->OnDeath.AddDynamic(this, &ASuraCharacterEnemyBase::OnDeathTriggered);
 	}
 
-	GetCapsuleComponent()->SetVisibility(true);
-	GetCapsuleComponent()->SetHiddenInGame(false);
+	// GetCapsuleComponent()->SetVisibility(true);
+	// GetCapsuleComponent()->SetHiddenInGame(false);
 
 	const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>("Base", "");
 
