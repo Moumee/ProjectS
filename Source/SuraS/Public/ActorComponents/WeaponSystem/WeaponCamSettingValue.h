@@ -10,9 +10,7 @@ USTRUCT(Atomic, BlueprintType)
 struct FWeaponCamSettingValue
 {
 	GENERATED_USTRUCT_BODY()
-
 public:
-
 	UPROPERTY(EditAnywhere)
 	float FOV = 75.f;
 
@@ -31,18 +29,23 @@ public:
 	UPROPERTY(EditAnywhere)
 	float CameraRelativeLocation_InterpSpeed_ToThisState = 1.2f;
 
-	//UPROPERTY(EditAnywhere)
-	//float FOV_InterpSpeed_ToOtherState = 1.2f;
+	FWeaponCamSettingValue(
+		float InFOV = 75.f,
+		FRotator InCameraRelativeRotation = { 0, 0, 0 },
+		FVector InCameraRelativeLocation = { 0, 0, 0},
 
-	//UPROPERTY(EditAnywhere)
-	//float CameraRelativeRotation_InterpSpeed_ToOtherState = 0.01f;
+		float InFOV_InterpSpeed_ToThisState = 1.2f,
+		float InCameraRelativeRotation_InterpSpeed_ToThisState = 0.01f,
+		float InCameraRelativeLocation_InterpSpeed_ToThisState = 1.2f
+		):
+		FOV(InFOV),
+		CameraRelativeRotation(InCameraRelativeRotation),
+		CameraRelativeLocation(InCameraRelativeLocation),
 
-	//UPROPERTY(EditAnywhere)
-	//float CameraRelativeLocation_InterpSpeed_ToOtherState = 1.2f;
-
-	FWeaponCamSettingValue()
+		FOV_InterpSpeed_ToThisState(InFOV_InterpSpeed_ToThisState),
+		CameraRelativeRotation_InterpSpeed_ToThisState(InCameraRelativeRotation_InterpSpeed_ToThisState),
+		CameraRelativeLocation_InterpSpeed_ToThisState(InCameraRelativeLocation_InterpSpeed_ToThisState)
 	{
-
 	}
 };
 
