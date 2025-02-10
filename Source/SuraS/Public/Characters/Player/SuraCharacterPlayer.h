@@ -166,6 +166,7 @@ public:
 	// If floor angle is 45 degrees downward slope, returns -45.f
 	float FindFloorAngle() const;
 	void RestoreCameraTilt(float DeltaTime);
+	void InterpCameraFOV(float DeltaTime);
 
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TSubclassOf<UCameraShakeBase> IdleCamShake;
@@ -253,10 +254,14 @@ public:
 	float DefaultBrakingDecelerationWalking;
 	float DefaultBrakingDecelerationFalling;
 	float DefaultBrakingFriction;
+	float DefaultCameraFOV;
 	
 
 	bool bShouldRestoreCameraTilt = false;
 	bool bShouldRestoreCapsuleHalfHeight = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Movement)
+	float XYSpeed;
 	
 	UFUNCTION(BlueprintCallable)
 	void SetBaseMovementSpeed(float MovementSpeed);

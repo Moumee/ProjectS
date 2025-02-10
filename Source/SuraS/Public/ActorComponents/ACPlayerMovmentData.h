@@ -90,5 +90,9 @@ public:
 	float GetSlidingDecreaseSpeed() const;
 
 	float GetWallRunningMaxDuration() const;
-	
+
+	float GetMaxCameraFOV() const;
+
+	float GetMaxCameraFOVSpeed() const;
+
 };
