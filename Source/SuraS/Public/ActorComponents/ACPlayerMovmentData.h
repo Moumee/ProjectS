@@ -83,8 +83,6 @@ public:
 
 	float GetSlidingAdditionalSpeed() const;
 
-	float GetDashImpulseTransitionStartDuration() const;
-
 	float GetDashImpulseTransitionEndDuration() const;
 
 	float GetSlidingDecreaseSpeed() const;

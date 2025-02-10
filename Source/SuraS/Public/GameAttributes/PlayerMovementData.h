@@ -35,9 +35,6 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	float CrouchDashTransitionDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashImpulseTransitionStartDuration;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashImpulseTransitionEndDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
