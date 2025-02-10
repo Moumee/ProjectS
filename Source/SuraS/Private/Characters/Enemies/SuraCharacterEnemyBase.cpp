@@ -77,20 +77,10 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 {
 	UpdateHealthBarValue();
 
-	if (HitAnimation)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-		if (AnimInstance)
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("anim instance found"));
-			AnimInstance->Montage_Play(HitAnimation, 1.f);
-		}
-
-		// PlayAnimMontage(HitAnimation, 1, NAME_None);
-	}
+	if (HitAnimation)		
+		PlayAnimMontage(HitAnimation);
 }
 
 void ASuraCharacterEnemyBase::OnDeathTriggered()
