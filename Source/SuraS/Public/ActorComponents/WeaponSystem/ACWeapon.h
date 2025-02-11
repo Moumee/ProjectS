@@ -9,8 +9,10 @@
 #include "ActorComponents/WeaponSystem/WeaponType.h"
 #include "ActorComponents/WeaponSystem/WeaponFireMode.h"
 #include "ActorComponents/WeaponSystem/WeaponCamSettingValue.h"
-
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
+
+#include "Engine/DataTable.h"
+#include "WeaponData.h"
 
 #include "ACWeapon.generated.h"
 
@@ -24,12 +26,20 @@ class USuraWeaponUnequippedState;
 class USuraWeaponReloadingState;
 class UWeaponCameraShakeBase;
 
+class UNiagaraSystem;
+
+
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURAS_API UACWeapon : public USkeletalMeshComponent, public IWeaponInterface
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Weapon)
+	UDataTable* WeaponDataTable;
+
+	FWeaponData* WeaponData;
+
 	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = Projectile)
 	TSubclassOf<class ASuraProjectile> ProjectileClass;
@@ -78,6 +88,8 @@ public:
 	void InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter);
 	void InitializeUI();
 
+	void LoadWeaponData(FName WeaponID);
+
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	bool AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter);
@@ -88,8 +100,8 @@ public:
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void FireSingleProjectile();
-
 	void FireMultiProjectile();
+	void SpawnProjectile();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void ZoomToggle();
@@ -130,7 +142,6 @@ protected: //TODO: public으로 수정하기
 
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponReloadingState* ReloadingState;
-
 public:
 	UFUNCTION()
 	USuraWeaponBaseState* GetCurrentState() const { return CurrentState; }
@@ -171,6 +182,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Weapon")
 	UAnimMontage* AM_Reload_Weapon;
+#pragma endregion
+
+#pragma region Niagara
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	UNiagaraSystem* MuzzleFireEffect;
+public:
+	void SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotation);
 #pragma endregion
 
 #pragma region Aim
@@ -214,15 +233,30 @@ public:
 
 #pragma region Reload
 protected:
-	//TODO: Reloading Animation 적용하기
-	//TODO: GetReloadingAnimMontage() 함수 만들기 -> 왜 만들어야 한다고 했는지 기억이 안남 
-	// -> Reloading State에서 사용하려고 만든다고 했음
 	UPROPERTY(EditAnywhere)
-	float ReloadingTime = 1.5f;
+	bool bCanAutoReload = true;
+	//TODO: Auto Reload true일 때, 각각의 fire가 끝나면, Check ammo를 통해 남은 탄환수를 확인하고 0이면 자동으로 reloading으로 넘어가기
+
+	UPROPERTY(EditAnywhere)
+	float ReloadingTime = 2.5f;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmo = 20.f;
+
+	UPROPERTY(EditAnywhere)
+	int32 NumOfLeftAmmo;
+
+	FTimerHandle ReloadingTimer;
 protected:
 	void HandleReload();
+	void StartReload();
+	void StopReload();
 
-	virtual void ReloadingEnd() override;
+	void ConsumeAmmo();
+	void ReloadAmmo();
+	bool HasAmmo();
+
+	virtual void ReloadingEnd() override; //Legacy
 #pragma endregion
 
 #pragma region UI
@@ -256,17 +290,24 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponFireMode WeaponFireMode;
-
-protected: //내부 로직 //TODO: 아래 함수들 정리하기
+protected:
 	void HandleSingleFire();
-
 	void HandleBurstFire();
-
 	void HandleFullAutoFire();
 #pragma endregion
 
-#pragma region FireMode/BurstShot
+#pragma region FireMode/SingleShot
+protected:
+	FTimerHandle SingleShotTimer;
 
+	UPROPERTY(EditAnywhere)
+	float SingleShotDelay = 1.f;
+public:
+	void StartSingleShot();
+	void StopSingleShot();
+#pragma endregion
+
+#pragma region FireMode/BurstShot
 protected:
 	FTimerHandle BurstShotTimer;
 
@@ -279,11 +320,8 @@ protected:
 	int32 BurstShotFired = 0;
 
 protected:
-
 	void StartBurstFire(bool bMultiProjectile = false);
-
 	void StopBurstFire();
-
 #pragma endregion
 
 #pragma region FireMode/FullAuto
@@ -295,11 +333,8 @@ protected:
 	FTimerHandle FullAutoShotTimer;
 
 protected:
-
 	void StartFullAutoShot();
-
 	void StopFullAutoShot();
-
 #pragma endregion
 
 #pragma region Recoil
@@ -342,15 +377,10 @@ protected:
 
 	float RecoveredRecoilValuePitch = 0.f;
 	float RecoveredRecoilValueYaw = 0.f;
-
 public:
-
 	void AddRecoilValue();
-
 	void ApplyRecoil(float DeltaTime);
-
 	void RecoverRecoil(float DeltaTime);
-
 	void UpdateRecoil(float DeltaTime);
 #pragma endregion
 
@@ -392,10 +422,6 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> CameraShakeClass;
-
-	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CameraShake")
-	UWeaponCameraShakeBase* CameraShake;
-
 public:
 	void ApplyCameraShake();
 #pragma endregion
