@@ -27,6 +27,8 @@ protected:
 
 public:
 
+	float GetGravityScale() const;
+	
 	UFUNCTION(BlueprintCallable, Category = "Data")
 	float GetWalkSpeed() const;
 
@@ -83,12 +85,16 @@ public:
 
 	float GetSlidingAdditionalSpeed() const;
 
-	float GetDashImpulseTransitionStartDuration() const;
-
 	float GetDashImpulseTransitionEndDuration() const;
 
 	float GetSlidingDecreaseSpeed() const;
 
 	float GetWallRunningMaxDuration() const;
-	
+
+	float GetMaxCameraFOV() const;
+
+	float GetMaxCameraFOVSpeed() const;
+
+	float GetMaxWallRunSpeed() const;
+
 };

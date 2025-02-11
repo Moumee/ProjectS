@@ -17,6 +17,10 @@ class SURAS_API UEnemyHealthBarWidget : public UUserWidget
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UProgressBar* HealthBar = nullptr;
+
+// protected:
+	// Called when the game starts
+	// virtual bool Initialize() override;
 	
 public:
 	void SetHealthBarPercent(float const value);
