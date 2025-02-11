@@ -12,7 +12,9 @@ public class SuraS : ModuleRules
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
 			"AnimGraphRuntime",
-			"UMG",			 //Added by Boranaga for the use of UI
+            "AIModule",
+            "NavigationSystem",
+            "UMG",			 //Added by Boranaga for the use of UI
             "EngineCameras", //Added by Boranaga for the use of CameraShake
 			"Niagara"        //Added by Boranaga for the use of ParticleSystem
         });
