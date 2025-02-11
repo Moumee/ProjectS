@@ -30,6 +30,7 @@ class SURAS_API USuraPlayerDashingState : public USuraPlayerBaseState
 
 	FVector DashDirection;
 
+	UPROPERTY()
 	APlayerController* PlayerController;
 	
 public:

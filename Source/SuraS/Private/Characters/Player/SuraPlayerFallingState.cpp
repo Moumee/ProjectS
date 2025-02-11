@@ -10,6 +10,7 @@
 #include "Characters/Player/SuraPlayerHangingState.h"
 #include "Characters/Player/SuraPlayerJumpingState.h"
 #include "Characters/Player/SuraPlayerMantlingState.h"
+#include "Characters/Player/SuraPlayerSlidingState.h"
 #include "Characters/Player/SuraPlayerWallRunningState.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -25,6 +26,8 @@ void USuraPlayerFallingState::EnterState(ASuraCharacterPlayer* Player)
 	Super::EnterState(Player);
 
 	PlayerController = Player->GetController<APlayerController>();
+
+	DesiredSlidingDirection = FVector::ZeroVector;
 
 	if (Player->GetPreviousState()->GetStateType() == EPlayerState::Hanging ||
 		Player->GetPreviousState()->GetStateType() == EPlayerState::Running ||
@@ -70,6 +73,23 @@ void USuraPlayerFallingState::UpdateBaseMovementSpeed(ASuraCharacterPlayer* Play
 	}
 }
 
+void USuraPlayerFallingState::CacheSlidingDirection(ASuraCharacterPlayer* Player)
+{
+	if (DesiredSlidingDirection != FVector::ZeroVector) return;
+	
+	FHitResult SlideDirectionHitResult;
+	FVector Start = Player->GetCapsuleComponent()->GetComponentLocation();
+	FVector End = Start + FVector::DownVector * Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() - 50.f;
+	FCollisionQueryParams SlideDirectionParams;
+	SlideDirectionParams.AddIgnoredActor(Player);
+	bool bSlideDirectionHit = GetWorld()->LineTraceSingleByChannel(SlideDirectionHitResult, Start, End, ECC_Visibility, SlideDirectionParams);
+	if (bSlideDirectionHit)
+	{
+		FVector CurrentVelocity = Player->GetVelocity();
+		DesiredSlidingDirection = FVector(CurrentVelocity.X, CurrentVelocity.Y, 0.f).GetSafeNormal();
+	}
+}
+
 void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float DeltaTime)
 {
 	Super::UpdateState(Player, DeltaTime);
@@ -78,6 +98,8 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	UpdateBaseMovementSpeed(Player, DeltaTime);
 
 	Player->InterpCapsuleHeight(1.f, DeltaTime);
+
+	CacheSlidingDirection(Player);
 	
 	FHitResult WallHitResult;
 	FCollisionQueryParams WallParams;
@@ -116,6 +138,9 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		}
 	}
 
+	
+	
+
 	if (Player->GetPreviousState()->GetStateType() != EPlayerState::WallRunning)
 	{
 		if (Player->ShouldEnterWallRunning(Player->WallRunDirection, Player->WallRunSide))
@@ -143,6 +168,12 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 		if (Player->LandCamShake)
 		{
 			PlayerController->ClientStartCameraShake(Player->LandCamShake);
+		}
+		
+		if (Player->bCrouchTriggered)
+		{
+			Player->ChangeState(Player->SlidingState);
+			return;
 		}
 		Player->ChangeState(Player->DesiredGroundState);
 		return;

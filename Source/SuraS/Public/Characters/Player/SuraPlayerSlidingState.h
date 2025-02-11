@@ -24,6 +24,7 @@ class SURAS_API USuraPlayerSlidingState : public USuraPlayerBaseState
 	
 	float CrouchSpeed = 0.f;
 
+	UPROPERTY()
 	APlayerController* PlayerController;
 
 public:
