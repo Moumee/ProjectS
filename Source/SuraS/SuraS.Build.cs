@@ -10,8 +10,14 @@ public class SuraS : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
-			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
+			"Core",
+			"CoreUObject",
+			"Engine",
+			"InputCore",
+			"EnhancedInput",
 			"AnimGraphRuntime",
+			"AIModule",
+			"NavigationSystem",
 			"UMG",
             "EngineCameras"
         });

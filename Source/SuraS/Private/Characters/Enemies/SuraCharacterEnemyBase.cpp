@@ -90,7 +90,7 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	if (DeathAnimation)
 		PlayAnimMontage(DeathAnimation);
 
-	// Disable all collision on capsule
+	// Disable all collisions on capsule
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionObjectType(ECC_GameTraceChannel1); // to disable collision with SuraProjectile object
