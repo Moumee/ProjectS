@@ -49,12 +49,6 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	DefaultCapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	DefaultCameraLocation = Camera->GetRelativeLocation();
 
-	DefaultGravityScale = GetCharacterMovement()->GravityScale;
-	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
-	DefaultBrakingFriction = GetCharacterMovement()->BrakingFriction;
-	DefaultBrakingDecelerationFalling = GetCharacterMovement()->BrakingDecelerationFalling;
-	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
-	
 	// Initialize JumpsLeft
 	JumpsLeft = MaxJumps;
 
@@ -78,6 +72,14 @@ void ASuraCharacterPlayer::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	DefaultGravityScale = PlayerMovementData->GetGravityScale();
+	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
+	DefaultBrakingFriction = GetCharacterMovement()->BrakingFriction;
+	DefaultBrakingDecelerationFalling = GetCharacterMovement()->BrakingDecelerationFalling;
+	DefaultBrakingDecelerationWalking = GetCharacterMovement()->BrakingDecelerationWalking;
+
+	DefaultCameraFOV = GetCamera()->FieldOfView;
 	
 	
 	DefaultGroundFriction = GetCharacterMovement()->GroundFriction;
@@ -311,9 +313,21 @@ void ASuraCharacterPlayer::RestoreCameraTilt(float DeltaTime)
 }
 
 
+void ASuraCharacterPlayer::InterpCameraFOV(float DeltaTime)
+{
+	float Alpha = FMath::Clamp(GetCharacterMovement()->Velocity.Size() / PlayerMovementData->GetMaxCameraFOVSpeed(), 0.f, 1.f);
+	float TargetFOV = FMath::Lerp(DefaultCameraFOV, PlayerMovementData->GetMaxCameraFOV(), Alpha);
+	float NewCameraFOV = FMath::FInterpTo(GetCamera()->FieldOfView, TargetFOV, DeltaTime, 10.f);
+	GetCamera()->SetFieldOfView(NewCameraFOV);
+}
+
 void ASuraCharacterPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	XYSpeed = FVector(GetCharacterMovement()->Velocity.X, GetCharacterMovement()->Velocity.Y, 0.f).Size();
+
+	InterpCameraFOV(DeltaTime);
 
 	UpdateDashCooldowns(DeltaTime);
 

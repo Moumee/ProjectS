@@ -69,18 +69,13 @@ void USuraPlayerDashingState::EnterState(ASuraCharacterPlayer* Player)
 	Player->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 	
 	DashImpulseSpeed = Player->GetPlayerMovementData()->GetDashImpulseSpeed();
-	DashStartSpeed = Player->GetPlayerMovementData()->GetRunSpeed();
 	DashEndSpeed = Player->GetPlayerMovementData()->GetDashSpeed();
 
-	StartTransitionDuration = Player->GetPlayerMovementData()->GetDashImpulseTransitionStartDuration();
 	EndTransitionDuration = Player->GetPlayerMovementData()->GetDashImpulseTransitionEndDuration();
 
-	float StartDistance = ((DashStartSpeed + DashImpulseSpeed) / 2.f) * StartTransitionDuration;
-	float EndDistance = ((DashImpulseSpeed + DashEndSpeed) / 2.f) * EndTransitionDuration;
-
-	float DashImpulseDistance = Player->GetPlayerMovementData()->GetDashDistance() - (StartDistance + EndDistance);
+	float DashImpulseDistance = Player->GetPlayerMovementData()->GetDashDistance();
 	DashImpulseDuration = DashImpulseDistance / DashImpulseSpeed;
-	Player->GetCharacterMovement()->Velocity = DashDirection * DashStartSpeed;
+	Player->GetCharacterMovement()->Velocity = DashDirection * DashImpulseSpeed;
 	
 }
 
@@ -97,25 +92,17 @@ void USuraPlayerDashingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	
 	
 	
-	if (DashElapsedTime < StartTransitionDuration + DashImpulseDuration + EndTransitionDuration)
+	if (DashElapsedTime < DashImpulseDuration + EndTransitionDuration)
 	{
 		DashElapsedTime += DeltaTime;
-		if (DashElapsedTime < StartTransitionDuration)
+		if (DashElapsedTime >= DashImpulseDuration)
 		{
-			float NewSpeed = FMath::Lerp(DashStartSpeed, DashImpulseSpeed, DashElapsedTime / StartTransitionDuration);
+			float Alpha = (DashElapsedTime - DashImpulseDuration) / EndTransitionDuration;
+			float TargetSpeed = FMath::Lerp(DashImpulseSpeed, DashEndSpeed, Alpha);
+			float NewSpeed = FMath::FInterpTo(Player->GetCharacterMovement()->Velocity.Size(), TargetSpeed, DeltaTime, 10.f);
 			Player->GetCharacterMovement()->Velocity = NewSpeed * DashDirection;
 		}
-		else if (StartTransitionDuration <= DashElapsedTime && DashElapsedTime < StartTransitionDuration + DashImpulseDuration)
-		{
-			Player->GetCharacterMovement()->Velocity = DashImpulseSpeed * DashDirection;
-		}
-		else if (StartTransitionDuration + DashImpulseDuration <=
-			DashElapsedTime && DashElapsedTime < StartTransitionDuration + DashImpulseDuration + EndTransitionDuration)
-		{
-			float NewSpeed = FMath::Lerp(DashImpulseSpeed, DashEndSpeed,
-				(DashElapsedTime - (StartTransitionDuration + DashImpulseDuration)) / EndTransitionDuration);
-			Player->GetCharacterMovement()->Velocity = NewSpeed * DashDirection;
-		}
+		
 	}
 	else
 	{

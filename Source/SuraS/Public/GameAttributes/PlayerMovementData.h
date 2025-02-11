@@ -14,6 +14,9 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float GravityScale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WalkSpeed;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -33,9 +36,6 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CrouchDashTransitionDuration;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DashImpulseTransitionStartDuration;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DashImpulseTransitionEndDuration;
@@ -85,5 +85,14 @@ struct SURAS_API FPlayerMovementData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WallRunningMaxDuration;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxCameraFOV;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxCameraFOVSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxWallRunSpeed;
 	
 };

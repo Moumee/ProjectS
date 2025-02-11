@@ -38,24 +38,26 @@ void ASuraCharacterEnemyBase::BeginPlay()
 
 	UpdateHealthBarValue();
 
+	HealthBarWidget->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	if (DamageSystemComp)
 	{
 		GetDamageSystemComp()->OnDamaged.AddDynamic(this, &ASuraCharacterEnemyBase::OnDamagedTriggered);
 		GetDamageSystemComp()->OnDeath.AddDynamic(this, &ASuraCharacterEnemyBase::OnDeathTriggered);
 	}
 
-	GetCapsuleComponent()->SetVisibility(true);
-	GetCapsuleComponent()->SetHiddenInGame(false);
+	// GetCapsuleComponent()->SetVisibility(true);
+	// GetCapsuleComponent()->SetHiddenInGame(false);
 
 	const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>("Base", "");
 
 	if (EnemyAttributesData)
 	{
-		GetDamageSystemComp()->SetMaxHealth((*EnemyAttributesData).MaxHealth);
-		GetDamageSystemComp()->SetHealth((*EnemyAttributesData).MaxHealth);
+		GetDamageSystemComp()->SetMaxHealth(EnemyAttributesData->MaxHealth);
+		GetDamageSystemComp()->SetHealth(EnemyAttributesData->MaxHealth);
 
-		HitAnimation = (*EnemyAttributesData).HitAnimation;
-		DeathAnimation = (*EnemyAttributesData).DeathAnimation;
+		HitAnimation = EnemyAttributesData->HitAnimation;
+		DeathAnimation = EnemyAttributesData->DeathAnimation;
 	}
 }
 
@@ -75,7 +77,9 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 {
 	UpdateHealthBarValue();
 
-	if (HitAnimation)
+	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
+
+	if (HitAnimation)		
 		PlayAnimMontage(HitAnimation);
 }
 
@@ -86,7 +90,7 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	if (DeathAnimation)
 		PlayAnimMontage(DeathAnimation);
 
-	// Disable all collision on capsule
+	// Disable all collisions on capsule
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionObjectType(ECC_GameTraceChannel1); // to disable collision with SuraProjectile object

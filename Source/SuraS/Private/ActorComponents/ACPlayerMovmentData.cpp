@@ -13,6 +13,16 @@ void UACPlayerMovementData::BeginPlay()
 	
 }
 
+float UACPlayerMovementData::GetGravityScale() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->GravityScale;
+}
+
 float UACPlayerMovementData::GetWalkSpeed() const
 {
 	if (!PlayerRow)
@@ -206,16 +216,6 @@ float UACPlayerMovementData::GetSlidingAdditionalSpeed() const
 	return PlayerRow->SlidingAdditionalSpeed;
 }
 
-float UACPlayerMovementData::GetDashImpulseTransitionStartDuration() const
-{
-	if (!PlayerRow)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
-		return 0;
-	}
-	return PlayerRow->DashImpulseTransitionStartDuration;
-}
-
 float UACPlayerMovementData::GetDashImpulseTransitionEndDuration() const
 {
 	if (!PlayerRow)
@@ -245,4 +245,36 @@ float UACPlayerMovementData::GetWallRunningMaxDuration() const
 	}
 	return PlayerRow->WallRunningMaxDuration;
 }
+
+float UACPlayerMovementData::GetMaxCameraFOV() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->MaxCameraFOV;
+}
+
+float UACPlayerMovementData::GetMaxCameraFOVSpeed() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->MaxCameraFOVSpeed;
+}
+
+float UACPlayerMovementData::GetMaxWallRunSpeed() const
+{
+	if (!PlayerRow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerRow is null"));
+		return 0;
+	}
+	return PlayerRow->MaxWallRunSpeed;
+}
+
+
 
