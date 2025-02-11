@@ -42,6 +42,8 @@ public:
 	/** 특정 UI 열기/ 닫기 **/
 	void OpenUI(EUIType UIType);
 
+	UBaseUIWidget* GetWidget(EUIType UIType);
+
 
 	
 private:
@@ -58,7 +60,7 @@ private:
 	UPROPERTY()
 	TMap<EUIType, UBaseUIWidget*> UIWidgets;
 
-	UBaseUIWidget* GetOrCreateWidget(EUIType UIType);
+	//UBaseUIWidget* GetOrCreateWidget(EUIType UIType);
 
 public:
 

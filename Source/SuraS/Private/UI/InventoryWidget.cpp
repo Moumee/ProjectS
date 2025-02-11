@@ -1,7 +1,6 @@
 #include "UI/InventoryWidget.h"
 
 #include "ActorComponents/UISystem/ACInventoryManager.h"
-#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet/GameplayStatics.h"
@@ -84,12 +83,11 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
 
     if (InKeyEvent.GetKey() == EKeys::T)  // T 키를 눌렀을 때
     {
-        GEngine->AddOnScreenDebugMessage(-1, 2.f , FColor::Red, TEXT("weapon unlocked"));
-        
         // 무기 언락 처리
         if (UACInventoryManager* InventoryManager = GetOwningPlayerPawn()->FindComponentByClass<UACInventoryManager>())
         {
-            InventoryManager->UnlockWeapon();  // 예시로 UnlockWeapon 함수 호출
+            InventoryManager->UnlockWeapon("WeaponImage1_0","WeaponText1_0", "LockBackground1_0", "LockImage1_0");  // 예시로 UnlockWeapon 함수 호출
+            GEngine->AddOnScreenDebugMessage(-1, 2.f , FColor::Red, TEXT("Weapon unlocked"));
         }
     
         return FReply::Handled();
@@ -162,11 +160,6 @@ void UInventoryWidget::CloseUI()
 
 void UInventoryWidget::UpdateWeaponSlot(int32 WeaponType, int32 WeaponIndex, bool bIsUnlocked)
 {
-    // if (WeaponImages[WeaponType][WeaponIndex] && WeaponNames[WeaponType][WeaponIndex])
-    // {
-    //     // 무기가 Unlock되면 value를 1로, lock 상태면 value를 0으로
-    //     WeaponImages[WeaponType][WeaponIndex]->SetRenderOpacity(bIsUnlocked ? 1.0f : 0.0f);
-    //     WeaponNames[WeaponType][WeaponIndex]->SetRenderOpacity(bIsUnlocked ? 1.0f : 0.5f);
-    // }
+    
 }
 
