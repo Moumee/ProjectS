@@ -43,8 +43,8 @@ public:
 	void SetIsDead(bool bIsDead);
 
 	// Getters
-	float GetHealth();
-	float GetMaxHealth();
+	float GetHealth() const { return Health; }
+	float GetMaxHealth() const { return MaxHealth; }
 
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnDamaged OnDamaged;

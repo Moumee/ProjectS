@@ -7,6 +7,7 @@
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
 #include "Components/WidgetComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "SuraCharacterEnemyBase.generated.h"
 
 class UACDamageSystem;
@@ -32,6 +33,9 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
+	UBehaviorTree* BehaviorTree;
+
 	UFUNCTION()
 	virtual void OnDamagedTriggered();
 
@@ -48,6 +52,9 @@ public:
 
 	// damage system comp getter
 	UACDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
+
+	// behavior tree getter
+	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 
 	bool TakeDamage(FDamageData DamageData, AActor* DamageCauser);
 
