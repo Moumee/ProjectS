@@ -18,8 +18,9 @@ public class SuraS : ModuleRules
 			"AnimGraphRuntime",
 			"AIModule",
 			"NavigationSystem",
-			"UMG",
-            "EngineCameras"
+            "UMG",			 //Added by Boranaga for the use of UI
+            "EngineCameras", //Added by Boranaga for the use of CameraShake
+			"Niagara"        //Added by Boranaga for the use of ParticleSystem
         });
 	}
 }
