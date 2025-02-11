@@ -9,8 +9,11 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/DecalComponent.h"
-#include "Particles/ParticleSystem.h"
-#include "Particles/ParticleSystemComponent.h"
+//#include "Particles/ParticleSystem.h"
+//#include "Particles/ParticleSystemComponent.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -21,7 +24,7 @@ ASuraProjectile::ASuraProjectile()
 
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
-	CollisionComp->InitSphereRadius(5.0f);
+	//CollisionComp->InitSphereRadius(5.0f);
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
 	CollisionComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore); //Projectile
@@ -58,6 +61,8 @@ ASuraProjectile::ASuraProjectile()
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
+
+	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
 void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile)
@@ -65,6 +70,31 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile)
 	if (IsValid(OwnerOfProjectile))
 	{
 		ProjectileOwner = OwnerOfProjectile;
+
+		if (ProjectileType == EProjectileType::Projectile_Rifle)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Rifle Projectile!!!"));
+			LoadProjectileData("RifleProjectile");
+		}
+		else if (ProjectileType == EProjectileType::Projectile_ShotGun)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ShotGun Projectile!!!"));
+			LoadProjectileData("ShotGunProjectile");
+		}
+
+		SpawnTrailEffect();
+	}
+}
+
+void ASuraProjectile::LoadProjectileData(FName ProjectileID)
+{
+	ProjectileData = ProjectileDataTable->FindRow<FProjectileData>(ProjectileID, TEXT(""));
+	if (ProjectileData)
+	{
+		TrailEffect = ProjectileData->TrailEffect;
+		ImpactEffect = ProjectileData->ImpactEffect;
+		DecalMaterial = ProjectileData->HoleDecal;
+		Damage = ProjectileData->Damage;
 	}
 }
 
@@ -83,18 +113,17 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 			//TODO: Effect는 한번만 발생되도록 설정하기
 			//TODO: 충돌 Effect는 Projectile Type에 따라 다르게 설정하기
-			SpawnParticleEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
 
 			FDamageData DefaultDamage;
-			DefaultDamage.DamageAmount = 50.f;
+			DefaultDamage.DamageAmount = Damage;
 			DefaultDamage.DamageType = EDamageType::Melee;
 			DefaultDamage.bCanForceDamage = false;
 
 			if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
 			{
-				//UE_LOG(LogTemp, Warning, TEXT("Enemy Hit!!!"));
 				Cast<IDamageable>(OtherActor)->TakeDamage(DefaultDamage, this->ProjectileOwner);
 			}
 
@@ -111,7 +140,7 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 
 		//TODO: Effect는 한번만 발생되도록 설정하기
 		//TODO: 충돌 Effect는 Projectile Type에 따라 다르게 설정하기
-		SpawnParticleEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+		SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 		SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
 
@@ -119,18 +148,35 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 	}
 }
 
-void ASuraProjectile::SpawnParticleEffect(FVector SpawnLocation, FRotator SpawnRotation)
+
+void ASuraProjectile::SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRotation)
 {
 	if (ImpactEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),       // 월드 컨텍스트
-			ImpactEffect,  // 파티클 시스템 템플릿
-			SpawnLocation,    // 위치
-			SpawnRotation,    // 회전
-			FVector(1.0f),    // 스케일
-			true              // 자동 파괴 여부
-		);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactEffect, SpawnLocation, SpawnRotation, FVector(1.0f), true);
+	}
+}
+
+void ASuraProjectile::SpawnTrailEffect()
+{
+	if (ProjectileMesh && TrailEffect)
+	{
+		FTransform TrailStartTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailStart")), ERelativeTransformSpace::RTS_Component);
+		FTransform TrailEndTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailEnd")), ERelativeTransformSpace::RTS_Component);
+		//FRotator TrailRotation = (TrailStartTransform.GetLocation() - TrailEndTransform.GetLocation()).Rotation();
+		//TrailRotation.Normalize();
+		float DistanceOffset = 80.f;
+
+		FVector TrailLocationOffset = (TrailEndTransform.GetLocation() - TrailStartTransform.GetLocation()).GetSafeNormal() * DistanceOffset;
+
+		TrailEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			TrailEffect,
+			ProjectileMesh,
+			FName(TEXT("TrailStart")),
+			TrailLocationOffset,
+			FRotator(0, 0, 0),
+			EAttachLocation::KeepRelativeOffset,
+			true);
 	}
 }
 

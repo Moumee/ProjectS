@@ -4,11 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/DataTable.h"
+
+#include "ProjectileData.h"
+#include "ProjectileType.h"
+
 #include "SuraProjectile.generated.h"
 
 class USphereComponent;
 class UProjectileMovementComponent; // 기본적인 projectile이 구현되어 있는 class임
-class UParticleSystem;
+//class UParticleSystem;
+class UNiagaraSystem;
 
 UCLASS(config = Game) //TODO: 무슨 속성인지 알아봐야함
 class SURAS_API ASuraProjectile : public AActor
@@ -16,31 +22,52 @@ class SURAS_API ASuraProjectile : public AActor
 	GENERATED_BODY()
 
 protected:
-	/** Sphere collision component */
+	UPROPERTY(EditAnywhere, Category = Projectile)
+	EProjectileType ProjectileType = EProjectileType::Projectile_Rifle;
+
+	//TODO: UDataTable, FDataTableRowHandle 둘중에 하나 사용해야함
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Projectile)
+	UDataTable* ProjectileDataTable;
+
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType="ProjectileData"))
+	//FDataTableRowHandle ProjectileDataTableHandle;
+
+	FProjectileData* ProjectileData;
+
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	USphereComponent* CollisionComp;
 
-	/** Projectile movement component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UProjectileMovementComponent* ProjectileMovement;
 	
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	UStaticMeshComponent* ProjectileMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	UNiagaraSystem* TrailEffect;
+
+	UPROPERTY()
+	UNiagaraComponent* TrailEffectComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-	UParticleSystem* ImpactEffect;
+	//UParticleSystem* ImpactEffect;
+	UNiagaraSystem* ImpactEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	UMaterialInterface* DecalMaterial;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float Damage = 0.f;
+
 	UPROPERTY(VisibleAnywhere)
 	AActor* ProjectileOwner;
+
+
 
 public:	
 	// Sets default values for this actor's properties
 	ASuraProjectile();
-
 	void InitializeProjectile(AActor* Owner);
+	void LoadProjectileData(FName ProjectileID);
 
 	/** called when projectile hits something */
 	UFUNCTION()
@@ -51,8 +78,8 @@ public:
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
-	void SpawnParticleEffect(FVector SpawnLocation, FRotator SpawnRotation);
-
+	void SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRotation);
+	void SpawnTrailEffect();
 	void SpawnDecalEffect(FVector SpawnLocation, FRotator SpawnRotation);
 
 //protected:
