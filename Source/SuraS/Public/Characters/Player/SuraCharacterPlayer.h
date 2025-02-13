@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "SuraPlayerEnums.h"
-#include "ActorComponents/UISystem/ACBaseUIComponent.h"
+#include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "Characters/SuraCharacterBase.h"
 #include "SuraCharacterPlayer.generated.h"
@@ -52,10 +52,12 @@ protected:
 
 	// UI component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
-	UACBaseUIComponent* UIComponent;
+	UACUIMangerComponent* UIManager;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	UACInventoryManager* InventoryManager;
+
+	
 
 
 

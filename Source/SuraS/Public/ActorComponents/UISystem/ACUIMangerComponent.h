@@ -5,11 +5,14 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "UI/InventoryWidget.h"
-#include "ACBaseUIComponent.generated.h"
+#include "ACUIMangerComponent.generated.h"
 
 class UInputAction;
 class UEnhancedInputComponent;
 class UBaseUIWidget;
+class UACInventoryManager;
+class UACCrosshairManager;
+
 
 UENUM(BlueprintType)
 enum class EUIType : uint8
@@ -21,13 +24,13 @@ enum class EUIType : uint8
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class SURAS_API UACBaseUIComponent : public UActorComponent
+class SURAS_API UACUIMangerComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UACBaseUIComponent();
+	UACUIMangerComponent();
 
 protected:
 	// Called when the game starts
@@ -44,7 +47,6 @@ public:
 
 	UBaseUIWidget* GetWidget(EUIType UIType);
 
-
 	
 private:
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -60,11 +62,17 @@ private:
 	UPROPERTY()
 	TMap<EUIType, UBaseUIWidget*> UIWidgets;
 
-	//UBaseUIWidget* GetOrCreateWidget(EUIType UIType);
+	/** UI Manager들 **/
+	UPROPERTY()
+	UACInventoryManager* InventoryManager;
 
-public:
+	UPROPERTY()
+	UACCrosshairManager* CrosshairManager;
+
+	void InitializeMangers();
 
 	
 
+public:
 		
 };

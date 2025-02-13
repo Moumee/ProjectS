@@ -17,9 +17,9 @@ void USuraWeaponReloadingState::EnterState(UACWeapon* Weapon)
 	Super::EnterState(Weapon);
 
 	//TODO:
-	// ReloadingTime(È¤Àº ReloadingRate)º¯¼ö¿¡ µû¶ó Reloading Anim MontageÀÇ Rate¸¦ ¼³Á¤ÇÏ°í ½ÇÇàÇÏµµ·Ï
-	// ReloadingÀÌ ³¡³ª¸é IdleState·Î ChangeÇÏ±â
-	// ±Ùµ¥ ÀÌ°É ±»ÀÌ State¿¡¼­ ½ÇÇàÇÒ ÇÊ¿ä°¡ ÀÖ³ª? ±×³É weapon¿¡¼­ Ã³¸®ÇÏ´Â°Ô ±ò²ûÇÑ °Í °°Àºµ¥
+	// ReloadingTime(í˜¹ì€ ReloadingRate)ë³€ìˆ˜ì— ë”°ë¼ Reloading Anim Montageì˜ Rateë¥¼ ì„¤ì •í•˜ê³  ì‹¤í–‰í•˜ë„ë¡
+	// Reloadingì´ ëë‚˜ë©´ IdleStateë¡œ Changeí•˜ê¸°
+	// ê·¼ë° ì´ê±¸ êµ³ì´ Stateì—ì„œ ì‹¤í–‰í•  í•„ìš”ê°€ ìˆë‚˜? ê·¸ëƒ¥ weaponì—ì„œ ì²˜ë¦¬í•˜ëŠ”ê²Œ ê¹”ë”í•œ ê²ƒ ê°™ì€ë°
 }
 
 void USuraWeaponReloadingState::UpdateState(UACWeapon* Weapon, float DeltaTime)

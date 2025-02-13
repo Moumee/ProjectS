@@ -1,12 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ActorComponents/UISystem/ACBaseUIComponent.h"
+#include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "EnhancedInputComponent.h"
+#include "ActorComponents/UISystem/ACCrosshairManager.h"
 
 
 // Sets default values for this component's properties
-UACBaseUIComponent::UACBaseUIComponent()
+UACUIMangerComponent::UACUIMangerComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -16,42 +17,29 @@ UACBaseUIComponent::UACBaseUIComponent()
 
 
 // Called when the game starts
-void UACBaseUIComponent::BeginPlay()
+void UACUIMangerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	SetupInput();
+
+	InitializeMangers();
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "UImanager begin play called");
 }
 
-void UACBaseUIComponent::SetupInput()
+void UACUIMangerComponent::SetupInput()
 {
 	if (APlayerController* PC = Cast<APlayerController>(GetOwner()->GetInstigatorController()))
 	{
 		if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PC->InputComponent))
 		{
-			EnhancedInput->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &UACBaseUIComponent::OpenUI, EUIType::Inventory);
+			EnhancedInput->BindAction(OpenInventoryAction, ETriggerEvent::Started, this, &UACUIMangerComponent::OpenUI, EUIType::Inventory);
 			//EnhancedInput->BindAction(OpenPauseMenuAction, ETriggerEvent::Started, this, &UACBaseUIComponent::ToggleUI, EUIType::PauseMenu);
 		}
 	}
 }
 
-// UBaseUIWidget* UACBaseUIComponent::GetOrCreateWidget(EUIType UIType)
-// {
-// 	// UIWidgetClasses에서 UIType에 맞는 위젯 클래스를 가져와서 생성
-// 	
-// 	if (UIWidgetClasses.Contains(UIType))
-// 	{
-// 		UBaseUIWidget* NewWidget = CreateWidget<UBaseUIWidget>(GetWorld(), UIWidgetClasses[UIType]);
-// 		if (NewWidget)
-// 		{
-// 			UIWidgets.Add(UIType, NewWidget);
-// 		}
-// 		return NewWidget;
-// 	}
-// 	
-// 	return nullptr;
-// }
-
-void UACBaseUIComponent::OpenUI(EUIType UIType)
+void UACUIMangerComponent::OpenUI(EUIType UIType)
 {
 	UBaseUIWidget* TargetWidget = GetWidget(UIType);
 	if (!TargetWidget) return; // 위젯 생성에 실패한 경우 처리
@@ -62,7 +50,7 @@ void UACBaseUIComponent::OpenUI(EUIType UIType)
 	}
 }
 
-UBaseUIWidget* UACBaseUIComponent::GetWidget(EUIType UIType)
+UBaseUIWidget* UACUIMangerComponent::GetWidget(EUIType UIType)
 {
 	// UIType에 해당하는 위젯이 이미 생성되어 있는지 확인
 	if (!UIWidgets.Contains(UIType))
@@ -83,6 +71,18 @@ UBaseUIWidget* UACBaseUIComponent::GetWidget(EUIType UIType)
 
 	// 이미 생성된 위젯이 있으면 반환
 	return UIWidgets[UIType];
+}
+
+void UACUIMangerComponent::InitializeMangers()
+{
+	CrosshairManager = NewObject<UACCrosshairManager>(this, UACCrosshairManager::StaticClass());
+	CrosshairManager->RegisterComponent(); // 이 시점에서 해당 manager의 begin play가 호출됨.
+
+	
+
+	// // 인벤토리 매니저 생성 및 등록
+	// InventoryManager = NewObject<UACInventoryManager>(this, UACInventoryManager::StaticClass());
+	// InventoryManager->RegisterComponent();
 }
 
 

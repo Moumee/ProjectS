@@ -2,9 +2,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ACBaseUIComponent.h"
+#include "ACUIMangerComponent.h"
 #include "Components/ActorComponent.h"
-#include "UI/InventoryWidget.h"
 #include "ACInventoryManager.generated.h"
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -30,5 +29,5 @@ protected:
 	// UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	// UInventoryWidget* InventoryWidget;
 
-	UACBaseUIComponent* BaseUIComponent;
+	UACUIMangerComponent* BaseUIComponent;
 };

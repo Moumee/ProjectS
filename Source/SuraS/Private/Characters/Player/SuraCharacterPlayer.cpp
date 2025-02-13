@@ -21,7 +21,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
-#include "ActorComponents/UISystem/ACBaseUIComponent.h"
+#include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Extensions/UIComponent.h"
 
 
@@ -53,8 +53,8 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	JumpsLeft = MaxJumps;
 
 	// inventory actor components
-	UIComponent = CreateDefaultSubobject<UACBaseUIComponent>(TEXT("UI Component"));
-	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("UI Manager Component"));
+	UIManager = CreateDefaultSubobject<UACUIMangerComponent>(TEXT("UI Manager Component"));
+	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("Inventory Manager Component"));
 	
 
 }

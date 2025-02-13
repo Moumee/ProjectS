@@ -3,7 +3,7 @@
 
 #include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 
-#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h" //TODO: Player Class ¼öÁ¤ÇÏ±â
+#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h" //TODO: Player Class ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 #include "ActorComponents/WeaponSystem/SuraWeaponPickUp.h"
 #include "ActorComponents/WeaponSystem/ACWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponName.h"
@@ -71,7 +71,7 @@ void UWeaponSystemComponent::InitializePlayerReference()
 
 			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 			{
-				//TODO : Weapon SwitchingÇÏ´Â logic ÇÊ¿äÇÔ
+				//TODO : Weapon Switchingï¿½Ï´ï¿½ logic ï¿½Ê¿ï¿½ï¿½ï¿½
 
 				// Inereact With WeaponPickUp
 				EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &UWeaponSystemComponent::PickUpWeapon);
@@ -89,7 +89,7 @@ void UWeaponSystemComponent::InitializePlayerReference()
 bool UWeaponSystemComponent::SearchWeapon()
 {
 	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
-	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Visibility)); //TODO: Collision Channel ¼³Á¤ÇÏ±â
+	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Visibility)); //TODO: Collision Channel ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 
 	TArray<AActor*> ignoreActors;
 	ignoreActors.Init(PlayerOwner, 1);
@@ -116,7 +116,7 @@ bool UWeaponSystemComponent::SearchWeapon()
 					MinDistanceToWeapon = DistanceToWeapon;
 					NearestWeapon = WeaponObject;
 
-					// TODO: Overlap µÈ weapon¿¡ UI on/off ±â´É Ãß°¡ÇÏ±â
+					// TODO: Overlap ï¿½ï¿½ weaponï¿½ï¿½ UI on/off ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½Ï±ï¿½
 				}
 			}
 		}
@@ -235,10 +235,12 @@ void UWeaponSystemComponent::PickUpWeapon()
 {
 	if (OverlappedWeapon != nullptr)
 	{
-		//TODO: ¹Ù·Î Attach ÇÏ´Â °ÍÀÌ ¾Æ´Ï¶ó inventory¿¡ ÃÑ±â¸¦ ÀúÀåÇÏ±â
+		//TODO: ï¿½Ù·ï¿½ Attach ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Æ´Ï¶ï¿½ inventoryï¿½ï¿½ ï¿½Ñ±â¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 		// OverlappedWeapon->AttachToCharacter(PlayerOwner);
 		ObtainNewWeapon(OverlappedWeapon);
 	}
+
+	/** ì—¬ê¸°ë‹¤ unlock ë©”ì„œë“œ ì—°ê²° **/
 }
 
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
@@ -291,19 +293,19 @@ FVector UWeaponSystemComponent::CalculateScreenCenterWorldPositionAndDirection(F
 		return FVector::ZeroVector;
 	}
 
-	// È­¸é Å©±â °¡Á®¿À±â
+	// È­ï¿½ï¿½ Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	FVector2D ViewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
 
-	// È­¸é Áß¾Ó ÁÂÇ¥ °è»ê
+	// È­ï¿½ï¿½ ï¿½ß¾ï¿½ ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½
 	FVector2D ScreenCenter(ViewportSize.X / 2.0f, ViewportSize.Y / 2.0f);
 
-	// È­¸é Áß½ÉÀÇ ¿ùµå À§Ä¡¿Í ¹æÇâ °¡Á®¿À±â
+	// È­ï¿½ï¿½ ï¿½ß½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	FVector WorldPosition, WorldDirection;
 	if (PlayerController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldPosition, WorldDirection))
 	{
 		OutWorldPosition = WorldPosition;
 		OutWorldDirection = WorldDirection;
-		return WorldPosition + (WorldDirection * 15.0f); // TODO: ÀÓÀÇ °Å¸®¸¦ »ç¿ëÇßÀ½. ¼öÄ¡ Á¶Àý °¡´ÉÇÏµµ·Ï ±¸ÇöÇÏ±â
+		return WorldPosition + (WorldDirection * 15.0f); // TODO: ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 	}
 
 	return FVector::ZeroVector;
@@ -333,18 +335,18 @@ FTransform UWeaponSystemComponent::GetWeaponAimSocketRelativeTransform()
 }
 
 
-//TODO: ¾Æ·¡ ÇÔ¼ö ¿Ï¼ºÇÏ±â
+//TODO: ï¿½Æ·ï¿½ ï¿½Ô¼ï¿½ ï¿½Ï¼ï¿½ï¿½Ï±ï¿½
 //FVector UWeaponSystemComponent::ConvertTargetToBoneSpace(const FVector& TargetWorldLocation, const FName& BoneName) const
 //{
-//	// Ä³¸¯ÅÍÀÇ ½ºÄÌ·¹Å» ¸Þ½Ã ÄÄÆ÷³ÍÆ® °¡Á®¿À±â
+//	// Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì·ï¿½Å» ï¿½Þ½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //	USkeletalMeshComponent* SkeletalMesh = PlayerOwner->GetMesh();
 //	if (!SkeletalMesh)
 //	{
 //		return FVector::ZeroVector;
 //	}
 //
-//	// ¿ùµå À§Ä¡¸¦ º» ½ºÆäÀÌ½º·Î º¯È¯
-//	//TODO: ConvertWorldLocationToBoneSpace ÇÔ¼ö°¡ Á¸ÀçÇÏÁö ¾ÊÀ½
+//	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
+//	//TODO: ConvertWorldLocationToBoneSpace ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 //	SkeletalMesh->TransformToBoneSpace(BoneName, );
 //
 //	FVector BoneSpaceLocation = SkeletalMesh->ConvertWorldLocationToBoneSpace(BoneName, TargetWorldPosition, EBoneSpaces::WorldSpace);
