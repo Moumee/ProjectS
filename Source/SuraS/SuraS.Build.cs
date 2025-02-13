@@ -16,8 +16,8 @@ public class SuraS : ModuleRules
 			"InputCore",
 			"EnhancedInput",
 			"AnimGraphRuntime",
-			"AIModule",
-			"NavigationSystem",
+			"AIModule",			// Added by Yoony for AI
+			"NavigationSystem",	// Added by Yoony for AI Navigation
             "UMG",			 //Added by Boranaga for the use of UI
             "EngineCameras", //Added by Boranaga for the use of CameraShake
 			"Niagara"        //Added by Boranaga for the use of ParticleSystem
