@@ -186,10 +186,12 @@ void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 	InitializeUI();
 
 	// Set up action bindings
-	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+	CharacterController = Cast<APlayerController>(Character->GetController());
+	if (CharacterController)
 	{
+	
 		//TODO: 아래 코드에 대해서 알아봐야함. Multi Play를 위한 것인가?
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(CharacterController->GetLocalPlayer()))
 		{
 			// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
 			Subsystem->AddMappingContext(FireMappingContext, 1);
@@ -458,12 +460,19 @@ void UACWeapon::FireSingleProjectile()
 			FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
 			FVector LineTraceHitLocation;
 
+			//----------------------------------------------
+			//FVector LineTraceStartLocation;
+			//FVector LineTraceDirection;
+			//FVector LineTraceHitLocation;
+			//CalculateScreenCenterWorldPositionAndDirection(LineTraceStartLocation, LineTraceDirection);
+
 			if (PerformLineTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceHitLocation))
 			{
 				TargetLocationOfProjectile = LineTraceHitLocation;
 			}
 			else
 			{
+				UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
 				TargetLocationOfProjectile = LineTraceHitLocation;
 			}
 
@@ -753,12 +762,17 @@ bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, f
 	Params.AddIgnoredComponent(this);
 	Params.AddIgnoredActor(Character);
 
+	FCollisionResponseParams ResponseParams;
+	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel1, ECR_Ignore);
+	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel3, ECR_Ignore);
+
 	bool bHit = GetWorld()->LineTraceSingleByChannel(
 		HitResult,           // 충돌 결과 저장
 		Start,               // 시작 지점
 		End,                 // 끝 지점
 		ECC_Visibility,      // 충돌 채널
-		Params               // 쿼리 매개변수
+		Params,              // 쿼리 매개변수
+		ResponseParams
 	);
 
 
@@ -817,6 +831,31 @@ bool UACWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection
 	}
 
 	return bHit;
+}
+
+FVector UACWeapon::CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const
+{
+	if (!CharacterController || !CharacterController->PlayerCameraManager)
+	{
+		return FVector::ZeroVector;
+	}
+
+	// 화면 크기 가져오기
+	FVector2D ViewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
+
+	// 화면 중앙 좌표 계산
+	FVector2D ScreenCenter(ViewportSize.X / 2.0f, ViewportSize.Y / 2.0f);
+
+	// 화면 중심의 월드 위치와 방향 가져오기
+	FVector WorldPosition, WorldDirection;
+	if (CharacterController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldPosition, WorldDirection))
+	{
+		OutWorldPosition = WorldPosition;
+		OutWorldDirection = WorldDirection;
+		return WorldPosition + (WorldDirection * 15.0f); // TODO: 임의 거리를 사용했음. 수치 조절 가능하도록 구현하기
+	}
+
+	return FVector::ZeroVector;
 }
 
 void UACWeapon::SetAimSocketTransform()

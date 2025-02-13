@@ -163,6 +163,8 @@ protected:
 	/** The Character holding this weapon*/
 	ASuraCharacterPlayerWeapon* Character;
 	
+	APlayerController* CharacterController;
+		
 #pragma region Animation
 protected:
 	void StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation);
@@ -222,17 +224,22 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float SphereTraceRadius = 20.f;
 
+	FVector ScreenCenterWorldPosition;
+	FVector ScreenCenterWorldDirection;
+
 	FVector TargetLocationOfProjectile;
 
 public:
 	bool PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation);
-
 	bool PerformSphereTrace(FVector StartLocation, FVector TraceDirection, float MaxDistance, float SphereRadius, FVector& HitLocation);
 
+	FVector CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const;
+
+
+
+
 	void SetAimSocketTransform();
-
 	void SetAimSocketRelativeTransform();
-
 	FTransform GetAimSocketRelativeTransform();
 #pragma endregion
 

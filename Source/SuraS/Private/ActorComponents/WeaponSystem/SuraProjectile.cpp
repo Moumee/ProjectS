@@ -45,8 +45,8 @@ ASuraProjectile::ASuraProjectile()
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = 500000.f;
-	ProjectileMovement->MaxSpeed = 500000.f;
+	ProjectileMovement->InitialSpeed = InitialSpeed;
+	ProjectileMovement->MaxSpeed = MaxSpeed;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f;
@@ -84,6 +84,10 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile)
 
 		SpawnTrailEffect();
 	}
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Projectile InitialSpeed: %f"), ProjectileMovement->InitialSpeed);
+	UE_LOG(LogTemp, Warning, TEXT("Projectile MaxSpeed: %f"), ProjectileMovement->MaxSpeed);
 }
 
 void ASuraProjectile::LoadProjectileData(FName ProjectileID)
