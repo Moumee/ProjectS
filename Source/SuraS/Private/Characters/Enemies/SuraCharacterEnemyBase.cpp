@@ -5,7 +5,6 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
-#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
 
@@ -117,4 +116,9 @@ void ASuraCharacterEnemyBase::UpdateHealthBarValue()
 bool ASuraCharacterEnemyBase::TakeDamage(FDamageData DamageData, AActor* DamageCauser)
 {
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
+}
+
+void ASuraCharacterEnemyBase::SetUpAIController(AEnemyBaseAIController* NewAIController)
+{
+	AIController = NewAIController;
 }

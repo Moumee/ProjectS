@@ -20,22 +20,13 @@ protected:
 	ASuraCharacterEnemyBase* Enemy;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float GroundSpeed;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	FVector Velocity;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float RunSpeed;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	bool bIsInAir;
+	float GroundSpeed;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	float Direction;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float Pitch;
 
 	virtual void NativeInitializeAnimation() override;
 
