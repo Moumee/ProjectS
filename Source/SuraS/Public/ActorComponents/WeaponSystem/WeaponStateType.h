@@ -13,7 +13,8 @@ enum class EWeaponStateType : uint8
 	WeaponStateType_Idle UMETA(DisplayName = "Idle"),
 	WeaponStateType_Firing UMETA(DisplayName = "Firing"),
 	WeaponStateType_Reloading UMETA(DisplayName = "Reloading"),
-	WeaponStateType_Unequipped UMETA(DisplayName = "Unequipped")
+	WeaponStateType_Unequipped UMETA(DisplayName = "Unequipped"),
+	WeaponStateType_Switching UMETA(DisplayName = "Switching")
 };
 
 UCLASS()
