@@ -22,5 +22,5 @@ public class SuraS : ModuleRules
             "EngineCameras", //Added by Boranaga for the use of CameraShake
 			"Niagara"        //Added by Boranaga for the use of ParticleSystem
         });
-	}
+    }
 }

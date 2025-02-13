@@ -12,7 +12,9 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponFiringState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponUnequippedState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponReloadingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponSwitchingState.h"
 #include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
+#include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -25,11 +27,19 @@
 
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
-//#include "Components/WidgetComponent.h"
+
 #include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
 
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+
+//----------------------------------
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Engine/CanvasRenderTarget2D.h"
+
+
 
 // Sets default values for this component's properties
 UACWeapon::UACWeapon()
@@ -57,6 +67,102 @@ UACWeapon::UACWeapon()
 
 	//---------------------------------------------------------------------------------
 	NumOfLeftAmmo = MaxAmmo;
+
+	//<UI>
+	//AmmoCounterWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("AmmoCounterWidgetComponent"));
+	//AmmoCounterWidgetComponent->SetDrawSize(FVector2D());
+	//AmmoCounterWidgetComponent->SetHiddenInGame(false);
+
+	//  / Script / UMGEditor.WidgetBlueprint'/Game/FPWeapon/UI/WBP_AmmoCounter_2.WBP_AmmoCounter_2'
+	// E: / Unreal_engine_projects / PJSURA_2 / SuraS / Content / FPWeapon / UI / WBP_AmmoCounter_2.uasset
+
+
+	if (AmmoCounterWidgetComponent)
+	{
+		//UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidgetComponent Is Available!!!"));
+		//AmmoCounterWidgetComponent->SetupAttachment(this, FName(TEXT("AmmoCounter")));
+
+		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+		//AmmoCounterWidgetComponent->SetVisibility(true);
+		//AmmoCounterWidgetComponent->SetHiddenInGame(false);
+		//AmmoCounterWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
+
+		//static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClass{ TEXT("/Game/UI/Enemies/WBP_EnemyHealthBar") };
+
+		//if (WidgetClass.Succeeded())
+		//{
+		//	AmmoCounterWidgetComponent->SetWidgetClass((WidgetClass.Class));
+		//}
+
+		//static ConstructorHelpers::FClassFinder<UAmmoCounterWidget> WidgetClass{ TEXT("/Game/FPWeapon/UI/WBP_AmmoCounter_2") };
+
+		//if (WidgetClass.Succeeded())
+		//{
+		//	UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidgetClass Is Available!!!"));
+		//	//AmmoCounterWidgetComponent->SetWidgetClass(AmmoCounterWidgetClass);
+		//	AmmoCounterWidgetComponent->SetWidgetClass(WidgetClass.Class);
+		//	AmmoCounterWidget = Cast<UAmmoCounterWidget>(AmmoCounterWidgetComponent->GetWidget());
+		//	if (AmmoCounterWidget)
+		//	{
+		//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Available!!!"));
+
+		//	}
+
+
+
+
+		//	//AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass, FName(TEXT("AmmoCounterWidget")));
+		//	//if (AmmoCounterWidget)
+		//	//{
+		//	//	UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Available!!!"));
+		//	//	AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
+		//	//	if (AmmoCounterWidgetComponent->GetWidget() == AmmoCounterWidget)
+		//	//	{
+		//	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Set!!!"));
+		//	//	}
+		//	//}
+		//}
+
+	}
+
+
+
+	//if (AmmoCounterWidgetClass)
+	//{
+	//	AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
+	//	if (AmmoCounterWidgetComponent)
+	//	{
+	//		//AmmoCounterWidgetComponent->SetWidgetClass(AmmoCounterWidget->GetClass());
+	//		//AmmoCounterWidget = AmmoCounterWidgetComponent->GetWidget();
+	//		AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
+
+	//		if (AmmoCounterWidget)
+	//		{
+	//			UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget is Availlable"));
+	//		}
+
+	//		//AmmoCounterWidget->AddToViewport();
+	//		//AmmoCounterWidget->SetVisibility(ESlateVisibility::Visible);
+
+	//		//AmmoCounterWidget->AddToRoot();
+	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	//		AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	//		AmmoCounterWidgetComponent->SetDrawAtDesiredSize(true);
+	//		AmmoCounterWidgetComponent->SetDrawSize(FVector2D(500.f, 500.f));
+
+	//		AmmoCounterWidgetComponent->SetHiddenInGame(false);
+	//		AmmoCounterWidgetComponent->SetVisibility(true);
+
+	//		FAttachmentTransformRules AttachRule(EAttachmentRule::KeepRelative, true);
+	//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
+
+
+	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget!!!"));
+	//	}
+	//}
+
+
 }
 
 void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
@@ -136,6 +242,81 @@ void UACWeapon::InitializeUI()
 	{
 		CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
 	}
+
+
+	if (AmmoCounterWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidgetClass Is Available!!!"));
+		//AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass, FName(TEXT("AmmoCounterWidget")));
+		AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
+		//AmmoCounterWidget = CreateWidget<UUserWidget>(GetWorld(), AmmoCounterWidgetClass, FName(TEXT("AmmoCounterWidget")));
+		//if (AmmoCounterWidget)
+		//{
+		//	//UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Available!!!"));
+		//	//AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
+		//	if (AmmoCounterWidgetComponent->GetWidget() == AmmoCounterWidget)
+		//	{
+		//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Set!!!"));
+
+		//		FAttachmentTransformRules AttachRule(EAttachmentRule::SnapToTarget, true);
+		//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
+
+
+		//		//AmmoCounterWidget->AddToViewport();
+		//		AmmoCounterWidget->SetVisibility(ESlateVisibility::Visible);
+
+		//		AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+		//		AmmoCounterWidgetComponent->SetDrawAtDesiredSize(true);
+		//		AmmoCounterWidgetComponent->SetDrawSize(FVector2D(100.f, 100.f));
+
+		//		AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+		//	}
+		//}
+
+		if (AmmoCounterWidget)
+		{
+			AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+		}
+	}
+
+
+
+	//----------------
+
+	//if (AmmoCounterWidgetClass)
+	//{
+	//	AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
+	//	if (AmmoCounterWidgetComponent)
+	//	{
+	//		//AmmoCounterWidgetComponent->SetWidgetClass(AmmoCounterWidget->GetClass());
+	//		//AmmoCounterWidget = AmmoCounterWidgetComponent->GetWidget();
+	//		AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
+
+	//		if (AmmoCounterWidget)
+	//		{
+	//			UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget is Availlable"));
+	//		}
+
+	//		//AmmoCounterWidget->AddToViewport();
+	//		//AmmoCounterWidget->SetVisibility(ESlateVisibility::Visible);
+
+	//		//AmmoCounterWidget->AddToRoot();
+	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	//		AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	//		AmmoCounterWidgetComponent->SetDrawAtDesiredSize(true);
+	//		AmmoCounterWidgetComponent->SetDrawSize(FVector2D(500.f, 500.f));
+
+	//		AmmoCounterWidgetComponent->SetHiddenInGame(false);
+	//		AmmoCounterWidgetComponent->SetVisibility(true);
+	//	
+	//		FAttachmentTransformRules AttachRule(EAttachmentRule::KeepRelative, true);
+	//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
+
+
+	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget!!!"));
+	//	}
+	//}
 }
 
 void UACWeapon::LoadWeaponData(FName WeaponID)
@@ -158,6 +339,7 @@ void UACWeapon::BeginPlay()
 	FiringState = NewObject<USuraWeaponFiringState>(this, USuraWeaponFiringState::StaticClass());
 	UnequippedState = NewObject<USuraWeaponUnequippedState>(this, USuraWeaponUnequippedState::StaticClass());
 	ReloadingState = NewObject<USuraWeaponReloadingState>(this, USuraWeaponReloadingState::StaticClass());
+	SwitchingState = NewObject<USuraWeaponSwitchingState>(this, USuraWeaponSwitchingState::StaticClass());
 
 	WeaponAnimInstance = GetAnimInstance();
 
@@ -239,6 +421,7 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 	// Set Up Widget UI Class
 	// TODO: WidgetInstance 생성은 Weapon Initialize에서만 진행하고, 키고 끄는 기능만 ActivateCrosshairWidget에서 하기
 	ActivateCrosshairWidget(true);
+	ActivateAmmoCounterWidget(true);
 
 	SetVisibility(true);
 
@@ -497,19 +680,49 @@ void UACWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMo
 }
 void UACWeapon::StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate)
 {
-	if (CharacterAnimInstance != nullptr)
+	if (CharacterAnimInstance != nullptr && CharacterAnimation != nullptr)
 	{
 		if (!CharacterAnimInstance->Montage_IsPlaying(CharacterAnimation))
 		{
+
+			//FMontageBlendSettings BlendSettings;
+			//BlendSettings.Blend.BlendTime = 0.1f;
+
+			CharacterAnimation->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
+			CharacterAnimation->BlendIn.SetAlpha(10.f);
+			CharacterAnimation->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
+			CharacterAnimation->BlendOut.SetAlpha(10.f);
+
+
+				
+			UE_LOG(LogTemp, Warning, TEXT("Reloading Weapon Animation!!!"));
 			CharacterAnimInstance->Montage_Play(CharacterAnimation, CharacterAnimation->GetPlayLength() / CharacterAnimPlayRate);
+		}
+	}
+
+	if (WeaponAnimInstance != nullptr && WeaponAnimation != nullptr)
+	{
+		if (!GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
+		{
+			GetAnimInstance()->Montage_Play(WeaponAnimation, WeaponAnimation->GetPlayLength() / WeaponAnimPlayRate);
+		}
+	}
+}
+void UACWeapon::CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation)
+{
+	if (CharacterAnimInstance != nullptr)
+	{
+		if (CharacterAnimInstance->Montage_IsPlaying(CharacterAnimation))
+		{
+			CharacterAnimInstance->Montage_Stop(0.f, CharacterAnimation);
 		}
 	}
 
 	if (WeaponAnimInstance != nullptr)
 	{
-		if (!GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
+		if (GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
 		{
-			GetAnimInstance()->Montage_Play(WeaponAnimation, WeaponAnimation->GetPlayLength() / WeaponAnimPlayRate);
+			GetAnimInstance()->Montage_Stop(0.f, WeaponAnimation);
 		}
 	}
 }
@@ -626,12 +839,50 @@ FTransform UACWeapon::GetAimSocketRelativeTransform()
 }
 
 #pragma region Equip/Unequip
+void UACWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+{
+	//TODO: Reloading 중이였다면, CancelReload 해줘야함
+	if (CurrentState == ReloadingState)
+	{
+		CancelReload();
+	}
+
+	ChangeState(SwitchingState);
+
+	if (bEquip)
+	{
+		AttachWeaponToPlayer(TargetCharacter);
+		GetWorld()->GetTimerManager().SetTimer(SwitchingTimer, [this, TargetCharacter, bEquip]() {EndWeaponSwitch(TargetCharacter, bEquip); }, WeaponSwitchingRate, false);
+		StartAnimation(AM_Equip_Character, nullptr, WeaponSwitchingRate, WeaponSwitchingRate);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(SwitchingTimer, [this, TargetCharacter, bEquip]() {EndWeaponSwitch(TargetCharacter, bEquip); }, WeaponSwitchingRate, false);
+		StartAnimation(AM_Unequip_Character, nullptr, WeaponSwitchingRate, WeaponSwitchingRate);
+	}
+}
+void UACWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+{
+	if (bEquip)
+	{
+		EquipWeapon(TargetCharacter);
+	}
+	else
+	{
+		UnequipWeapon(TargetCharacter);
+		//TODO: 이걸 굳이 Interface로 처리했어야 했나? 다른 방법이 더 좋을 것 같음
+		if (TargetCharacter && TargetCharacter->GetWeaponSystem()
+			&& TargetCharacter->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+		{
+			Cast<IWeaponInterface>(TargetCharacter->GetWeaponSystem())->SwitchToOtherWeapon();
+		}
+	}
+}
 void UACWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	// TODO: 함수 최적화 해야함
 	UE_LOG(LogTemp, Warning, TEXT("Equip Weapon!!!"));
-	AttachWeaponToPlayer(TargetCharacter);
-
+	//AttachWeaponToPlayer(TargetCharacter);
 	SetInputActionBinding();
 
 	ChangeState(IdleState);
@@ -641,7 +892,6 @@ void UACWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	// TODO: Detach 전에 처리해야하는 것들 처리해야함
 	ResetInputActionBinding();
-
 	DetachWeaponFromPlayer();
 
 	UE_LOG(LogTemp, Warning, TEXT("Unequip Weapon!!!"));
@@ -658,26 +908,40 @@ void UACWeapon::SetInputActionBinding()
 			{
 				if (WeaponName == EWeaponName::WeaponName_Rifle)
 				{
-					// FullAuto Shot
-					// TODO: LeftMouseButtonActionBinding -> Down 과 Up으로 나눠서 저장하기 
-					// (아니면 그냥 Array로 순차적으로 저장하고, Reset 때도 Array 요소를 순차적으로 해제 하는 것이 나을 수도 있음)
-					LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot);
-					EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot);
-					//TODO: Zoom을 Holding 방식으로 바꿔야함
-					// Zoom Toggle
-					RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
-					// Reload
-					RButtonActionBinding = &EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+					//// FullAuto Shot
+					//// TODO: LeftMouseButtonActionBinding -> Down 과 Up으로 나눠서 저장하기 
+					//// (아니면 그냥 Array로 순차적으로 저장하고, Reset 때도 Array 요소를 순차적으로 해제 하는 것이 나을 수도 있음)
+					//LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot);
+					//EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot);
+					////TODO: Zoom을 Holding 방식으로 바꿔야함
+					//// Zoom Toggle
+					//RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
+					//// Reload
+					//RButtonActionBinding = &EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+
+					//------------------------------------------------------------
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
+
+
 				}
 				else if (WeaponName == EWeaponName::WeaponName_ShotGun)
 				{
-					// Fire Single Shot
-					//LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::FireMultiProjectile);
-					LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleSingleFire);
-					// Fire Burst Shot
-					RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire);
-					// Reload
-					RButtonActionBinding = &EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+					//// Fire Single Shot
+					////LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::FireMultiProjectile);
+					//LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleSingleFire);
+					//// Fire Burst Shot
+					//RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire);
+					//// Reload
+					//RButtonActionBinding = &EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+
+					//-------------------------------------------------------------------
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleSingleFire));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
+
 				}
 			}
 		}
@@ -692,20 +956,26 @@ void UACWeapon::ResetInputActionBinding()
 		{
 			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 			{
-				//EnhancedInputComponent->RemoveBinding(*RightMouseButtonActionBinding);
-				//EnhancedInputComponent->RemoveBinding(*LeftMouseButtonActionBinding);
-				if (EnhancedInputComponent->RemoveBinding(*RightMouseButtonActionBinding))
+				////EnhancedInputComponent->RemoveBinding(*RightMouseButtonActionBinding);
+				////EnhancedInputComponent->RemoveBinding(*LeftMouseButtonActionBinding);
+				//if (EnhancedInputComponent->RemoveBinding(*RightMouseButtonActionBinding))
+				//{
+				//	UE_LOG(LogTemp, Warning, TEXT("Left Action Binding Removed!"));
+				//}
+				//if (EnhancedInputComponent->RemoveBinding(*LeftMouseButtonActionBinding))
+				//{
+				//	UE_LOG(LogTemp, Warning, TEXT("Right Action Binding Removed!"));
+				//}
+				//if (EnhancedInputComponent->RemoveBinding(*RButtonActionBinding))
+				//{
+				//	UE_LOG(LogTemp, Warning, TEXT("R Action Binding Removed!"));
+				//}
+				for (FInputBindingHandle* bindinghandle : InputActionBindingHandles)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Left Action Binding Removed!"));
+					EnhancedInputComponent->RemoveBinding(*bindinghandle);
 				}
-				if (EnhancedInputComponent->RemoveBinding(*LeftMouseButtonActionBinding))
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Right Action Binding Removed!"));
-				}
-				if (EnhancedInputComponent->RemoveBinding(*RButtonActionBinding))
-				{
-					UE_LOG(LogTemp, Warning, TEXT("R Action Binding Removed!"));
-				}
+
+				InputActionBindingHandles.Empty();
 
 			}
 		}
@@ -718,12 +988,28 @@ void UACWeapon::HandleReload()
 {
 	if (CurrentState == IdleState)
 	{
-		ChangeState(ReloadingState);
-		StartReload();
+		if (NumOfLeftAmmo < MaxAmmo)
+		{
+			//TODO: ReloadingState의 EnterState에서 StartReload 해도 될 듯
+			ChangeState(ReloadingState);
+			//StartReload();
+		}
 	}
+}
+void UACWeapon::CancelReload()
+{
+	CancelAnimation(AM_Reload_Character, AM_Reload_Weapon);
+	GetWorld()->GetTimerManager().ClearTimer(ReloadingTimer);
 }
 void UACWeapon::StartReload()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Start Reload!!!"));
+
+	if (bIsZoomIn)
+	{
+		ZoomOut();
+	}
+
 	StartAnimation(AM_Reload_Character, AM_Reload_Weapon, ReloadingTime, ReloadingTime);
 	GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &UACWeapon::StopReload, ReloadingTime, false);
 }
@@ -738,22 +1024,73 @@ void UACWeapon::ConsumeAmmo()
 	if (NumOfLeftAmmo > 0)
 	{
 		NumOfLeftAmmo--;
+		if (AmmoCounterWidget)
+		{
+			AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+		}
 	}
 }
 void UACWeapon::ReloadAmmo()
 {
 	NumOfLeftAmmo = MaxAmmo;
+	if (AmmoCounterWidget)
+	{
+		AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+	}
 }
 bool UACWeapon::HasAmmo()
 {
 	return (NumOfLeftAmmo > 0);
 }
+void UACWeapon::AutoReload()
+{
+	if (bCanAutoReload)
+	{
+		if (!HasAmmo())
+		{
+			ChangeState(ReloadingState);
+			//StartReload();
+		}
+	}
+}
 void UACWeapon::ReloadingEnd() //Legacy: 사용 안함. animation이 끝날 때의 처리를 위해 남겨 둠.
 {
 	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
-	ChangeState(IdleState);
+	//ChangeState(IdleState);
 }
 #pragma endregion
+
+void UACWeapon::Create3DUI()
+{
+	////RenderTarget 생성
+	//RenderTarget = NewObject<UTextureRenderTarget2D>();
+	//RenderTarget->InitAutoFormat(512, 512); // UI 해상도 설정
+	//RenderTarget->ClearColor = FLinearColor::Transparent;
+	//RenderTarget->UpdateResource();
+
+	////UUserWidget을 RenderTarget에 그리기
+	//UUserWidget* AmmoCounterWidget = CreateWidget<UUserWidget>(GetWorld(), LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/AmmoCounterWidget_BP.AmmoCounterWidget_BP_C")));
+	//if (AmmoCounterWidget)
+	//{
+	//	UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
+	//		GetWorld()->GetFirstPlayerController(),
+	//		GetComponentLocation(),
+	//		RenderTarget-,
+	//		true
+	//	);
+
+	//	AmmoCounterWidget->AddToViewport();
+	//}
+
+	////머티리얼 동적 인스턴스 생성 및 RenderTarget 적용
+	//UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_UI_BaseMaterial.M_UI_BaseMaterial"));
+	//if (BaseMaterial)
+	//{
+	//	WidgetMaterialInstance = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+	//	WidgetMaterialInstance->SetTextureParameterValue(FName("RenderTargetTexture"), RenderTarget);
+	//	SetMaterial(0, WidgetMaterialInstance);
+	//}
+}
 
 void UACWeapon::ActivateCrosshairWidget(bool bflag)
 {
@@ -792,6 +1129,25 @@ void UACWeapon::ActivateCrosshairWidget(bool bflag)
 		}
 	}
 }
+
+void UACWeapon::ActivateAmmoCounterWidget(bool bflag)
+{
+	if (bflag)
+	{
+		if (AmmoCounterWidget)
+		{
+			AmmoCounterWidget->AddToViewport();
+		}
+	}
+	else
+	{
+		if (AmmoCounterWidget)
+		{
+			AmmoCounterWidget->RemoveFromViewport();
+		}
+	}
+}
+
 
 #pragma region FireMode
 void UACWeapon::HandleSingleFire()
@@ -902,10 +1258,14 @@ void UACWeapon::StartFullAutoShot()
 
 void UACWeapon::StopFullAutoShot()
 {
-	UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
-	GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
+	//TODO: 방식에 마음에 안듦. 다른 방법 생각해보기
+	if (CurrentState == FiringState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
+		GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
 
-	ChangeState(IdleState);
+		ChangeState(IdleState);
+	}
 }
 #pragma endregion
 

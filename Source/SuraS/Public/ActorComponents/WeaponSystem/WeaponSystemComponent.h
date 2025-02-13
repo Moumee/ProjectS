@@ -141,7 +141,6 @@ public:
 
 #pragma region SwitchWeapon
 protected:
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapons")
 	TArray<UACWeapon*> WeaponInventory;
 
@@ -151,16 +150,16 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	int32 CurrentWeaponIndex = 0;
 
-
 public:
 	UACWeapon* GetCurrentWeapon() { return CurrentWeapon; }
 
 	int32 GetWeaponNum() { return WeaponInventory.Num(); }
 
 	void SwitchToPreviousWeapon();
-
 	void SwitchToNextWeapon();
 
-	void EquipWeapon(int32 WeaponIndex);
+	virtual void SwitchToOtherWeapon() override;
+
+	void ChangeWeapon(int32 WeaponIndex);
 #pragma endregion
 };

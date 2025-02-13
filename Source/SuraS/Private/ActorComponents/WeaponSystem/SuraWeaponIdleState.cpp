@@ -1,8 +1,6 @@
 
-
-
 #include "ActorComponents/WeaponSystem/SuraWeaponIdleState.h"
-
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
 
 USuraWeaponIdleState::USuraWeaponIdleState()
 {
@@ -16,6 +14,7 @@ USuraWeaponIdleState::~USuraWeaponIdleState()
 void USuraWeaponIdleState::EnterState(UACWeapon* Weapon)
 {
 	Super::EnterState(Weapon);
+	Weapon->AutoReload();
 }
 
 void USuraWeaponIdleState::UpdateState(UACWeapon* Weapon, float DeltaTime)

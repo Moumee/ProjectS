@@ -2,7 +2,7 @@
 
 
 #include "ActorComponents/WeaponSystem/SuraWeaponFiringState.h"
-
+//#include "ActorComponents/WeaponSystem/ACWeapon.h"
 
 USuraWeaponFiringState::USuraWeaponFiringState()
 {
@@ -26,4 +26,5 @@ void USuraWeaponFiringState::UpdateState(UACWeapon* Weapon, float DeltaTime)
 void USuraWeaponFiringState::ExitState(UACWeapon* Weapon)
 {
 	Super::ExitState(Weapon);
+	//Weapon->AutoReload();
 }

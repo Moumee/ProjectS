@@ -259,7 +259,8 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 	if (CurrentWeapon == nullptr)
 	{
 		CurrentWeapon = NewWeapon;
-		CurrentWeapon->EquipWeapon(PlayerOwner);
+		//CurrentWeapon->EquipWeapon(PlayerOwner);
+		CurrentWeapon->SwitchWeapon(PlayerOwner, true);
 	}
 
 	return true;
@@ -356,7 +357,18 @@ FTransform UWeaponSystemComponent::GetWeaponAimSocketRelativeTransform()
 #pragma region SwitchWeapon
 void UWeaponSystemComponent::SwitchToPreviousWeapon()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Wheel Down"));
+	//UE_LOG(LogTemp, Warning, TEXT("Wheel Down"));
+	//if (WeaponInventory.Num() > 1)
+	//{
+	//	CurrentWeaponIndex--;
+	//	if (CurrentWeaponIndex < 0)
+	//	{
+	//		CurrentWeaponIndex = WeaponInventory.Num() + CurrentWeaponIndex;
+	//	}
+	//	ChangeWeapon(CurrentWeaponIndex);
+	//}
+
+	//------------------------------------------
 	if (WeaponInventory.Num() > 1)
 	{
 		CurrentWeaponIndex--;
@@ -364,7 +376,7 @@ void UWeaponSystemComponent::SwitchToPreviousWeapon()
 		{
 			CurrentWeaponIndex = WeaponInventory.Num() + CurrentWeaponIndex;
 		}
-		EquipWeapon(CurrentWeaponIndex);
+		ChangeWeapon(CurrentWeaponIndex);
 	}
 }
 
@@ -374,20 +386,40 @@ void UWeaponSystemComponent::SwitchToNextWeapon()
 	if (WeaponInventory.Num() > 1)
 	{
 		CurrentWeaponIndex = (CurrentWeaponIndex + 1) % WeaponInventory.Num();
-		EquipWeapon(CurrentWeaponIndex);
+		ChangeWeapon(CurrentWeaponIndex);
 	}
 }
 
-void UWeaponSystemComponent::EquipWeapon(int32 WeaponIndex)
+void UWeaponSystemComponent::SwitchToOtherWeapon()
 {
+	WeaponInventory[CurrentWeaponIndex]->SwitchWeapon(PlayerOwner, true);
+	CurrentWeapon = WeaponInventory[CurrentWeaponIndex];
+}
+
+void UWeaponSystemComponent::ChangeWeapon(int32 WeaponIndex)
+{
+	//if (WeaponInventory.IsValidIndex(WeaponIndex))
+	//{
+	//	if (IsValid(CurrentWeapon))
+	//	{
+	//		CurrentWeapon->UnequipWeapon(PlayerOwner);
+	//	}
+	//	WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
+	//	CurrentWeapon = WeaponInventory[WeaponIndex];
+	//}
+
+	//---------------------------------
+
 	if (WeaponInventory.IsValidIndex(WeaponIndex))
 	{
 		if (IsValid(CurrentWeapon))
 		{
-			CurrentWeapon->UnequipWeapon(PlayerOwner);
+			//CurrentWeapon->UnequipWeapon(PlayerOwner);
+			//TODO: 여기서 CurrentWeapon의 state의 확인해서 무기 전환 여부 결정하기
+			CurrentWeapon->SwitchWeapon(PlayerOwner, false);
 		}
-		WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
-		CurrentWeapon = WeaponInventory[WeaponIndex];
+		//WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
+		//CurrentWeapon = WeaponInventory[WeaponIndex];
 	}
 }
 #pragma endregion

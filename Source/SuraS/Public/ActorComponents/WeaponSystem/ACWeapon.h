@@ -24,10 +24,14 @@ class USuraWeaponIdleState;
 class USuraWeaponFiringState;
 class USuraWeaponUnequippedState;
 class USuraWeaponReloadingState;
+class USuraWeaponSwitchingState;
 class UWeaponCameraShakeBase;
 
 class UNiagaraSystem;
+class UWidgetComponent;
+class UAmmoCounterWidget;
 
+struct FInputBindingHandle;
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURAS_API UACWeapon : public USkeletalMeshComponent, public IWeaponInterface
@@ -76,12 +80,14 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
+	
 
-	struct FInputBindingHandle* LeftMouseButtonActionBinding;
-	struct FInputBindingHandle* RightMouseButtonActionBinding;
-	struct FInputBindingHandle* RButtonActionBinding;
+	FInputBindingHandle* LeftMouseButtonActionBinding;
+	FInputBindingHandle* RightMouseButtonActionBinding;
+	FInputBindingHandle* RButtonActionBinding;
 
-	/** Sets default values for this component's properties */
+	TArray<FInputBindingHandle*> InputActionBindingHandles;
+
 	UACWeapon();
 
 	void InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter);
@@ -142,6 +148,10 @@ protected: //TODO: public으로 수정하기
 
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponReloadingState* ReloadingState;
+
+	UPROPERTY(VisibleAnywhere)
+	USuraWeaponSwitchingState* SwitchingState;
+
 public:
 	UFUNCTION()
 	USuraWeaponBaseState* GetCurrentState() const { return CurrentState; }
@@ -156,8 +166,8 @@ protected:
 #pragma region Animation
 protected:
 	void StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMontage* WeaponFireAnimation);
-
 	void StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate);
+	void CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation);
 #pragma endregion
 
 #pragma region Animation/Character
@@ -170,6 +180,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
 	UAnimMontage* AM_Reload_Character;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
+	UAnimMontage* AM_Equip_Character;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Character")
+	UAnimMontage* AM_Unequip_Character;
 #pragma endregion
 
 #pragma region Animation/Weapon
@@ -221,13 +237,16 @@ public:
 #pragma endregion
 
 #pragma region Equip/Unequip
+protected:
+	UPROPERTY(EditAnywhere)
+	float WeaponSwitchingRate = 1.f;
+	FTimerHandle SwitchingTimer;
 public:
+	void SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip);
+	void EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip);
 	void EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
-
 	void UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter);
-
 	void SetInputActionBinding();
-
 	void ResetInputActionBinding();
 #pragma endregion
 
@@ -249,13 +268,17 @@ protected:
 	FTimerHandle ReloadingTimer;
 protected:
 	void HandleReload();
+	void CancelReload();
+public:
 	void StartReload();
+protected:
 	void StopReload();
 
 	void ConsumeAmmo();
 	void ReloadAmmo();
 	bool HasAmmo();
-
+public:
+	void AutoReload();
 	virtual void ReloadingEnd() override; //Legacy
 #pragma endregion
 
@@ -267,23 +290,40 @@ protected:
 	UPROPERTY()
 	UUserWidget* CrosshairWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|AmmoCounterWidget")
+	//TSubclassOf<UUserWidget> AmmoCounterWidgetClass;
+	TSubclassOf<UAmmoCounterWidget> AmmoCounterWidgetClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|AmmoCounterWidget")
+	UWidgetComponent* AmmoCounterWidgetComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|AmmoCounterWidget")
+	UAmmoCounterWidget* AmmoCounterWidget;
+	//UUserWidget* AmmoCounterWidget;
+
+	//-----------------------------------------------------------
+	UPROPERTY()
+	UTextureRenderTarget2D* RenderTarget;
+
+	// 3D UI의 머티리얼 인스턴스
+	UPROPERTY()
+	UMaterialInstanceDynamic* WidgetMaterialInstance;
+
+	void Create3DUI();
 public:
 	void ActivateCrosshairWidget(bool bflag);
+	void ActivateAmmoCounterWidget(bool bflag);
 #pragma endregion
 
 #pragma region WeaponType
-
 protected:
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponName WeaponName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWeaponType WeaponType;
-
 public:
 	EWeaponName GetWeaponName() const { return WeaponName; }
-
 #pragma endregion
 
 #pragma region FireMode
