@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Engine/DataTable.h"
 
+#include "Enumerations/EDamageType.h"
+
 #include "ProjectileData.h"
 #include "ProjectileType.h"
 
@@ -56,7 +58,7 @@ protected:
 	UMaterialInterface* DecalMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float Damage = 0.f;
+	float DefaultDamage = 0.f;
 
 	UPROPERTY(VisibleAnywhere)
 	AActor* ProjectileOwner;
@@ -67,13 +69,29 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float MaxSpeed = 50000.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	bool bIsExplosive = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	float MaxExplosiveDamage = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	float MaxExplosionRadius = 300.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	float HomingAccelerationMagnitude = 3000.f;
 public:	
 	// Sets default values for this actor's properties
 	ASuraProjectile();
 	void InitializeProjectile(AActor* Owner);
 	void LoadProjectileData(FName ProjectileID);
+	void SetHomingTarget(bool bIsHoming, AActor* Target);
+	void LaunchProjectile();
 
-	/** called when projectile hits something */
+	void ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector CenterLocation);
+	void ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage);
+	bool SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors);
+
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 

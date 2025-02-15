@@ -21,4 +21,17 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UNiagaraSystem* FireEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float MissileLaunchDelay = 0.2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	int32 MaxTargetNum = 10;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float MaxTargetDetectionRadius = 3000.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float MaxTargetDetectionAngle = 80.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float MaxTargetDetectionTime = 8.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
+	float TimeToReachMaxTargetDetectionRange = 2.5f;
 };

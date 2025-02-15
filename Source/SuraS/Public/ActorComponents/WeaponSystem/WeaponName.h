@@ -14,7 +14,8 @@ enum class EWeaponName : uint8
 {
 	WeaponName_Pistol UMETA(DisplayName = "Pistol"),
 	WeaponName_Rifle UMETA(DisplayName = "Rifle"),
-	WeaponName_ShotGun UMETA(DisplayName = "ShotGun")
+	WeaponName_ShotGun UMETA(DisplayName = "ShotGun"),
+	WeaponName_MissileLauncher UMETA(DisplayName = "MissileLauncher")
 };
 
 UCLASS()
