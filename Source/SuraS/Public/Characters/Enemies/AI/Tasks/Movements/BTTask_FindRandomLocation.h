@@ -15,7 +15,7 @@ class SURAS_API UBTTask_FindRandomLocation : public UBTTask_BlackboardBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
-	float SearchRadius = 1500.f;
+	float SearchRadius = 100.f;
 
 public:
 	explicit UBTTask_FindRandomLocation(FObjectInitializer const& ObjectInitializer);

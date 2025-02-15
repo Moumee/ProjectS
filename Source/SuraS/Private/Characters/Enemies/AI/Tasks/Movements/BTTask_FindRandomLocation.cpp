@@ -23,7 +23,7 @@ EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeCompone
 
 				if (Navigation->GetRandomPointInNavigableRadius(Origin, SearchRadius, RandomLocation))
 				{
-					OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), RandomLocation);
+					OwnerComp.GetBlackboardComponent()->SetValueAsVector("TargetLocation", RandomLocation);
 
 					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 					return EBTNodeResult::Succeeded;

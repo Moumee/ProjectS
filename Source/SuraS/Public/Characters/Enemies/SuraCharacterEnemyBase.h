@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Characters/SuraCharacterBase.h"
+#include "Characters/Enemies/AI/EnemyBaseAIController.h"
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
+#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Components/WidgetComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "SuraCharacterEnemyBase.generated.h"
-
-class UACDamageSystem;
 
 /**
  * 
@@ -19,8 +19,9 @@ UCLASS()
 class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDamageable
 {
 	GENERATED_BODY()
+
+	AEnemyBaseAIController* AIController;
 	
-private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor Components", meta = (AllowPrivateAccess = "true"))
 	UACDamageSystem* DamageSystemComp;
 
@@ -57,6 +58,8 @@ public:
 	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 
 	bool TakeDamage(FDamageData DamageData, AActor* DamageCauser);
+
+	void SetUpAIController(AEnemyBaseAIController* NewAIController);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* HitAnimation;
