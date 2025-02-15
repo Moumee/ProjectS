@@ -22,6 +22,4 @@ public:
 	virtual void UpdateState(UACWeapon* Weapon, float DeltaTime) override;
 
 	virtual void ExitState(UACWeapon* Weapon) override;
-
-
 };

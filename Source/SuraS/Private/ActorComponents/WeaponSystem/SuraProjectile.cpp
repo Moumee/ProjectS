@@ -4,7 +4,6 @@
 
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
-#include "Enumerations/EDamageType.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
@@ -50,6 +49,7 @@ ASuraProjectile::ASuraProjectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.f;
+	ProjectileMovement->bAutoActivate = false;
 
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
 	ProjectileMesh->SetupAttachment(RootComponent);
@@ -60,28 +60,38 @@ ASuraProjectile::ASuraProjectile()
 	ProjectileMesh->SetCastShadow(false);
 
 	// Die after 3 seconds by default
-	InitialLifeSpan = 3.0f;
+	InitialLifeSpan = 10.0f;
 
 	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
-void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile)
+void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile) //TODO: 여기서 ProjectileType을 input으로 받아야 할 듯
 {
+	// Weapon에서 spawn projectile 할 때 처리를 해줘야 하나?
+	// 근데 어차피 projectile 종류별로 BP 따로 만들고, Mesh도 다른거 사용하는데 의미가 있나?
+
+	// 결론: 아래처럼 처음부터 Projectile의 type을 정해놓고 그에 맞는 DT low를 탐색하는 것이 아니라,
+	// BP에서 DT RowBase를 선택 가능하게 하고, 선택된 DT RowBase에 따라 속성값들을 불러오는 식으로 하기(Projectile의 Type Enum 또한 마찬가지로)
+
 	if (IsValid(OwnerOfProjectile))
 	{
 		ProjectileOwner = OwnerOfProjectile;
 
 		if (ProjectileType == EProjectileType::Projectile_Rifle)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Rifle Projectile!!!"));
+			//UE_LOG(LogTemp, Warning, TEXT("Rifle Projectile!!!"));
 			LoadProjectileData("RifleProjectile");
 		}
 		else if (ProjectileType == EProjectileType::Projectile_ShotGun)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("ShotGun Projectile!!!"));
+			//UE_LOG(LogTemp, Warning, TEXT("ShotGun Projectile!!!"));
 			LoadProjectileData("ShotGunProjectile");
 		}
-
+		else if (ProjectileType == EProjectileType::Projectile_BasicRocket)
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("BasicRocket Projectile!!!"));
+			LoadProjectileData("BasicRocketProjectile");
+		}
 		SpawnTrailEffect();
 	}
 
@@ -98,8 +108,86 @@ void ASuraProjectile::LoadProjectileData(FName ProjectileID)
 		TrailEffect = ProjectileData->TrailEffect;
 		ImpactEffect = ProjectileData->ImpactEffect;
 		DecalMaterial = ProjectileData->HoleDecal;
-		Damage = ProjectileData->Damage;
+
+		InitialLifeSpan = ProjectileData->InitialLifeSpan;
+
+		DefaultDamage = ProjectileData->Damage;
+		bIsExplosive = ProjectileData->bIsExplosive;
+		MaxExplosiveDamage = ProjectileData->MaxExplosiveDamage;
+		MaxExplosionRadius = ProjectileData->MaxExplosionRadius;
+
+		HomingAccelerationMagnitude = ProjectileData->HomingAccelerationMagnitude;
+
+		ProjectileMovement->InitialSpeed = ProjectileData->InitialSpeed;
+		ProjectileMovement->MaxSpeed = ProjectileData->MaxSpeed;
 	}
+}
+
+void ASuraProjectile::SetHomingTarget(bool bIsHoming, AActor* Target)
+{
+	ProjectileMovement->bIsHomingProjectile = bIsHoming;
+	ProjectileMovement->HomingAccelerationMagnitude = HomingAccelerationMagnitude;
+	ProjectileMovement->HomingTargetComponent = Target->GetRootComponent();
+
+	UE_LOG(LogTemp, Warning, TEXT("Homing!!!"));
+}
+
+void ASuraProjectile::LaunchProjectile()
+{
+	ProjectileMovement->Activate();
+
+	if (ProjectileMovement->bIsHomingProjectile)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Is Homing!"));
+	}
+}
+
+void ASuraProjectile::ApplyExplosiveDamage(bool bCanExplosiveDamage, FVector CenterLocation)
+{
+	if (bCanExplosiveDamage)
+	{
+		TArray<AActor*> OverlappedActors;
+		if (SearchOverlappedActor(CenterLocation, MaxExplosionRadius, OverlappedActors))
+		{
+			for (AActor* OverlappedActor : OverlappedActors)
+			{
+				float DistanceToTarget = FVector::Distance(CenterLocation, OverlappedActor->GetActorLocation());
+				float DamageAmount;
+				if (DistanceToTarget > MaxExplosionRadius)
+				{
+					DamageAmount = 0.f;
+				}
+				else
+				{
+					DamageAmount = ((MaxExplosionRadius - DistanceToTarget) / MaxExplosionRadius) * MaxExplosiveDamage;
+				}
+				ApplyDamage(OverlappedActor, DamageAmount, EDamageType::Explosion, true);
+				UE_LOG(LogTemp, Error, TEXT("Explosive Damage!!!"));
+			}
+		}
+	}
+}
+void ASuraProjectile::ApplyDamage(AActor* OtherActor, float DamageAmount, EDamageType DamageType, bool bCanForceDamage)
+{
+	FDamageData Damage;
+	Damage.DamageAmount = DamageAmount;
+	Damage.DamageType = DamageType;
+	Damage.bCanForceDamage = bCanForceDamage;
+
+	if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
+	{
+		Cast<IDamageable>(OtherActor)->TakeDamage(Damage, this->ProjectileOwner);
+	}
+}
+bool ASuraProjectile::SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors)
+{
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init(ProjectileOwner, 1);
+	bool bIsAnyActorExist = UKismetSystemLibrary::SphereOverlapActors(GetWorld(), CenterLocation, SearchRadius, traceObjectTypes, nullptr, ignoreActors, OverlappedActors);
+
+	return bIsAnyActorExist;
 }
 
 void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -120,16 +208,8 @@ void ASuraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 			SpawnImpactEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			SpawnDecalEffect(Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 
-
-			FDamageData DefaultDamage;
-			DefaultDamage.DamageAmount = Damage;
-			DefaultDamage.DamageType = EDamageType::Melee;
-			DefaultDamage.bCanForceDamage = false;
-
-			if (OtherActor->GetClass()->ImplementsInterface(UDamageable::StaticClass()))
-			{
-				Cast<IDamageable>(OtherActor)->TakeDamage(DefaultDamage, this->ProjectileOwner);
-			}
+			ApplyDamage(OtherActor, DefaultDamage, EDamageType::Melee, false);
+			ApplyExplosiveDamage(bIsExplosive, Hit.ImpactPoint);
 
 			Destroy();
 		}
@@ -160,15 +240,13 @@ void ASuraProjectile::SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRot
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ImpactEffect, SpawnLocation, SpawnRotation, FVector(1.0f), true);
 	}
 }
-
-void ASuraProjectile::SpawnTrailEffect()
+void ASuraProjectile::SpawnTrailEffect() //TODO: Rocket Trail 적용시 이상함. 손봐야함
 {
 	if (ProjectileMesh && TrailEffect)
 	{
 		FTransform TrailStartTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailStart")), ERelativeTransformSpace::RTS_Component);
 		FTransform TrailEndTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailEnd")), ERelativeTransformSpace::RTS_Component);
-		//FRotator TrailRotation = (TrailStartTransform.GetLocation() - TrailEndTransform.GetLocation()).Rotation();
-		//TrailRotation.Normalize();
+
 		float DistanceOffset = 80.f;
 
 		FVector TrailLocationOffset = (TrailEndTransform.GetLocation() - TrailStartTransform.GetLocation()).GetSafeNormal() * DistanceOffset;
@@ -183,7 +261,6 @@ void ASuraProjectile::SpawnTrailEffect()
 			true);
 	}
 }
-
 void ASuraProjectile::SpawnDecalEffect(FVector SpawnLocation, FRotator SpawnRotation)
 {
 	if (DecalMaterial)

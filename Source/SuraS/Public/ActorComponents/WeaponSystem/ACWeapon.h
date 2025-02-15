@@ -25,12 +25,14 @@ class USuraWeaponFiringState;
 class USuraWeaponUnequippedState;
 class USuraWeaponReloadingState;
 class USuraWeaponSwitchingState;
+class USuraWeaponTargetingState;
 class UWeaponCameraShakeBase;
 
 class UNiagaraSystem;
 class UWidgetComponent;
 class UAmmoCounterWidget;
 
+class UInputAction;
 struct FInputBindingHandle;
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -79,13 +81,11 @@ public:
 	class UInputAction* ZoomAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* HoldAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
 	
-
-	FInputBindingHandle* LeftMouseButtonActionBinding;
-	FInputBindingHandle* RightMouseButtonActionBinding;
-	FInputBindingHandle* RButtonActionBinding;
-
 	TArray<FInputBindingHandle*> InputActionBindingHandles;
 
 	UACWeapon();
@@ -105,7 +105,7 @@ public:
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void FireSingleProjectile();
+	void FireSingleProjectile(bool bShouldConsumeAmmo = true, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void FireMultiProjectile();
 	void SpawnProjectile();
 
@@ -151,6 +151,9 @@ protected: //TODO: public으로 수정하기
 
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponSwitchingState* SwitchingState;
+
+	UPROPERTY(VisibleAnywhere)
+	USuraWeaponTargetingState* TargetingState;
 
 public:
 	UFUNCTION()
@@ -235,9 +238,6 @@ public:
 
 	FVector CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const;
 
-
-
-
 	void SetAimSocketTransform();
 	void SetAimSocketRelativeTransform();
 	FTransform GetAimSocketRelativeTransform();
@@ -306,9 +306,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon|AmmoCounterWidget")
 	UAmmoCounterWidget* AmmoCounterWidget;
-	//UUserWidget* AmmoCounterWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|TargetMarkerWidget")
+	TSubclassOf<UUserWidget> TargetMarkerWidgetClass;
 
 	//-----------------------------------------------------------
+	//TODO: 아래는 Test를 위해서 임시로 사용중인 것임. 나중에 삭제하던지 해야함
+
 	UPROPERTY()
 	UTextureRenderTarget2D* RenderTarget;
 
@@ -372,7 +376,6 @@ protected:
 #pragma endregion
 
 #pragma region FireMode/FullAuto
-
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon|FireMode")
 	float FullAutoShotFireRate = 0.1f;
@@ -382,6 +385,55 @@ protected:
 protected:
 	void StartFullAutoShot();
 	void StopFullAutoShot();
+#pragma endregion
+
+#pragma region FireMode/Targeting
+protected:
+	UPROPERTY()
+	TArray<UUserWidget*> TargetMarkerWidgets;
+	UPROPERTY()
+	TSet<AActor*> Targets;
+
+	UPROPERTY()
+	TMap<AActor*, UUserWidget*> MapTargetActorToWidget;
+
+	FTimerHandle TargetDetectionTimer;
+
+	int32 MaxTargetNum = 10;
+
+	float MaxTargetDetectionRadius = 3000.f;
+	float MaxTargetDetectionAngle = 80.f;
+
+	float CurrentTargetDetectionRadius = 0.f;
+	float CurrentTargetDetectionAngle = 0.f;
+
+	float MaxTargetDetectionTime = 8.f;
+	float TimeToReachMaxTargetDetectionRange = 2.5f;
+	float ElapsedTimeAfterTargetingStarted = 0.f;
+protected:
+	void StartTargetDetection();
+	void UpdateTargetDetection(float DeltaTime);
+	void StopTargetDetection();
+
+	bool SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors);
+	TTuple<FVector2D, bool> GetScreenPositionOfWorldLocation(const FVector& SearchLocation) const;
+	bool IsInViewport(FVector2D ActorScreenPosition, float ScreenRatio_Width = 0.0f, float ScreenRatio_Height = 0.0f) const;
+	float GetUnsignedAngleBetweenVectors(const FVector& VectorA, const FVector& VectorB, const FVector& Axis);
+	bool CheckIfTargetIsBlockedByObstacle(AActor* target);
+
+	UUserWidget* CreateTargetMarkerWidget(AActor* TargetActor);
+public:
+	void UpdateTargetMarkers();
+	void ResetTargetMarkers();
+protected:
+	TArray<AActor*> ConfirmedTargets;
+	int32 CurrentTargetIndex = 0;
+	float MissileLaunchDelay = 0.2;
+	FTimerHandle MissileLaunchTimer;
+protected:
+	void StartMissileLaunch(TArray<AActor*> TargetActors);
+	void UpdateMissileLaunch();
+	void StopMissileLaunch();
 #pragma endregion
 
 #pragma region Recoil
@@ -459,9 +511,7 @@ protected:
 	FTimerHandle CamSettingTimer;
 public:
 	void StartCameraSettingChange(FWeaponCamSettingValue* CamSetting);
-
 	void UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting);
-
 	void StopCameraSettingChange();
 #pragma endregion
 
