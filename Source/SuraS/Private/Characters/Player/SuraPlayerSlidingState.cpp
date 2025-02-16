@@ -38,10 +38,18 @@ void USuraPlayerSlidingState::EnterState(ASuraCharacterPlayer* Player)
 	CrouchSpeed = Player->GetPlayerMovementData()->GetCrouchSpeed();
 
 	SlideDeltaSpeed = Player->GetPlayerMovementData()->GetSlidingDecreaseSpeed();
+
+	if (Player->GetPreviousState()->GetStateType() == EPlayerState::Falling)
+	{
+		SlideDirection = Player->FallingState->GetDesiredSlidingDirection();
+	}
+	else
+	{
+		FVector ForwardVector = Player->GetActorForwardVector();
+		FVector RightVector = Player->GetActorRightVector();
+		SlideDirection = (ForwardVector * Player->ForwardAxisInputValue + RightVector * Player->RightAxisInputValue).GetSafeNormal();
+	}
 	
-	FVector ForwardVector = Player->GetActorForwardVector();
-	FVector RightVector = Player->GetActorRightVector();
-	SlideDirection = (ForwardVector * Player->ForwardAxisInputValue + RightVector * Player->RightAxisInputValue).GetSafeNormal();
 
 	Player->GetCharacterMovement()->Velocity = SlideDirection * StartSpeed;
 	

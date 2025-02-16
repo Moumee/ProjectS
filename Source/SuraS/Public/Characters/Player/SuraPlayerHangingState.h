@@ -22,6 +22,7 @@ class SURAS_API USuraPlayerHangingState : public USuraPlayerBaseState
 
 	FVector HangPosition = FVector::ZeroVector;
 
+	UPROPERTY()
 	APlayerController* PlayerController;
 
 public:
