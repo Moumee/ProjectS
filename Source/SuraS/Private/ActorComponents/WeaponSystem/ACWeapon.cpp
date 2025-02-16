@@ -309,6 +309,11 @@ void UACWeapon::LoadWeaponData(FName WeaponID)
 		MuzzleFireEffect = WeaponData->FireEffect;
 		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
 
+		// <Reload>
+		MaxAmmo = WeaponData->MaxAmmo;
+		NumOfLeftAmmo = MaxAmmo;
+
+
 		// <SingleShot>
 		SingleShotDelay = WeaponData->SingleShotDelay;
 		// <Recoil>
@@ -974,7 +979,7 @@ void UACWeapon::SetInputActionBinding()
 					//Fire Single Shot
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleSingleFire));
 					//Targeting
-					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(HoldAction, ETriggerEvent::Started, this, &UACWeapon::StartTargetDetection));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(HoldAction, ETriggerEvent::Triggered, this, &UACWeapon::StartTargetDetection));
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(HoldAction, ETriggerEvent::Completed, this, &UACWeapon::StopTargetDetection));
 					//Reload
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
@@ -982,7 +987,6 @@ void UACWeapon::SetInputActionBinding()
 				else if (WeaponName == EWeaponName::WeaponName_RailGun)
 				{
 					//Charging
-					//InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Started, this, &UACWeapon::StartCharge));
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Triggered, this, &UACWeapon::StartCharge));
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Completed, this, &UACWeapon::StopCharge));
 					//Zoom
@@ -1289,9 +1293,10 @@ void UACWeapon::StopFullAutoShot()
 #pragma region FireMode/Targeting
 void UACWeapon::StartTargetDetection()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Start Target Detection!!!"));
 	if (CurrentState == IdleState)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Start Target Detection!!!"));
+
 		ChangeState(TargetingState);
 		UpdateTargetDetection(GetWorld()->GetDeltaSeconds());
 	}
