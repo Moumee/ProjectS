@@ -14,4 +14,11 @@ class SURAS_API ASuraCharacterEnemyMelee : public ASuraCharacterEnemyBase
 {
 	GENERATED_BODY()
 	
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	ASuraCharacterEnemyMelee();
+
+	virtual void Attack(const ASuraCharacterPlayer* Player) override;
 };

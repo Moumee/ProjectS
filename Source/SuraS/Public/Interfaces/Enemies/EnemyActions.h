@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Structures/DamageData.h"
-#include "Damageable.generated.h"
+#include "Characters/Player/SuraCharacterPlayer.h"
+#include "EnemyActions.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UDamageable : public UInterface
+class UEnemyActions : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -17,11 +17,11 @@ class UDamageable : public UInterface
 /**
  * 
  */
-class SURAS_API IDamageable
+class SURAS_API IEnemyActions
 {
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) = 0;
+	virtual void Attack(const ASuraCharacterPlayer* Player) = 0;
 };
