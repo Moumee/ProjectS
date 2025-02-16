@@ -26,6 +26,7 @@ class USuraWeaponUnequippedState;
 class USuraWeaponReloadingState;
 class USuraWeaponSwitchingState;
 class USuraWeaponTargetingState;
+class USuraWeaponChargingState;
 class UWeaponCameraShakeBase;
 
 class UNiagaraSystem;
@@ -84,6 +85,9 @@ public:
 	UInputAction* HoldAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ChargeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
 	
 	TArray<FInputBindingHandle*> InputActionBindingHandles;
@@ -105,7 +109,7 @@ public:
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void FireSingleProjectile(bool bShouldConsumeAmmo = true, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireSingleProjectile(bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void FireMultiProjectile();
 	void SpawnProjectile();
 
@@ -154,6 +158,9 @@ protected: //TODO: public으로 수정하기
 
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponTargetingState* TargetingState;
+
+	UPROPERTY(VisibleAnywhere)
+	USuraWeaponChargingState* ChargingState;
 
 public:
 	UFUNCTION()
@@ -354,7 +361,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float SingleShotDelay = 1.f;
 public:
-	void StartSingleShot();
+	void StartSingleShot(float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
 	void StopSingleShot();
 #pragma endregion
 
@@ -436,6 +443,26 @@ protected:
 	void StopMissileLaunch();
 #pragma endregion
 
+#pragma region FireMode/Charging
+protected:
+	bool bAutoFireAtMaxChargeTime = true;
+	float ChargeTimeThreshold = 0.5f;
+	float MaxChargeTime = 3.f;
+	float ChargingAdditionalDamageBase = 100.f;
+
+	float ChargingAdditionalRecoilAmountPitchBase = 4.f;
+	float ChargingAdditionalRecoilAmountYawBase = 1.f;
+	float ChargingAdditionalProjectileRadiusBase = 20.f;
+
+
+	float ElapsedChargeTime = 0.f;
+	FTimerHandle ChargingTimer;
+protected:
+	void StartCharge();
+	void UpdateCharge();
+	void StopCharge();
+#pragma endregion
+
 #pragma region Recoil
 protected:
 	bool bIsRecoiling = false;
@@ -477,7 +504,7 @@ protected:
 	float RecoveredRecoilValuePitch = 0.f;
 	float RecoveredRecoilValueYaw = 0.f;
 public:
-	void AddRecoilValue();
+	void AddRecoilValue(float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f);
 	void ApplyRecoil(float DeltaTime);
 	void RecoverRecoil(float DeltaTime);
 	void UpdateRecoil(float DeltaTime);
@@ -519,6 +546,9 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> CameraShakeClass;
+
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> ChargingCameraShakeClass;
 public:
 	void ApplyCameraShake();
 #pragma endregion
