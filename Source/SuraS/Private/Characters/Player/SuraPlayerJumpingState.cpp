@@ -39,6 +39,17 @@ void USuraPlayerJumpingState::EnterState(ASuraCharacterPlayer* Player)
 			PlayerController->ClientStartCameraShake(Player->DoubleJumpCamShake);
 		}
 	}
+
+	ElapsedTimeFromHanging = 0.f;
+
+	if (Player->GetPreviousState()->GetStateType() == EPlayerState::Hanging)
+	{
+		bShouldCheckLedge = false;
+	}
+	else
+	{
+		bShouldCheckLedge = true;
+	}
 	
 
 	if (Player->GetPreviousGroundedState()->GetStateType() == EPlayerState::Dashing)
@@ -80,43 +91,60 @@ void USuraPlayerJumpingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	UpdateBaseMovementSpeed(Player, DeltaTime);
 
-	FHitResult WallHitResult;
-	FCollisionQueryParams WallParams;
-	WallParams.AddIgnoredActor(Player);
-
-	const FVector WallDetectStart = Player->GetActorLocation();
-	const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 35.f;
-	const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
-		ECC_GameTraceChannel2, FCollisionShape::MakeCapsule(34.f,
-			Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
-
-	if (bWallHit && Player->GetCharacterMovement()->IsFalling())
+	if (!bShouldCheckLedge)
 	{
-		Player->WallHitResult = WallHitResult;
-		FHitResult LedgeHitResult;
-		FCollisionQueryParams LedgeParams;
-		LedgeParams.AddIgnoredActor(Player);
-		
-		FVector LedgeDetectStart = FVector(WallHitResult.ImpactPoint.X, WallHitResult.ImpactPoint.Y,
-			Player->GetCamera()->GetComponentLocation().Z + 100.f);
-		FVector LedgeDetectEnd = FVector(LedgeDetectStart.X, LedgeDetectStart.Y, WallHitResult.ImpactPoint.Z);
-
-		bool bLedgeHit = GetWorld()->SweepSingleByChannel(LedgeHitResult, LedgeDetectStart, LedgeDetectEnd, FQuat::Identity,
-			ECC_GameTraceChannel2, FCollisionShape::MakeSphere(20.f), LedgeParams);
-
-		if (bLedgeHit && Player->GetCharacterMovement()->IsWalkable(LedgeHitResult))
+		if (ElapsedTimeFromHanging < 0.2f)
 		{
-			
-			Player->LedgeHitResult = LedgeHitResult;
-			if (LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z && Player->ForwardAxisInputValue > 0.f)
-			{
-				Player->ChangeState(Player->MantlingState);
-				return;
-			}
-			Player->ChangeState(Player->HangingState);
-			return;
+			ElapsedTimeFromHanging += DeltaTime;
+		}
+		else
+		{
+			bShouldCheckLedge = true;
 		}
 	}
+
+	if (bShouldCheckLedge)
+	{
+		FHitResult WallHitResult;
+		FCollisionQueryParams WallParams;
+		WallParams.AddIgnoredActor(Player);
+
+		const FVector WallDetectStart = Player->GetActorLocation();
+		const FVector WallDetectEnd = WallDetectStart + Player->GetActorForwardVector() * 35.f;
+		const bool bWallHit = GetWorld()->SweepSingleByChannel(WallHitResult, WallDetectStart, WallDetectEnd, FQuat::Identity,
+			ECC_GameTraceChannel2, FCollisionShape::MakeCapsule(34.f,
+				Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 0.85f), WallParams);
+
+		if (bWallHit && Player->GetCharacterMovement()->IsFalling())
+		{
+			Player->WallHitResult = WallHitResult;
+			FHitResult LedgeHitResult;
+			FCollisionQueryParams LedgeParams;
+			LedgeParams.AddIgnoredActor(Player);
+		
+			FVector LedgeDetectStart = FVector(WallHitResult.ImpactPoint.X, WallHitResult.ImpactPoint.Y,
+				Player->GetCamera()->GetComponentLocation().Z + 100.f);
+			FVector LedgeDetectEnd = FVector(LedgeDetectStart.X, LedgeDetectStart.Y, WallHitResult.ImpactPoint.Z);
+
+			bool bLedgeHit = GetWorld()->SweepSingleByChannel(LedgeHitResult, LedgeDetectStart, LedgeDetectEnd, FQuat::Identity,
+				ECC_GameTraceChannel2, FCollisionShape::MakeSphere(20.f), LedgeParams);
+
+			if (bLedgeHit && Player->GetCharacterMovement()->IsWalkable(LedgeHitResult))
+			{
+			
+				Player->LedgeHitResult = LedgeHitResult;
+				if (LedgeHitResult.ImpactPoint.Z < Player->GetActorLocation().Z && Player->ForwardAxisInputValue > 0.f)
+				{
+					Player->ChangeState(Player->MantlingState);
+					return;
+				}
+				Player->ChangeState(Player->HangingState);
+				return;
+			}
+		}
+	}
+
+	
 
 	if (Player->GetPreviousState()->GetStateType() == EPlayerState::WallRunning)
 	{
@@ -164,6 +192,7 @@ void USuraPlayerJumpingState::ExitState(ASuraCharacterPlayer* Player)
 	Super::ExitState(Player);
 	bShouldUpdateSpeed = false;
 	ElapsedTimeFromWallRun = 0.f;
+	ElapsedTimeFromHanging = 0.f;
 }
 
 void USuraPlayerJumpingState::Move(ASuraCharacterPlayer* Player, const FVector2D& InputVector)
