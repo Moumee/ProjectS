@@ -2,4 +2,20 @@
 
 
 #include "Characters/Enemies/SuraCharacterEnemyMelee.h"
+#include "Structures/Enemies/EnemyAttributesData.h"
 
+ASuraCharacterEnemyMelee::ASuraCharacterEnemyMelee()
+{
+	EnemyType = "Melee";
+}
+
+void ASuraCharacterEnemyMelee::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void ASuraCharacterEnemyMelee::Attack(const ASuraCharacterPlayer* Player)
+{
+	if (AttackAnimation)
+		PlayAnimMontage(AttackAnimation);
+}

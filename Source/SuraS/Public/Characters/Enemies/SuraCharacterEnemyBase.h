@@ -5,8 +5,12 @@
 #include "CoreMinimal.h"
 #include "Characters/SuraCharacterBase.h"
 #include "Characters/Enemies/AI/EnemyBaseAIController.h"
+#include "Characters/Player/SuraCharacterPlayer.h"
+
 #include "Interfaces/Damageable.h"
 #include "Structures/DamageData.h"
+#include "Interfaces/Enemies/EnemyActions.h"
+
 #include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Components/WidgetComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
@@ -16,7 +20,7 @@
  * 
  */
 UCLASS()
-class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDamageable
+class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDamageable, public IEnemyActions
 {
 	GENERATED_BODY()
 
@@ -29,6 +33,10 @@ class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDam
 	UWidgetComponent* HealthBarWidget;
 
 protected:
+	// [protected variables]
+	FName EnemyType; // for initializing differently btw enemy types from the DT
+
+	// [protected functions]
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -57,13 +65,18 @@ public:
 	// behavior tree getter
 	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 
-	bool TakeDamage(FDamageData DamageData, AActor* DamageCauser);
-
 	void SetUpAIController(AEnemyBaseAIController* NewAIController);
+
+	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
+
+	virtual void Attack(const ASuraCharacterPlayer* Player) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* HitAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	UAnimMontage* DeathAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	UAnimMontage* AttackAnimation;
 };
