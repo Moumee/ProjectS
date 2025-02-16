@@ -23,7 +23,9 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UNiagaraSystem* FireEffect;
 
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
+	int32 MaxAmmo = 10.f;
+	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SingleShot")
 	float SingleShotDelay = 1.f;
 	//-----------------------------------------------------------------
