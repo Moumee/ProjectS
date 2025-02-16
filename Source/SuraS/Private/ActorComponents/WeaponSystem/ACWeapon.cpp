@@ -14,6 +14,7 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponReloadingState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponSwitchingState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponTargetingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponChargingState.h"
 #include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
 #include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 
@@ -182,6 +183,15 @@ void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 		{
 			LoadWeaponData("ShotGun");
 		}
+		else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
+		{
+			LoadWeaponData("MissileLauncher");
+		}
+		else if (WeaponName == EWeaponName::WeaponName_RailGun)
+		{
+			LoadWeaponData("RailGun");
+		}
+
 	}
 	InitializeUI();
 
@@ -254,8 +264,6 @@ void UACWeapon::InitializeUI()
 		}
 	}
 
-
-
 	//----------------
 
 	//if (AmmoCounterWidgetClass)
@@ -288,7 +296,6 @@ void UACWeapon::InitializeUI()
 	//		FAttachmentTransformRules AttachRule(EAttachmentRule::KeepRelative, true);
 	//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
 
-
 	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget!!!"));
 	//	}
 	//}
@@ -302,13 +309,33 @@ void UACWeapon::LoadWeaponData(FName WeaponID)
 		MuzzleFireEffect = WeaponData->FireEffect;
 		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
 
-		//<Targeting(Homing)>
+		// <SingleShot>
+		SingleShotDelay = WeaponData->SingleShotDelay;
+		// <Recoil>
+		bIsRecoilRecoverAffectedByPlayerInput = WeaponData->bIsRecoilRecoverAffectedByPlayerInput;
+		RecoilAmountPitch = WeaponData->RecoilAmountPitch;
+		RecoilRangeMinPitch = WeaponData->RecoilRangeMinPitch;
+		RecoilRangeMaxPitch = WeaponData->RecoilRangeMaxPitch;
+		RecoilAmountYaw = WeaponData->RecoilAmountYaw;
+		RecoilRangeMinYaw = WeaponData->RecoilRangeMinYaw;
+		RecoilRangeMaxYaw = WeaponData->RecoilRangeMaxYaw;
+		RecoilSpeed = WeaponData->RecoilSpeed;
+		RecoilRecoverSpeed = WeaponData->RecoilRecoverSpeed;
+		// <Targeting(Homing)>
 		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
 		MaxTargetNum = WeaponData->MaxTargetNum;
 		MaxTargetDetectionRadius = WeaponData->MaxTargetDetectionRadius;
 		MaxTargetDetectionAngle = WeaponData->MaxTargetDetectionAngle;
 		MaxTargetDetectionTime = WeaponData->MaxTargetDetectionTime;
 		TimeToReachMaxTargetDetectionRange = WeaponData->TimeToReachMaxTargetDetectionRange;
+		// <Charging>
+		bAutoFireAtMaxChargeTime = WeaponData->bAutoFireAtMaxChargeTime;
+		ChargeTimeThreshold = WeaponData->ChargeTimeThreshold;
+		MaxChargeTime = WeaponData->MaxChargeTime;
+		ChargingAdditionalDamageBase = WeaponData->ChargingAdditionalDamageBase;
+		ChargingAdditionalRecoilAmountPitchBase = WeaponData->ChargingAdditionalRecoilAmountPitchBase;
+		ChargingAdditionalRecoilAmountYawBase = WeaponData->ChargingAdditionalRecoilAmountYawBase;
+		ChargingAdditionalProjectileRadiusBase = WeaponData->ChargingAdditionalProjectileRadiusBase;
 	}
 }
 
@@ -324,7 +351,9 @@ void UACWeapon::BeginPlay()
 	UnequippedState = NewObject<USuraWeaponUnequippedState>(this, USuraWeaponUnequippedState::StaticClass());
 	ReloadingState = NewObject<USuraWeaponReloadingState>(this, USuraWeaponReloadingState::StaticClass());
 	SwitchingState = NewObject<USuraWeaponSwitchingState>(this, USuraWeaponSwitchingState::StaticClass());
+
 	TargetingState = NewObject<USuraWeaponTargetingState>(this, USuraWeaponTargetingState::StaticClass());
+	ChargingState = NewObject<USuraWeaponChargingState>(this, USuraWeaponChargingState::StaticClass());
 
 	WeaponAnimInstance = GetAnimInstance();
 
@@ -388,6 +417,11 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 	{
 		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_MissileLauncher")));
 	}
+	else if (WeaponName == EWeaponName::WeaponName_RailGun)
+	{
+		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_RailGun")));
+	}
+
 
 	//TODO: 더 좋은 방법을 생각해 봐야함
 	//RightHandToAimSocketOffset = this->GetSocketLocation(FName(TEXT("Aim"))) - Character->GetMesh()->GetSocketLocation(FName("Gun"));
@@ -424,8 +458,9 @@ void UACWeapon::DetachWeaponFromPlayer()
 	}
 }
 
-void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, bool bIsHoming, AActor* HomingTarget) //TODO: Projectile 종류에 대한 정보를 input으로 받아야 하나? 아직은 잘 모르곘음
+void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget) 
 {
+	//TODO: Projectile 종류에 대한 정보를 input으로 받아야 하나? 아직은 잘 모르곘음
 	if (CurrentState != UnequippedState)
 	{
 		if (Character == nullptr || Character->GetController() == nullptr)
@@ -478,7 +513,7 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, bool bIsHoming, AA
 
 				// Spawn the projectile at the muzzle
 				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				Projectile->InitializeProjectile(Character);
+				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius);
 				if (bIsHoming)
 				{
 					Projectile->SetHomingTarget(bIsHoming, HomingTarget);
@@ -503,7 +538,7 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, bool bIsHoming, AA
 		ApplyCameraShake();
 
 		// <Recoil>
-		AddRecoilValue();
+		AddRecoilValue(AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 	}
 }
 
@@ -549,7 +584,7 @@ void UACWeapon::FireMultiProjectile()
 
 						// Spawn the projectile at the muzzle
 						ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-						Projectile->InitializeProjectile(Character);
+						Projectile->InitializeProjectile(Character, this);
 						Projectile->LaunchProjectile();
 					}
 
@@ -667,7 +702,7 @@ void UACWeapon::StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* W
 	{
 		if (!CharacterAnimInstance->Montage_IsPlaying(CharacterAnimation))
 		{
-
+			//TODO: Blend 세팅 제대로 해야함
 			//FMontageBlendSettings BlendSettings;
 			//BlendSettings.Blend.BlendTime = 0.1f;
 
@@ -675,9 +710,7 @@ void UACWeapon::StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* W
 			CharacterAnimation->BlendIn.SetAlpha(10.f);
 			CharacterAnimation->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
 			CharacterAnimation->BlendOut.SetAlpha(10.f);
-
-
-				
+	
 			UE_LOG(LogTemp, Warning, TEXT("Reloading Weapon Animation!!!"));
 			CharacterAnimInstance->Montage_Play(CharacterAnimation, CharacterAnimation->GetPlayLength() / CharacterAnimPlayRate);
 		}
@@ -748,7 +781,6 @@ bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, f
 		Params,              // 쿼리 매개변수
 		ResponseParams
 	);
-
 
 	if (bHit)
 	{
@@ -947,6 +979,17 @@ void UACWeapon::SetInputActionBinding()
 					//Reload
 					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
 				}
+				else if (WeaponName == EWeaponName::WeaponName_RailGun)
+				{
+					//Charging
+					//InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Started, this, &UACWeapon::StartCharge));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Triggered, this, &UACWeapon::StartCharge));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Completed, this, &UACWeapon::StopCharge));
+					//Zoom
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle));
+					//Reload
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
+				}
 			}
 		}
 	}
@@ -1036,14 +1079,12 @@ void UACWeapon::AutoReload()
 		if (!HasAmmo())
 		{
 			ChangeState(ReloadingState);
-			//StartReload();
 		}
 	}
 }
 void UACWeapon::ReloadingEnd() //Legacy: 사용 안함. animation이 끝날 때의 처리를 위해 남겨 둠.
 {
 	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
-	//ChangeState(IdleState);
 }
 #pragma endregion
 
@@ -1150,8 +1191,10 @@ void UACWeapon::HandleFullAutoFire()
 #pragma endregion
 
 #pragma region FireMode/SingleShot
-void UACWeapon::StartSingleShot()
+void UACWeapon::StartSingleShot(float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
 {
+	//TODO: 방식을 바꿔야 함 
+	//TODO: Enum에 따라서 다르게 함수 호출하는 방식이 아니라, StartSingleShot 자체에 Input을 넣어서 필요한 곳에서 각각 다른 Input 넣어서 작동하도록 해야함
 	if (WeaponName == EWeaponName::WeaponName_Rifle)
 	{
 		FireSingleProjectile();
@@ -1164,6 +1207,11 @@ void UACWeapon::StartSingleShot()
 	{
 		FireSingleProjectile();
 	}
+	else if (WeaponName == EWeaponName::WeaponName_RailGun)
+	{
+		FireSingleProjectile(true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+	}
+
 	GetWorld()->GetTimerManager().SetTimer(SingleShotTimer, this, &UACWeapon::StopSingleShot, SingleShotDelay, false);
 }
 void UACWeapon::StopSingleShot()
@@ -1219,8 +1267,9 @@ void UACWeapon::StartFullAutoShot()
 			FireSingleProjectile();
 			//GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, this, &UACWeapon::FireSingleProjectile, FullAutoShotFireRate, true);
 			bool bShouldConsumeAmmo = true;
+			float AdditionalDamage = 0.f;
 			bool bCanHoming = false;
-			GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, bShouldConsumeAmmo, bCanHoming]() {FireSingleProjectile(bShouldConsumeAmmo, bCanHoming); }, FullAutoShotFireRate, true);
+			GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
 		}
 	}
 }
@@ -1558,7 +1607,7 @@ void UACWeapon::StartMissileLaunch(TArray<AActor*> TargetActors)
 }
 void UACWeapon::UpdateMissileLaunch()
 {
-	FireSingleProjectile(false, true, ConfirmedTargets[CurrentTargetIndex]);
+	FireSingleProjectile(false, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
 	if (ConfirmedTargets.Num() <= CurrentTargetIndex)
 	{
@@ -1578,17 +1627,101 @@ void UACWeapon::StopMissileLaunch()
 }
 #pragma endregion
 
+#pragma region FireMode/Charging
+void UACWeapon::StartCharge()
+{
+	//TODO: Chargning 하는 동안 CameraShake 적용, Charging 시간에 따라 Camera Shake 정도가 점점 더 커지게 하기
+	if (CurrentState == IdleState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Start Charging!!!"));
+
+		ChangeState(ChargingState);
+		UpdateCharge();
+	}
+
+}
+void UACWeapon::UpdateCharge()
+{
+	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+	ElapsedChargeTime += DeltaSeconds;
+
+	// TODO: Camera Shake Test 적용하기
+	// TODO: Charging 정도에 따라 CameraShake 정도를 다르게 하기
+	if (Character)
+	{
+		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+		{
+			if (ChargingCameraShakeClass)
+			{
+				float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 2.f); //TODO: Max는 멤버변수로 지정하던가 해야함
+				UCameraShakeBase* CameraShakeIntance = PlayerController->PlayerCameraManager->StartCameraShake(ChargingCameraShakeClass, ChargingCamShakeScale);
+				UWeaponCameraShakeBase* CamShake = Cast<UWeaponCameraShakeBase>(CameraShakeIntance);
+				if (CamShake)
+				{
+					//TODO: 디테일하게 속성값을 설정 가능하지만, 너무 복잡하고, 굳이?임
+					//CamShake->SetZero();
+				}
+			}
+		}
+	}
+
+	if (bAutoFireAtMaxChargeTime)
+	{
+		if (ElapsedChargeTime > MaxChargeTime)
+		{
+			StopCharge();
+		}
+		else
+		{
+			GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &UACWeapon::UpdateCharge, DeltaSeconds, false);
+		}
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &UACWeapon::UpdateCharge, DeltaSeconds, false);
+	}
+}
+void UACWeapon::StopCharge()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Stop Charging!!!"));
+
+	if (CurrentState == ChargingState)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(ChargingTimer);
+
+		ChangeState(FiringState);
+
+		float ChargingAdditionalDamage = 0.f;
+		float AdditionalRecoilAmountPitch = 0.f;
+		float AdditionalRecoilAmountYaw = 0.f;
+		float AdditionalProjectileRadius = 0.f;
+		if (ElapsedChargeTime > ChargeTimeThreshold)
+		{
+			// TODO: Clamp 해줘야함...
+			ChargingAdditionalDamage = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalDamageBase;
+			AdditionalRecoilAmountPitch = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountPitchBase;
+			AdditionalRecoilAmountYaw = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountYawBase;
+			AdditionalProjectileRadius = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalProjectileRadiusBase;
+		}
+
+		StartSingleShot(ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+
+		ElapsedChargeTime = 0.f;
+	}
+}
+#pragma endregion
+
 
 #pragma region Recoil
-void UACWeapon::AddRecoilValue()
+void UACWeapon::AddRecoilValue(float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw)
 {
 	bIsRecoiling = true;
 
 	//float RandRecoilPitch = FMath::RandRange(RecoilAmountPitch * 0.8f, RecoilAmountPitch * 1.2f) * (-1);
 	//float RandRecoilYaw = FMath::RandRange(-RecoilAmountYaw, RecoilAmountYaw);
 
-	float RandRecoilPitch = FMath::RandRange(RecoilAmountPitch * RecoilRangeMinPitch , RecoilAmountPitch * RecoilRangeMaxPitch) * (-1);
-	float RandRecoilYaw = FMath::RandRange(RecoilAmountYaw * RecoilRangeMinYaw, RecoilAmountYaw * RecoilRangeMaxYaw);
+	float RandRecoilPitch = FMath::RandRange((RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilRangeMinPitch , (RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilRangeMaxPitch) * (-1);
+	float RandRecoilYaw = FMath::RandRange((RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilRangeMinYaw, (RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilRangeMaxYaw);
 
 	TotalTargetRecoilValuePitch += RandRecoilPitch;
 	TotalTargetRecoilValueYaw += RandRecoilYaw;

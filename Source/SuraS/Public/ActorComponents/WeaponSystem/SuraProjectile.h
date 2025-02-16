@@ -13,6 +13,8 @@
 
 #include "SuraProjectile.generated.h"
 
+class UACWeapon;
+
 class USphereComponent;
 class UProjectileMovementComponent; // 기본적인 projectile이 구현되어 있는 class임
 //class UParticleSystem;
@@ -63,11 +65,17 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	AActor* ProjectileOwner;
 
+	UPROPERTY(VisibleAnywhere)
+	UACWeapon* Weapon;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float InitialSpeed = 50000.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float MaxSpeed = 50000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
+	float InitialRadius = 10.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	bool bIsExplosive = false;
@@ -80,10 +88,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CustomProjectile")
 	float HomingAccelerationMagnitude = 3000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
+	bool bCanPenetrate = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
+	int32 NumPenetrableObjects = 4;
 public:	
-	// Sets default values for this actor's properties
 	ASuraProjectile();
-	void InitializeProjectile(AActor* Owner);
+	void InitializeProjectile(AActor* Owner, UACWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f);
 	void LoadProjectileData(FName ProjectileID);
 	void SetHomingTarget(bool bIsHoming, AActor* Target);
 	void LaunchProjectile();
@@ -95,22 +108,38 @@ public:
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UFUNCTION()
+	void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 	/** Returns CollisionComp subobject **/
 	USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 
 	void SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRotation);
-	void SpawnTrailEffect();
+	void SpawnTrailEffect(bool bShouldAttachedToWeapon = false);
 	void SpawnDecalEffect(FVector SpawnLocation, FRotator SpawnRotation);
+
+protected:
+	bool bShouldUpdateTrailEffect = false;
+	void UpdateTrailEffect();
 
 //protected:
 //	// Called when the game starts or when spawned
 //	virtual void BeginPlay() override;
 //
-//public:	
-//	// Called every frame
-//	virtual void Tick(float DeltaTime) override;
+public:	
+	virtual void Tick(float DeltaTime) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void BeginDestroy() override;
 
+#pragma region Penetration
+protected:
+	int32 NumPenetratedObjects = 0;
 
+	float AdditionalDamage = 0.f;
+protected:
+	void UpdatePenetration();
+	void ResetPenetration();
+#pragma endregion
 };

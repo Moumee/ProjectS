@@ -39,6 +39,9 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float MaxSpeed;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float InitialRadius = 10.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosive")
 	bool bIsExplosive;
 
@@ -50,4 +53,10 @@ struct SURAS_API FProjectileData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Homing")
 	float HomingAccelerationMagnitude = 3000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
+	bool bCanPenetrate = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
+	int32 NumPenetrableObjects = 4;
 };

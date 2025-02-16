@@ -12,7 +12,8 @@ enum class EProjectileType : uint8
 	Projectile_Rifle UMETA(DisplayName = "Rifle_Projectile"),
 	Projectile_ShotGun UMETA(DisplayName = "ShotGun_Projectile"),
 	Projectile_BasicRocket UMETA(DisplayName = "BasicRocket_Projectile"),
-	Projectile_Missile UMETA(DisplayName = "Missile_Projectile")
+	Projectile_Missile UMETA(DisplayName = "Missile_Projectile"),
+	Projectile_RailGun UMETA(DisplayName = "RailGun_Projectile"),
 };
 
 UCLASS()

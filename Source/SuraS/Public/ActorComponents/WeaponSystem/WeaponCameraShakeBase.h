@@ -17,10 +17,7 @@ public:
 	//UWeaponCameraShakeBase(const FObjectInitializer& ObjectInitializer);
 	UWeaponCameraShakeBase();
 
-
-
 protected:
 	UPROPERTY(EditAnywhere, Category = "Camera Shake")
 	TObjectPtr<UPerlinNoiseCameraShakePattern> ShakePattern_Perlin;
-
 };

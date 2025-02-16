@@ -357,18 +357,6 @@ FTransform UWeaponSystemComponent::GetWeaponAimSocketRelativeTransform()
 #pragma region SwitchWeapon
 void UWeaponSystemComponent::SwitchToPreviousWeapon()
 {
-	//UE_LOG(LogTemp, Warning, TEXT("Wheel Down"));
-	//if (WeaponInventory.Num() > 1)
-	//{
-	//	CurrentWeaponIndex--;
-	//	if (CurrentWeaponIndex < 0)
-	//	{
-	//		CurrentWeaponIndex = WeaponInventory.Num() + CurrentWeaponIndex;
-	//	}
-	//	ChangeWeapon(CurrentWeaponIndex);
-	//}
-
-	//------------------------------------------
 	if (WeaponInventory.Num() > 1)
 	{
 		CurrentWeaponIndex--;
@@ -382,7 +370,6 @@ void UWeaponSystemComponent::SwitchToPreviousWeapon()
 
 void UWeaponSystemComponent::SwitchToNextWeapon()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Wheel Up"));
 	if (WeaponInventory.Num() > 1)
 	{
 		CurrentWeaponIndex = (CurrentWeaponIndex + 1) % WeaponInventory.Num();
@@ -398,18 +385,6 @@ void UWeaponSystemComponent::SwitchToOtherWeapon()
 
 void UWeaponSystemComponent::ChangeWeapon(int32 WeaponIndex)
 {
-	//if (WeaponInventory.IsValidIndex(WeaponIndex))
-	//{
-	//	if (IsValid(CurrentWeapon))
-	//	{
-	//		CurrentWeapon->UnequipWeapon(PlayerOwner);
-	//	}
-	//	WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
-	//	CurrentWeapon = WeaponInventory[WeaponIndex];
-	//}
-
-	//---------------------------------
-
 	if (WeaponInventory.IsValidIndex(WeaponIndex))
 	{
 		if (IsValid(CurrentWeapon))
