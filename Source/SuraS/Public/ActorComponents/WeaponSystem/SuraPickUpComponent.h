@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
-#include "Characters/SuraCharacterBase.h" //TODO: Base Character class¿©¾ß ÇÏ´ÂÁö °í¹ÎÇØºÁ¾ßÇÔ
+#include "Characters/SuraCharacterBase.h" //TODO: Base Character classì—¬ì•¼ í•˜ëŠ”ì§€ ê³ ë¯¼í•´ë´ì•¼í•¨
 #include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 
 #include "SuraPickUpComponent.generated.h"
 
-//TODO: Delegate ¸»°í Interface·Î ±¸ÇöÇÏ´Â°Ô ÁÁÀ»Áö °í¹ÎÇØºÁ¾ßÇÔ
+//TODO: Delegate ë§ê³  Interfaceë¡œ êµ¬í˜„í•˜ëŠ”ê²Œ ì¢‹ì„ì§€ ê³ ë¯¼í•´ë´ì•¼í•¨
 // Declaration of the delegate that will be called when someone picks this up
 // The character picking this up is the parameter sent with the notification
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUpWeapon, ASuraCharacterPlayerWeapon*, PickUpCharacter);
@@ -21,7 +21,7 @@ class SURAS_API USuraPickUpComponent : public USphereComponent
 
 public:	
 
-	//TODO: Interface·Î ±¸ÇöÇÒÁö °í¹ÎÇØºÁ¾ßÇÔ
+	//TODO: Interfaceë¡œ êµ¬í˜„í• ì§€ ê³ ë¯¼í•´ë´ì•¼í•¨
 	/** Delegate to whom anyone can subscribe to receive this event */
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 	FOnPickUpWeapon OnPickUp;

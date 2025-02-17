@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "SuraPlayerEnums.h"
-#include "ActorComponents/UISystem/ACBaseUIComponent.h"
+#include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "Characters/SuraCharacterBase.h"
+#include "Interfaces/Damageable.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class UACDamageSystem;
 class USuraPlayerSlidingState;
 class USphereComponent;
 class USuraPlayerWallRunningState;
@@ -32,11 +34,14 @@ class UInputMappingContext;
  * 
  */
 UCLASS()
-class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase
+class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase, public IDamageable
 {
 	GENERATED_BODY()
 
 protected:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
+	UACDamageSystem* DamageSystemComponent;
 
 	UPROPERTY()
 	USuraPlayerBaseState* CurrentState;
@@ -52,10 +57,12 @@ protected:
 
 	// UI component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BaseUI", meta = (AllowPrivateAccess = "true"))
-	UACBaseUIComponent* UIComponent;
+	UACUIMangerComponent* UIManager;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	UACInventoryManager* InventoryManager;
+
+	
 
 
 
@@ -123,8 +130,12 @@ protected:
 	void PrintPlayerDebugInfo() const;
 
 	void UpdateDashCooldowns(float DeltaTime);
-
 	
+	UFUNCTION()
+	void OnDamaged();
+
+	UFUNCTION()
+	void OnDeath();
 
 	
 	virtual void Tick(float DeltaTime) override;
@@ -300,6 +311,14 @@ public:
 
 	void InterpCapsuleHeight(float TargetScale, float DeltaTime);
 
+	UACDamageSystem* GetDamageSystemComponent() const { return DamageSystemComponent; }
+	
+	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
+
+	virtual void StartCamShake(TSubclassOf<UCameraShakeBase> InShakeClass);
+
 };
+
+
 
 

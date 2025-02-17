@@ -48,10 +48,7 @@ void USuraPlayerWallRunningState::UpdateState(ASuraCharacterPlayer* Player, floa
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	if (Player->WallRunCamShake && PlayerController)
-	{
-		PlayerController->ClientStartCameraShake(Player->WallRunCamShake);
-	}
+	Player->StartCamShake(Player->WallRunCamShake);
 
 	if (ElapsedTime < MaxDuration)
 	{
