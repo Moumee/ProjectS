@@ -16,7 +16,7 @@ void UBaseUIWidget::OpenUI()
 	AddToViewport();
 
 	// 게임 일시정지
-	UGameplayStatics::SetGamePaused(GetWorld(), true);
+	// UGameplayStatics::SetGamePaused(GetWorld(), true);
 
 	// 위젯에 포커스 주기
 	SetKeyboardFocus();
@@ -36,7 +36,7 @@ void UBaseUIWidget::CloseUI()
 	RemoveFromParent();
         
 	// 게임 일시정지 해제
-	UGameplayStatics::SetGamePaused(GetWorld(), false);
+	// UGameplayStatics::SetGamePaused(GetWorld(), false);
         
 	// InputMode를 게임 모드로 변경
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();

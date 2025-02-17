@@ -17,8 +17,7 @@ void UACInventoryManager::OnWeaponCollected(const int32 WeaponType, const int32 
 
 void UACInventoryManager::UnlockWeapon(const FName WeaponImageName, const FName WeaponTextName, const FName LockBackgroundName, const FName LockImageName)
 {	// 재형님 쪽 코드 배열 값 받아와서 인자로 쓰면 될 듯
-
-	// git test
+	
 	// 테스트용으로 그냥 바로 해당 버튼 바인딩해서 unlock처리
 	if (!BaseUIComponent)  // UIComponent가 nullptr이면 찾기
 	{
