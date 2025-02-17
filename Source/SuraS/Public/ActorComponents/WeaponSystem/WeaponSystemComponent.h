@@ -102,8 +102,9 @@ protected:
 
 public:
 	bool IsZoomIn() const { return bIsZoomIn; }
-	
 	virtual void ZoomIn(bool bZoomIn) override;
+
+	bool IsWeaponModifyingCamFov();
 
 #pragma endregion
 

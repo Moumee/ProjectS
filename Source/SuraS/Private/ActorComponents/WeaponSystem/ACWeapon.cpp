@@ -581,7 +581,7 @@ void UACWeapon::FireMultiProjectile()
 
 					for (int pellet = 0; pellet < PelletsNum; pellet++)
 					{
-						const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfProjectileSpread).Rotation();
+						const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfMultiProjectileSpread).Rotation();
 
 						//Set Spawn Collision Handling Override
 						FActorSpawnParameters ActorSpawnParams;
@@ -624,7 +624,7 @@ void UACWeapon::SpawnProjectile()
 
 void UACWeapon::ZoomToggle()
 {
-	if (CurrentState != UnequippedState)
+	if (CurrentState == IdleState || CurrentState == FiringState)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Zoom!!!"));
 
@@ -1838,6 +1838,8 @@ void UACWeapon::UpdateRecoil(float DeltaTime)
 #pragma region Camera
 void UACWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
 {
+	bIsUsingPlayerCamFov = true;
+
 	if (GetWorld()->GetTimerManager().IsTimerActive(CamSettingTimer))
 	{
 		GetWorld()->GetTimerManager().ClearTimer(CamSettingTimer);
@@ -1847,6 +1849,8 @@ void UACWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
 }
 void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting)
 {
+	//UE_LOG(LogTemp, Error, TEXT("UpdateCameraSetting"));
+
 	if (Character)
 	{
 		UCameraComponent* Camera = Character->GetCamera();
@@ -1863,9 +1867,14 @@ void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* Cam
 			FRotator CameraRelativeRotation_Error = CamSetting->CameraRelativeRotation - Camera->GetRelativeRotation();
 			CameraRelativeRotation_Error.Normalize();
 
-			if (CameraRelativeRotation_Error.IsNearlyZero()
-				&& FVector::Dist(CamSetting->CameraRelativeLocation, Camera->GetRelativeLocation()) < 0.01
-				//&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < KINDA_SMALL_NUMBER
+			//if (CameraRelativeRotation_Error.IsNearlyZero()
+			//	&& FVector::Dist(CamSetting->CameraRelativeLocation, Camera->GetRelativeLocation()) < 0.01
+			//	//&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < KINDA_SMALL_NUMBER
+			//	&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < 0.05)
+			//{
+			//	StopCameraSettingChange();
+			//}
+			if (FVector::Dist(CamSetting->CameraRelativeLocation, Camera->GetRelativeLocation()) < 0.01
 				&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < 0.01)
 			{
 				StopCameraSettingChange();
@@ -1880,7 +1889,17 @@ void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* Cam
 }
 void UACWeapon::StopCameraSettingChange()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Changing Cam Setting is Completed!!!"));
+	bIsUsingPlayerCamFov = false;
+	UE_LOG(LogTemp, Error, TEXT("Modifying Cam Setting is Completed!!!"));
+}
+void UACWeapon::ForceStopCamModification()
+{
+	bIsUsingPlayerCamFov = false;
+
+	if (GetWorld()->GetTimerManager().IsTimerActive(CamSettingTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CamSettingTimer);
+	}
 }
 void UACWeapon::ApplyCameraShake()
 {
