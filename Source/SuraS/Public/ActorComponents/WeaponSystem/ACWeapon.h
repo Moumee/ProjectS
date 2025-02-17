@@ -268,7 +268,6 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bCanAutoReload = true;
-	//TODO: Auto Reload true일 때, 각각의 fire가 끝나면, Check ammo를 통해 남은 탄환수를 확인하고 0이면 자동으로 reloading으로 넘어가기
 
 	UPROPERTY(EditAnywhere)
 	float ReloadingTime = 2.5f;
@@ -510,36 +509,38 @@ public:
 	void UpdateRecoil(float DeltaTime);
 #pragma endregion
 
-#pragma region Projectile/Spread
+#pragma region Projectile/MultiProjectileSpread
 protected:
 	UPROPERTY(EditAnywhere)
 	int32 PelletsNum = 9;
 
 	UPROPERTY(EditAnywhere)
-	float MaxAngleOfProjectileSpread = 15.f;
+	float MaxAngleOfMultiProjectileSpread = 15.f;
 #pragma endregion
 
 #pragma region Camera
 protected:
+	bool bIsUsingPlayerCamFov = false;
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FWeaponCamSettingValue CamSetting_Default = FWeaponCamSettingValue(
 		90.f,
 		{ 0.f, 0.f, 0.f },
 		{ 0.f, 0.f, 70.f },
 		1.f, 1.f, 15.f);
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FWeaponCamSettingValue CamSetting_ZoomIn = FWeaponCamSettingValue(
 		90.f,
 		{ 0.f, 0.f, 0.f },
 		{ 50.f, 0.f, 70.f },
 		1.f, 1.f, 15.f);
-
 	FTimerHandle CamSettingTimer;
 public:
 	void StartCameraSettingChange(FWeaponCamSettingValue* CamSetting);
 	void UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting);
 	void StopCameraSettingChange();
+	void ForceStopCamModification();
+	bool IsModifyingPlayerCamFov() const { return bIsUsingPlayerCamFov; }
 #pragma endregion
 
 #pragma region CameraShake

@@ -93,7 +93,7 @@ void USuraPlayerHangingState::UpdateState(ASuraCharacterPlayer* Player, float De
 void USuraPlayerHangingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
-	Player->GetCharacterMovement()->GravityScale = 1.f;
+	Player->GetCharacterMovement()->GravityScale = Player->DefaultGravityScale;
 	bShouldMoveToHangPosition = false;
 	ElapsedTime = 0.f;
 }

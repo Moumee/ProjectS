@@ -81,6 +81,10 @@ public:
 	USkeletalMeshComponent* GetArmMesh() { return ArmMesh; }
 #pragma endregion
 
+public:
+	virtual void InterpCameraFOV(float DeltaTime) override; // for test
+
+
 
 };
 

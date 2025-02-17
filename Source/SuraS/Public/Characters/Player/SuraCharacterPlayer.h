@@ -166,7 +166,7 @@ public:
 	// If floor angle is 45 degrees downward slope, returns -45.f
 	float FindFloorAngle() const;
 	void RestoreCameraTilt(float DeltaTime);
-	void InterpCameraFOV(float DeltaTime);
+	virtual void InterpCameraFOV(float DeltaTime);
 
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TSubclassOf<UCameraShakeBase> IdleCamShake;

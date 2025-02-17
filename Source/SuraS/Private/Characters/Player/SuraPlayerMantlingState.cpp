@@ -75,7 +75,7 @@ void USuraPlayerMantlingState::UpdateState(ASuraCharacterPlayer* Player, float D
 void USuraPlayerMantlingState::ExitState(ASuraCharacterPlayer* Player)
 {
 	Super::ExitState(Player);
-	Player->GetCharacterMovement()->GravityScale = 1.f;
+	Player->GetCharacterMovement()->GravityScale = Player->DefaultGravityScale;
 	bShouldMantle = false;
 	ElapsedTime = 0;
 }
