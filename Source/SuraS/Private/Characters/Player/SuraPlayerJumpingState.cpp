@@ -28,16 +28,13 @@ void USuraPlayerJumpingState::EnterState(ASuraCharacterPlayer* Player)
 
 	PlayerController = Player->GetController<APlayerController>();
 
-	if (PlayerController && Player->PrimaryJumpCamShake && Player->DoubleJumpCamShake)
+	if (Player->JumpsLeft == 1)
 	{
-		if (Player->JumpsLeft == 1)
-		{
-			PlayerController->ClientStartCameraShake(Player->PrimaryJumpCamShake);
-		}
-		else if (Player->JumpsLeft == 0)
-		{
-			PlayerController->ClientStartCameraShake(Player->DoubleJumpCamShake);
-		}
+		Player->StartCamShake(Player->PrimaryJumpCamShake);
+	}
+	else if (Player->JumpsLeft == 0)
+	{
+		Player->StartCamShake(Player->DoubleJumpCamShake);
 	}
 
 	ElapsedTimeFromHanging = 0.f;

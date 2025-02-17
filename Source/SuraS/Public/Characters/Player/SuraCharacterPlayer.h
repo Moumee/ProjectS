@@ -313,6 +313,10 @@ public:
 	
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 
+	virtual void StartCamShake(TSubclassOf<UCameraShakeBase> InShakeClass);
+
 };
+
+
 
 

@@ -165,10 +165,7 @@ void USuraPlayerFallingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->bLandedTriggered)
 	{
-		if (Player->LandCamShake)
-		{
-			PlayerController->ClientStartCameraShake(Player->LandCamShake);
-		}
+		Player->StartCamShake(Player->LandCamShake);
 		
 		if (Player->bCrouchTriggered)
 		{
