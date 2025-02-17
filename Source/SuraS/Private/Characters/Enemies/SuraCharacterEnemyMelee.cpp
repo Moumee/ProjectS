@@ -17,5 +17,8 @@ void ASuraCharacterEnemyMelee::BeginPlay()
 void ASuraCharacterEnemyMelee::Attack(const ASuraCharacterPlayer* Player)
 {
 	if (AttackAnimation)
-		PlayAnimMontage(AttackAnimation);
+	{
+		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+		EnemyAnimInstance->Montage_Play(AttackAnimation);
+	}
 }

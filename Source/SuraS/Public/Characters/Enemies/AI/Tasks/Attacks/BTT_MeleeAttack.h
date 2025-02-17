@@ -13,6 +13,10 @@ UCLASS()
 class SURAS_API UBTT_MeleeAttack : public UBTTask_BlackboardBase
 {
 	GENERATED_BODY()
+
+	UBehaviorTreeComponent* TempOwnerComp;
+
+	void OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted);
 	
 public:
 	explicit UBTT_MeleeAttack(FObjectInitializer const& ObjectInitializer);

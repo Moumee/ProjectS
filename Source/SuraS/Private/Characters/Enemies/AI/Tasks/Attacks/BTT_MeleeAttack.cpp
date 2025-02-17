@@ -14,19 +14,31 @@ UBTT_MeleeAttack::UBTT_MeleeAttack(FObjectInitializer const& ObjectInitializer)
 
 EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
+	if (ASuraCharacterEnemyBase* const Enemy = Cast<ASuraCharacterEnemyBase>(OwnerComp.GetAIOwner()->GetCharacter()))
 	{
-		if (AEnemyBaseAIController* const EnemyController = Cast<AEnemyBaseAIController>(OwnerComp.GetAIOwner()))
+		if (ASuraCharacterPlayer* const Player = Cast<ASuraCharacterPlayer>(OwnerComp.GetBlackboardComponent()->GetValueAsObject("AttackTarget")))
 		{
-			if (ASuraCharacterEnemyBase* Enemy = Cast<ASuraCharacterEnemyBase>(EnemyController->GetCharacter()))
-			{
-				Enemy->Attack(Player);
+			Enemy->Attack(Player);
 
-				FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-				return EBTNodeResult::Succeeded;
-			}
+			TempOwnerComp = &OwnerComp; // for finishing task latently
+
+			FOnMontageEnded OnMontageEnded;
+			OnMontageEnded.BindUObject(this, &UBTT_MeleeAttack::OnAttackEnded);
+
+			Enemy->GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnMontageEnded);
+
+			FinishLatentTask(OwnerComp, EBTNodeResult::InProgress);
+			return EBTNodeResult::InProgress;
 		}
 	}
 
 	return EBTNodeResult::Failed;
+}
+
+void UBTT_MeleeAttack::OnAttackEnded(UAnimMontage* AnimMontage, bool bInterrupted)
+{
+	if (TempOwnerComp)
+		TempOwnerComp->OnTaskFinished(this, EBTNodeResult::Succeeded);
+	else
+		TempOwnerComp->OnTaskFinished(this, EBTNodeResult::Failed);
 }
