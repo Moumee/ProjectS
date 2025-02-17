@@ -525,6 +525,16 @@ bool ASuraCharacterPlayer::TakeDamage(const FDamageData& DamageData, const AActo
 	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }
 
+void ASuraCharacterPlayer::StartCamShake(const TSubclassOf<UCameraShakeBase> InShakeClass)
+{
+	if (!InShakeClass) return;
+	
+	if (APlayerController* PlayerController = GetController<APlayerController>())
+	{
+		PlayerController->PlayerCameraManager->StartCameraShake(InShakeClass);
+	}
+}
+
 
 
 

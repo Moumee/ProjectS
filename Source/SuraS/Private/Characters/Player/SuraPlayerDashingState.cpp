@@ -85,10 +85,7 @@ void USuraPlayerDashingState::UpdateState(ASuraCharacterPlayer* Player, float De
 	
 	Player->InterpCapsuleHeight(1.f, DeltaTime);
 
-	if (Player->DashCamShake && PlayerController)
-	{
-		PlayerController->ClientStartCameraShake(Player->DashCamShake);
-	}
+	Player->StartCamShake(Player->DashCamShake);
 	
 	
 	

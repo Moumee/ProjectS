@@ -43,10 +43,7 @@ void USuraPlayerMantlingState::UpdateState(ASuraCharacterPlayer* Player, float D
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	if (Player->MantleCamShake && PlayerController)
-	{
-		PlayerController->ClientStartCameraShake(Player->MantleCamShake);
-	}
+	Player->StartCamShake(Player->MantleCamShake);
 	
 
 	Player->InterpCapsuleHeight(1.f, DeltaTime);

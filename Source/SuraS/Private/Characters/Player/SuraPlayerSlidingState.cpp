@@ -59,10 +59,7 @@ void USuraPlayerSlidingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 
-	if (Player->SlideCamShake && PlayerController)
-	{
-		PlayerController->ClientStartCameraShake(Player->SlideCamShake);
-	}
+	Player->StartCamShake(Player->SlideCamShake);
 
 	FHitResult UpperHit;
 	FCollisionQueryParams UpperParams;

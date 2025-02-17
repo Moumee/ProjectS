@@ -71,17 +71,11 @@ void USuraPlayerWalkingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (!Player->HasMovementInput())
 	{
-		if (Player->IdleCamShake && PlayerController)
-		{
-			PlayerController->ClientStartCameraShake(Player->IdleCamShake);
-		}
+		Player->StartCamShake(Player->IdleCamShake);
 	}
 	else
 	{
-		if (Player->WalkCamShake && PlayerController)
-		{
-			PlayerController->ClientStartCameraShake(Player->WalkCamShake);
-		}
+		Player->StartCamShake(Player->WalkCamShake);
 	}
 
 	if (bShouldUpdateSpeed)
