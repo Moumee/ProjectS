@@ -624,7 +624,7 @@ void UACWeapon::SpawnProjectile()
 
 void UACWeapon::ZoomToggle()
 {
-	if (CurrentState != UnequippedState)
+	if (CurrentState == IdleState || CurrentState == FiringState)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Zoom!!!"));
 
@@ -1849,6 +1849,8 @@ void UACWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
 }
 void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting)
 {
+	//UE_LOG(LogTemp, Error, TEXT("UpdateCameraSetting"));
+
 	if (Character)
 	{
 		UCameraComponent* Camera = Character->GetCamera();
@@ -1889,6 +1891,15 @@ void UACWeapon::StopCameraSettingChange()
 {
 	bIsUsingPlayerCamFov = false;
 	UE_LOG(LogTemp, Error, TEXT("Modifying Cam Setting is Completed!!!"));
+}
+void UACWeapon::ForceStopCamModification()
+{
+	bIsUsingPlayerCamFov = false;
+
+	if (GetWorld()->GetTimerManager().IsTimerActive(CamSettingTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CamSettingTimer);
+	}
 }
 void UACWeapon::ApplyCameraShake()
 {

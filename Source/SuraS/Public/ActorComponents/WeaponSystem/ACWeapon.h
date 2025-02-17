@@ -521,26 +521,25 @@ protected:
 #pragma region Camera
 protected:
 	bool bIsUsingPlayerCamFov = false;
-
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FWeaponCamSettingValue CamSetting_Default = FWeaponCamSettingValue(
 		90.f,
 		{ 0.f, 0.f, 0.f },
 		{ 0.f, 0.f, 70.f },
 		1.f, 1.f, 15.f);
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FWeaponCamSettingValue CamSetting_ZoomIn = FWeaponCamSettingValue(
 		90.f,
 		{ 0.f, 0.f, 0.f },
 		{ 50.f, 0.f, 70.f },
 		1.f, 1.f, 15.f);
-
 	FTimerHandle CamSettingTimer;
 public:
 	void StartCameraSettingChange(FWeaponCamSettingValue* CamSetting);
 	void UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting);
 	void StopCameraSettingChange();
+	void ForceStopCamModification();
 	bool IsModifyingPlayerCamFov() const { return bIsUsingPlayerCamFov; }
 #pragma endregion
 
