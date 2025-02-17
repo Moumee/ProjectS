@@ -275,6 +275,18 @@ void UWeaponSystemComponent::ZoomIn(bool bZoomIn)
 	UE_LOG(LogTemp, Warning, TEXT("ZOOM Toggled!!!"));
 }
 
+bool UWeaponSystemComponent::IsWeaponModifyingCamFov()
+{
+	if (CurrentWeapon)
+	{
+		if (CurrentWeapon->IsModifyingPlayerCamFov() || bIsZoomIn)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 #pragma endregion
 
 #pragma region Aiming

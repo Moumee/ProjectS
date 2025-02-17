@@ -82,7 +82,7 @@ public:
 #pragma endregion
 
 public:
-	void InterpCameraFOV(float DeltaTime); // for test
+	virtual void InterpCameraFOV(float DeltaTime) override; // for test
 
 
 

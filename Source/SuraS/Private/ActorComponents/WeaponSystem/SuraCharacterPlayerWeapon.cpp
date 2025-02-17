@@ -66,7 +66,15 @@ void ASuraCharacterPlayerWeapon::SetLookInputVector2DZero()
 
 void ASuraCharacterPlayerWeapon::InterpCameraFOV(float DeltaTime)
 {
-	UE_LOG(LogTemp, Error, TEXT("Function Hiding!!!")); // 작동안함
+	if (WeaponSystem)
+	{
+		if (WeaponSystem->IsWeaponModifyingCamFov())
+		{
+			return;
+		}
+	}
+	Super::InterpCameraFOV(DeltaTime);
+	//UE_LOG(LogTemp, Error, TEXT("Function Hiding!!!")); // 작동안함
 }
 
 void ASuraCharacterPlayerWeapon::BeginPlay()

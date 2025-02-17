@@ -520,6 +520,8 @@ protected:
 
 #pragma region Camera
 protected:
+	bool bIsUsingPlayerCamFov = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FWeaponCamSettingValue CamSetting_Default = FWeaponCamSettingValue(
 		90.f,
@@ -539,6 +541,7 @@ public:
 	void StartCameraSettingChange(FWeaponCamSettingValue* CamSetting);
 	void UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting);
 	void StopCameraSettingChange();
+	bool IsModifyingPlayerCamFov() const { return bIsUsingPlayerCamFov; }
 #pragma endregion
 
 #pragma region CameraShake
