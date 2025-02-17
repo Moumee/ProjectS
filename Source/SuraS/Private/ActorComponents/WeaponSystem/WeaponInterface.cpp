@@ -17,3 +17,7 @@ void IWeaponInterface::ZoomIn(bool bZoomIn)
 void IWeaponInterface::ReloadingEnd()
 {
 }
+
+void IWeaponInterface::SwitchToOtherWeapon()
+{
+}

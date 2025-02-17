@@ -28,4 +28,6 @@ public:
 	virtual void ZoomIn(bool bZoomIn);
 
 	virtual void ReloadingEnd();
+
+	virtual void SwitchToOtherWeapon();
 };

@@ -12,7 +12,11 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponFiringState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponUnequippedState.h"
 #include "ActorComponents/WeaponSystem/SuraWeaponReloadingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponSwitchingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponTargetingState.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponChargingState.h"
 #include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
+#include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -25,8 +29,19 @@
 
 #include "Camera/CameraComponent.h"
 #include "Camera/PlayerCameraManager.h"
-//#include "Components/WidgetComponent.h"
+
 #include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
+
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+
+//----------------------------------
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Engine/CanvasRenderTarget2D.h"
+
+
 
 // Sets default values for this component's properties
 UACWeapon::UACWeapon()
@@ -52,8 +67,104 @@ UACWeapon::UACWeapon()
 	SetCollisionObjectType(ECC_GameTraceChannel3); //Weapon
 	SetCollisionResponseToAllChannels(ECR_Ignore);
 
+	//---------------------------------------------------------------------------------
+	NumOfLeftAmmo = MaxAmmo;
 
-	CameraShake = CreateDefaultSubobject<UWeaponCameraShakeBase>(TEXT("CameraShake"));
+	//<UI>
+	//AmmoCounterWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("AmmoCounterWidgetComponent"));
+	//AmmoCounterWidgetComponent->SetDrawSize(FVector2D());
+	//AmmoCounterWidgetComponent->SetHiddenInGame(false);
+
+	//  / Script / UMGEditor.WidgetBlueprint'/Game/FPWeapon/UI/WBP_AmmoCounter_2.WBP_AmmoCounter_2'
+	// E: / Unreal_engine_projects / PJSURA_2 / SuraS / Content / FPWeapon / UI / WBP_AmmoCounter_2.uasset
+
+
+	if (AmmoCounterWidgetComponent)
+	{
+		//UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidgetComponent Is Available!!!"));
+		//AmmoCounterWidgetComponent->SetupAttachment(this, FName(TEXT("AmmoCounter")));
+
+		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+		//AmmoCounterWidgetComponent->SetVisibility(true);
+		//AmmoCounterWidgetComponent->SetHiddenInGame(false);
+		//AmmoCounterWidgetComponent->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
+
+		//static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClass{ TEXT("/Game/UI/Enemies/WBP_EnemyHealthBar") };
+
+		//if (WidgetClass.Succeeded())
+		//{
+		//	AmmoCounterWidgetComponent->SetWidgetClass((WidgetClass.Class));
+		//}
+
+		//static ConstructorHelpers::FClassFinder<UAmmoCounterWidget> WidgetClass{ TEXT("/Game/FPWeapon/UI/WBP_AmmoCounter_2") };
+
+		//if (WidgetClass.Succeeded())
+		//{
+		//	UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidgetClass Is Available!!!"));
+		//	//AmmoCounterWidgetComponent->SetWidgetClass(AmmoCounterWidgetClass);
+		//	AmmoCounterWidgetComponent->SetWidgetClass(WidgetClass.Class);
+		//	AmmoCounterWidget = Cast<UAmmoCounterWidget>(AmmoCounterWidgetComponent->GetWidget());
+		//	if (AmmoCounterWidget)
+		//	{
+		//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Available!!!"));
+
+		//	}
+
+
+
+
+		//	//AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass, FName(TEXT("AmmoCounterWidget")));
+		//	//if (AmmoCounterWidget)
+		//	//{
+		//	//	UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Available!!!"));
+		//	//	AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
+		//	//	if (AmmoCounterWidgetComponent->GetWidget() == AmmoCounterWidget)
+		//	//	{
+		//	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Set!!!"));
+		//	//	}
+		//	//}
+		//}
+
+	}
+
+
+
+	//if (AmmoCounterWidgetClass)
+	//{
+	//	AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
+	//	if (AmmoCounterWidgetComponent)
+	//	{
+	//		//AmmoCounterWidgetComponent->SetWidgetClass(AmmoCounterWidget->GetClass());
+	//		//AmmoCounterWidget = AmmoCounterWidgetComponent->GetWidget();
+	//		AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
+
+	//		if (AmmoCounterWidget)
+	//		{
+	//			UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget is Availlable"));
+	//		}
+
+	//		//AmmoCounterWidget->AddToViewport();
+	//		//AmmoCounterWidget->SetVisibility(ESlateVisibility::Visible);
+
+	//		//AmmoCounterWidget->AddToRoot();
+	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	//		AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	//		AmmoCounterWidgetComponent->SetDrawAtDesiredSize(true);
+	//		AmmoCounterWidgetComponent->SetDrawSize(FVector2D(500.f, 500.f));
+
+	//		AmmoCounterWidgetComponent->SetHiddenInGame(false);
+	//		AmmoCounterWidgetComponent->SetVisibility(true);
+
+	//		FAttachmentTransformRules AttachRule(EAttachmentRule::KeepRelative, true);
+	//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
+
+
+	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget!!!"));
+	//	}
+	//}
+
+
 }
 
 void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
@@ -63,44 +174,38 @@ void UACWeapon::InitializeWeapon(ASuraCharacterPlayerWeapon* NewCharacter)
 	{
 		CharacterAnimInstance = Character->GetArmMesh()->GetAnimInstance();
 		InitializeCamera(Character);
+
+		if (WeaponName == EWeaponName::WeaponName_Rifle)
+		{
+			LoadWeaponData("Rifle");
+		}
+		else if (WeaponName == EWeaponName::WeaponName_ShotGun)
+		{
+			LoadWeaponData("ShotGun");
+		}
+		else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
+		{
+			LoadWeaponData("MissileLauncher");
+		}
+		else if (WeaponName == EWeaponName::WeaponName_RailGun)
+		{
+			LoadWeaponData("RailGun");
+		}
+
 	}
 	InitializeUI();
 
 	// Set up action bindings
-	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+	CharacterController = Cast<APlayerController>(Character->GetController());
+	if (CharacterController)
 	{
+	
 		//TODO: 아래 코드에 대해서 알아봐야함. Multi Play를 위한 것인가?
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(CharacterController->GetLocalPlayer()))
 		{
 			// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
 			Subsystem->AddMappingContext(FireMappingContext, 1);
 		}
-
-		////TODO: Weapon Type에 따라서 Bind되는 Action이 다르도록 설계하기
-		//if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
-		//{
-		//	if (WeaponName == EWeaponName::WeaponName_Rifle)
-		//	{
-		//		// FullAuto Shot
-		//		LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot);
-		//		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot);
-
-		//		//TODO: Zoom을 Holding 방식으로 바꿔야함
-		//		// Zoom Toggle
-		//		RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
-		//	}
-		//	else if (WeaponName == EWeaponName::WeaponName_ShotGun)
-		//	{
-		//		// Fire Single Shot
-		//		LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::FireMultiProjectile);
-
-		//		// Fire Burst Shot
-		//		RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire);
-
-		//		// Reload
-		//		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
-		//	}
-		//}
 	}
 
 	// Set Aim Socket Relative Transform
@@ -123,6 +228,120 @@ void UACWeapon::InitializeUI()
 	{
 		CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
 	}
+
+	if (AmmoCounterWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidgetClass Is Available!!!"));
+		//AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass, FName(TEXT("AmmoCounterWidget")));
+		AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
+		//AmmoCounterWidget = CreateWidget<UUserWidget>(GetWorld(), AmmoCounterWidgetClass, FName(TEXT("AmmoCounterWidget")));
+		//if (AmmoCounterWidget)
+		//{
+		//	//UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Available!!!"));
+		//	//AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
+		//	if (AmmoCounterWidgetComponent->GetWidget() == AmmoCounterWidget)
+		//	{
+		//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget Is Set!!!"));
+
+		//		FAttachmentTransformRules AttachRule(EAttachmentRule::SnapToTarget, true);
+		//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
+
+
+		//		//AmmoCounterWidget->AddToViewport();
+		//		AmmoCounterWidget->SetVisibility(ESlateVisibility::Visible);
+
+		//		AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+		//		AmmoCounterWidgetComponent->SetDrawAtDesiredSize(true);
+		//		AmmoCounterWidgetComponent->SetDrawSize(FVector2D(100.f, 100.f));
+
+		//		AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+		//	}
+		//}
+
+		if (AmmoCounterWidget)
+		{
+			AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+		}
+	}
+
+	//----------------
+
+	//if (AmmoCounterWidgetClass)
+	//{
+	//	AmmoCounterWidget = CreateWidget<UAmmoCounterWidget>(GetWorld(), AmmoCounterWidgetClass);
+	//	if (AmmoCounterWidgetComponent)
+	//	{
+	//		//AmmoCounterWidgetComponent->SetWidgetClass(AmmoCounterWidget->GetClass());
+	//		//AmmoCounterWidget = AmmoCounterWidgetComponent->GetWidget();
+	//		AmmoCounterWidgetComponent->SetWidget(AmmoCounterWidget);
+
+	//		if (AmmoCounterWidget)
+	//		{
+	//			UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget is Availlable"));
+	//		}
+
+	//		//AmmoCounterWidget->AddToViewport();
+	//		//AmmoCounterWidget->SetVisibility(ESlateVisibility::Visible);
+
+	//		//AmmoCounterWidget->AddToRoot();
+	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	//		AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	//		//AmmoCounterWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	//		AmmoCounterWidgetComponent->SetDrawAtDesiredSize(true);
+	//		AmmoCounterWidgetComponent->SetDrawSize(FVector2D(500.f, 500.f));
+
+	//		AmmoCounterWidgetComponent->SetHiddenInGame(false);
+	//		AmmoCounterWidgetComponent->SetVisibility(true);
+	//	
+	//		FAttachmentTransformRules AttachRule(EAttachmentRule::KeepRelative, true);
+	//		AmmoCounterWidgetComponent->AttachToComponent(this, AttachRule, FName(TEXT("AmmoCounter")));
+
+	//		UE_LOG(LogTemp, Error, TEXT("AmmoCounterWidget!!!"));
+	//	}
+	//}
+}
+
+void UACWeapon::LoadWeaponData(FName WeaponID)
+{
+	WeaponData = WeaponDataTable->FindRow<FWeaponData>(WeaponID, TEXT(""));
+	if (WeaponData)
+	{
+		MuzzleFireEffect = WeaponData->FireEffect;
+		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
+
+		// <Reload>
+		MaxAmmo = WeaponData->MaxAmmo;
+		NumOfLeftAmmo = MaxAmmo;
+
+
+		// <SingleShot>
+		SingleShotDelay = WeaponData->SingleShotDelay;
+		// <Recoil>
+		bIsRecoilRecoverAffectedByPlayerInput = WeaponData->bIsRecoilRecoverAffectedByPlayerInput;
+		RecoilAmountPitch = WeaponData->RecoilAmountPitch;
+		RecoilRangeMinPitch = WeaponData->RecoilRangeMinPitch;
+		RecoilRangeMaxPitch = WeaponData->RecoilRangeMaxPitch;
+		RecoilAmountYaw = WeaponData->RecoilAmountYaw;
+		RecoilRangeMinYaw = WeaponData->RecoilRangeMinYaw;
+		RecoilRangeMaxYaw = WeaponData->RecoilRangeMaxYaw;
+		RecoilSpeed = WeaponData->RecoilSpeed;
+		RecoilRecoverSpeed = WeaponData->RecoilRecoverSpeed;
+		// <Targeting(Homing)>
+		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
+		MaxTargetNum = WeaponData->MaxTargetNum;
+		MaxTargetDetectionRadius = WeaponData->MaxTargetDetectionRadius;
+		MaxTargetDetectionAngle = WeaponData->MaxTargetDetectionAngle;
+		MaxTargetDetectionTime = WeaponData->MaxTargetDetectionTime;
+		TimeToReachMaxTargetDetectionRange = WeaponData->TimeToReachMaxTargetDetectionRange;
+		// <Charging>
+		bAutoFireAtMaxChargeTime = WeaponData->bAutoFireAtMaxChargeTime;
+		ChargeTimeThreshold = WeaponData->ChargeTimeThreshold;
+		MaxChargeTime = WeaponData->MaxChargeTime;
+		ChargingAdditionalDamageBase = WeaponData->ChargingAdditionalDamageBase;
+		ChargingAdditionalRecoilAmountPitchBase = WeaponData->ChargingAdditionalRecoilAmountPitchBase;
+		ChargingAdditionalRecoilAmountYawBase = WeaponData->ChargingAdditionalRecoilAmountYawBase;
+		ChargingAdditionalProjectileRadiusBase = WeaponData->ChargingAdditionalProjectileRadiusBase;
+	}
 }
 
 // Called when the game starts
@@ -130,13 +349,16 @@ void UACWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-
 	//TODO: WeaponType에 따라서 생성되는 State 객체들이 달라지도록 설정하기
+	// 예를들어, 호밍 런쳐 같은 경우에는, ChargingState 혹은 TargetingState 등이 추가될 수 있음
 	IdleState = NewObject<USuraWeaponIdleState>(this, USuraWeaponIdleState::StaticClass());
 	FiringState = NewObject<USuraWeaponFiringState>(this, USuraWeaponFiringState::StaticClass());
 	UnequippedState = NewObject<USuraWeaponUnequippedState>(this, USuraWeaponUnequippedState::StaticClass());
 	ReloadingState = NewObject<USuraWeaponReloadingState>(this, USuraWeaponReloadingState::StaticClass());
+	SwitchingState = NewObject<USuraWeaponSwitchingState>(this, USuraWeaponSwitchingState::StaticClass());
+
+	TargetingState = NewObject<USuraWeaponTargetingState>(this, USuraWeaponTargetingState::StaticClass());
+	ChargingState = NewObject<USuraWeaponChargingState>(this, USuraWeaponChargingState::StaticClass());
 
 	WeaponAnimInstance = GetAnimInstance();
 
@@ -161,7 +383,6 @@ void UACWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	{
 		CurrentState->UpdateState(this, DeltaTime);
 	}
-
 	UpdateRecoil(DeltaTime);
 }
 
@@ -189,7 +410,6 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 	// Attach the weapon to the First Person Character
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 
-	//TODO: 방식 바꾸기
 	if (WeaponName == EWeaponName::WeaponName_Rifle)
 	{
 		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_Rifle")));
@@ -198,9 +418,13 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 	{
 		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
 	}
-	else
+	else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
 	{
-		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun")));
+		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_MissileLauncher")));
+	}
+	else if (WeaponName == EWeaponName::WeaponName_RailGun)
+	{
+		AttachToComponent(Character->GetArmMesh(), AttachmentRules, FName(TEXT("Gun_RailGun")));
 	}
 
 
@@ -218,6 +442,7 @@ bool UACWeapon::AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter
 	// Set Up Widget UI Class
 	// TODO: WidgetInstance 생성은 Weapon Initialize에서만 진행하고, 키고 끄는 기능만 ActivateCrosshairWidget에서 하기
 	ActivateCrosshairWidget(true);
+	ActivateAmmoCounterWidget(true);
 
 	SetVisibility(true);
 
@@ -238,8 +463,9 @@ void UACWeapon::DetachWeaponFromPlayer()
 	}
 }
 
-void UACWeapon::FireSingleProjectile()
+void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget) 
 {
+	//TODO: Projectile 종류에 대한 정보를 input으로 받아야 하나? 아직은 잘 모르곘음
 	if (CurrentState != UnequippedState)
 	{
 		if (Character == nullptr || Character->GetController() == nullptr)
@@ -247,10 +473,25 @@ void UACWeapon::FireSingleProjectile()
 			return;
 		}
 
+		if (bShouldConsumeAmmo)
+		{
+			if (!HasAmmo())
+			{
+				return;
+			}
+		}
+
+
 		//TODO: 투사체 타입이 직사형인지 곡사형인지, 그리고 관통형인지에 따라서 Trace 방식을 달리 해야함. 우선은 단순 직사형 and 일반형(관통X)로 진행
 		FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
 		FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
 		FVector LineTraceHitLocation;
+
+		//----------------------------------------------
+		//FVector LineTraceStartLocation;
+		//FVector LineTraceDirection;
+		//FVector LineTraceHitLocation;
+		//CalculateScreenCenterWorldPositionAndDirection(LineTraceStartLocation, LineTraceDirection);
 
 		if (PerformLineTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, LineTraceHitLocation))
 		{
@@ -258,6 +499,7 @@ void UACWeapon::FireSingleProjectile()
 		}
 		else
 		{
+			UE_LOG(LogTemp, Error, TEXT("LineTrace Failed!!!!!!!!!!!!!"));
 			TargetLocationOfProjectile = LineTraceHitLocation;
 		}
 
@@ -267,14 +509,6 @@ void UACWeapon::FireSingleProjectile()
 			UWorld* const World = GetWorld();
 			if (World != nullptr)
 			{
-				//// <Old Version>
-				//APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-				//const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-				//// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-				//const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-
-				//----------------------------------------------------
-				// <New Version>
 				const FVector SpawnLocation = this->GetSocketLocation(FName(TEXT("Muzzle")));
 				const FRotator SpawnRotation = (TargetLocationOfProjectile - SpawnLocation).Rotation();
 
@@ -284,7 +518,14 @@ void UACWeapon::FireSingleProjectile()
 
 				// Spawn the projectile at the muzzle
 				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				Projectile->InitializeProjectile(Character);
+				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius);
+				if (bIsHoming)
+				{
+					Projectile->SetHomingTarget(bIsHoming, HomingTarget);
+				}
+				Projectile->LaunchProjectile();
+
+				SpawnMuzzleFireEffect(SpawnLocation, SpawnRotation);
 			}
 		}
 
@@ -294,23 +535,15 @@ void UACWeapon::FireSingleProjectile()
 			UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
 		}
 
-		// Try and play a firing animation if specified
-		//if (FireAnimation != nullptr)
-		//{
-		//	// Get the animation object for the arms mesh
-		//	//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
-		//	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-		//	if (AnimInstance != nullptr)
-		//	{
-		//		AnimInstance->Montage_Play(FireAnimation, 1.f);
-		//	}
-		//}
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-
+		if (bShouldConsumeAmmo)
+		{
+			ConsumeAmmo();
+		}
 		ApplyCameraShake();
 
 		// <Recoil>
-		AddRecoilValue();
+		AddRecoilValue(AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
 	}
 }
 
@@ -323,72 +556,75 @@ void UACWeapon::FireMultiProjectile()
 			return;
 		}
 
-		FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
-		FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
-		FVector LineTraceHitLocation;
+		if (HasAmmo())
+		{
+			FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
+			FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
+			FVector LineTraceHitLocation;
 
-		if (PerformSphereTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, SphereTraceRadius, LineTraceHitLocation))
-		{
-			TargetLocationOfProjectile = LineTraceHitLocation;
-		}
-		else
-		{
-			TargetLocationOfProjectile = LineTraceHitLocation;
-		}
-
-		// Try and fire a projectile
-		if (ProjectileClass != nullptr)
-		{
-			UWorld* const World = GetWorld();
-			if (World != nullptr)
+			if (PerformSphereTrace(LineTraceStartLocation, LineTraceDirection, LineTraceMaxDistance, SphereTraceRadius, LineTraceHitLocation))
 			{
-				const FVector SpawnLocation = this->GetSocketLocation(FName(TEXT("Muzzle")));
+				TargetLocationOfProjectile = LineTraceHitLocation;
+			}
+			else
+			{
+				TargetLocationOfProjectile = LineTraceHitLocation;
+			}
 
-				for (int pellet = 0; pellet < PelletsNum; pellet++)
-				{			
-					const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfProjectileSpread).Rotation();
+			// Try and fire a projectile
+			if (ProjectileClass != nullptr)
+			{
+				UWorld* const World = GetWorld();
+				if (World != nullptr)
+				{
+					const FVector SpawnLocation = this->GetSocketLocation(FName(TEXT("Muzzle")));
 
-					//Set Spawn Collision Handling Override
-					FActorSpawnParameters ActorSpawnParams;
-					ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+					for (int pellet = 0; pellet < PelletsNum; pellet++)
+					{
+						const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfMultiProjectileSpread).Rotation();
 
-					// Spawn the projectile at the muzzle
-					ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-					Projectile->InitializeProjectile(Character);
+						//Set Spawn Collision Handling Override
+						FActorSpawnParameters ActorSpawnParams;
+						ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+						// Spawn the projectile at the muzzle
+						ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+						Projectile->InitializeProjectile(Character, this);
+						Projectile->LaunchProjectile();
+					}
+
+					SpawnMuzzleFireEffect(SpawnLocation, (TargetLocationOfProjectile - SpawnLocation).GetSafeNormal().Rotation());
 				}
 			}
+
+			// Try and play the sound if specified
+			if (FireSound != nullptr)
+			{
+				UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+			}
+
+			StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
+
+			ConsumeAmmo();
+
+			ApplyCameraShake();
+
+			// <Recoil>
+			AddRecoilValue();
 		}
-
-		// Try and play the sound if specified
-		if (FireSound != nullptr)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
-		}
-
-		// Try and play a firing animation if specified
-		//if (FireAnimation != nullptr)
-		//{
-		//	// Get the animation object for the arms mesh
-		//	//UAnimInstance* AnimInstance = Character->GetArmMesh()->GetAnimInstance();
-		//	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
-		//	if (AnimInstance != nullptr)
-		//	{
-		//		AnimInstance->Montage_Play(FireAnimation, 1.f);
-		//	}
-		//}
-		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
-
-		ApplyCameraShake();
-
-		// <Recoil>
-		AddRecoilValue();
 	}
 }
 
+void UACWeapon::SpawnProjectile()
+{
+	//TODO: Weapon name에 따라 다른 Projectile을 spawn 하도록 하려고 했는데,
+	//그냥 BP에서 초기에 Projectile 클래스를 지정해주면 되는 것이여서 일단은 보류중임.
+
+}
 
 void UACWeapon::ZoomToggle()
 {
-	if (CurrentState != UnequippedState)
+	if (CurrentState == IdleState || CurrentState == FiringState)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Zoom!!!"));
 
@@ -467,23 +703,65 @@ void UACWeapon::StartFireAnimation(UAnimMontage* CharacterFireAnimation, UAnimMo
 }
 void UACWeapon::StartAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation, float CharacterAnimPlayRate, float WeaponAnimPlayRate)
 {
-	if (CharacterAnimInstance != nullptr)
+	if (CharacterAnimInstance != nullptr && CharacterAnimation != nullptr)
 	{
 		if (!CharacterAnimInstance->Montage_IsPlaying(CharacterAnimation))
 		{
-			CharacterAnimInstance->Montage_Play(CharacterAnimation, CharacterAnimPlayRate / CharacterAnimation->GetPlayLength());
+			//TODO: Blend 세팅 제대로 해야함
+			//FMontageBlendSettings BlendSettings;
+			//BlendSettings.Blend.BlendTime = 0.1f;
+
+			CharacterAnimation->BlendIn.SetBlendOption(EAlphaBlendOption::Linear);
+			CharacterAnimation->BlendIn.SetAlpha(10.f);
+			CharacterAnimation->BlendOut.SetBlendOption(EAlphaBlendOption::Linear);
+			CharacterAnimation->BlendOut.SetAlpha(10.f);
+	
+			UE_LOG(LogTemp, Warning, TEXT("Reloading Weapon Animation!!!"));
+			CharacterAnimInstance->Montage_Play(CharacterAnimation, CharacterAnimation->GetPlayLength() / CharacterAnimPlayRate);
+		}
+	}
+
+	if (WeaponAnimInstance != nullptr && WeaponAnimation != nullptr)
+	{
+		if (!GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
+		{
+			GetAnimInstance()->Montage_Play(WeaponAnimation, WeaponAnimation->GetPlayLength() / WeaponAnimPlayRate);
+		}
+	}
+}
+void UACWeapon::CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* WeaponAnimation)
+{
+	if (CharacterAnimInstance != nullptr)
+	{
+		if (CharacterAnimInstance->Montage_IsPlaying(CharacterAnimation))
+		{
+			CharacterAnimInstance->Montage_Stop(0.f, CharacterAnimation);
 		}
 	}
 
 	if (WeaponAnimInstance != nullptr)
 	{
-		if (!GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
+		if (GetAnimInstance()->Montage_IsPlaying(WeaponAnimation))
 		{
-			GetAnimInstance()->Montage_Play(WeaponAnimation, WeaponAnimPlayRate / WeaponAnimation->GetPlayLength());
+			GetAnimInstance()->Montage_Stop(0.f, WeaponAnimation);
 		}
 	}
 }
 #pragma endregion
+
+void UACWeapon::SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotation)
+{
+	if (MuzzleFireEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(), 
+			MuzzleFireEffect,
+			SpawnLocation, 
+			SpawnRotation, 
+			FVector(1.0f),
+			true);
+	}
+}
 
 bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation)
 {
@@ -496,14 +774,18 @@ bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, f
 	Params.AddIgnoredComponent(this);
 	Params.AddIgnoredActor(Character);
 
+	FCollisionResponseParams ResponseParams;
+	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel1, ECR_Ignore);
+	ResponseParams.CollisionResponse.SetResponse(ECC_GameTraceChannel3, ECR_Ignore);
+
 	bool bHit = GetWorld()->LineTraceSingleByChannel(
 		HitResult,           // 충돌 결과 저장
 		Start,               // 시작 지점
 		End,                 // 끝 지점
 		ECC_Visibility,      // 충돌 채널
-		Params               // 쿼리 매개변수
+		Params,              // 쿼리 매개변수
+		ResponseParams
 	);
-
 
 	if (bHit)
 	{
@@ -562,6 +844,31 @@ bool UACWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection
 	return bHit;
 }
 
+FVector UACWeapon::CalculateScreenCenterWorldPositionAndDirection(FVector& OutWorldPosition, FVector& OutWorldDirection) const
+{
+	if (!CharacterController || !CharacterController->PlayerCameraManager)
+	{
+		return FVector::ZeroVector;
+	}
+
+	// 화면 크기 가져오기
+	FVector2D ViewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
+
+	// 화면 중앙 좌표 계산
+	FVector2D ScreenCenter(ViewportSize.X / 2.0f, ViewportSize.Y / 2.0f);
+
+	// 화면 중심의 월드 위치와 방향 가져오기
+	FVector WorldPosition, WorldDirection;
+	if (CharacterController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, WorldPosition, WorldDirection))
+	{
+		OutWorldPosition = WorldPosition;
+		OutWorldDirection = WorldDirection;
+		return WorldPosition + (WorldDirection * 15.0f); // TODO: 임의 거리를 사용했음. 수치 조절 가능하도록 구현하기
+	}
+
+	return FVector::ZeroVector;
+}
+
 void UACWeapon::SetAimSocketTransform()
 {
 	FTransform AimSocketTransform = GetSocketTransform(FName(TEXT("Aim")));
@@ -582,12 +889,50 @@ FTransform UACWeapon::GetAimSocketRelativeTransform()
 }
 
 #pragma region Equip/Unequip
+void UACWeapon::SwitchWeapon(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+{
+	//TODO: Reloading 중이였다면, CancelReload 해줘야함
+	if (CurrentState == ReloadingState)
+	{
+		CancelReload();
+	}
+
+	ChangeState(SwitchingState);
+
+	if (bEquip)
+	{
+		AttachWeaponToPlayer(TargetCharacter);
+		GetWorld()->GetTimerManager().SetTimer(SwitchingTimer, [this, TargetCharacter, bEquip]() {EndWeaponSwitch(TargetCharacter, bEquip); }, WeaponSwitchingRate, false);
+		StartAnimation(AM_Equip_Character, nullptr, WeaponSwitchingRate, WeaponSwitchingRate);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(SwitchingTimer, [this, TargetCharacter, bEquip]() {EndWeaponSwitch(TargetCharacter, bEquip); }, WeaponSwitchingRate, false);
+		StartAnimation(AM_Unequip_Character, nullptr, WeaponSwitchingRate, WeaponSwitchingRate);
+	}
+}
+void UACWeapon::EndWeaponSwitch(ASuraCharacterPlayerWeapon* TargetCharacter, bool bEquip)
+{
+	if (bEquip)
+	{
+		EquipWeapon(TargetCharacter);
+	}
+	else
+	{
+		UnequipWeapon(TargetCharacter);
+		//TODO: 이걸 굳이 Interface로 처리했어야 했나? 다른 방법이 더 좋을 것 같음
+		if (TargetCharacter && TargetCharacter->GetWeaponSystem()
+			&& TargetCharacter->GetWeaponSystem()->GetClass()->ImplementsInterface(UWeaponInterface::StaticClass()))
+		{
+			Cast<IWeaponInterface>(TargetCharacter->GetWeaponSystem())->SwitchToOtherWeapon();
+		}
+	}
+}
 void UACWeapon::EquipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	// TODO: 함수 최적화 해야함
 	UE_LOG(LogTemp, Warning, TEXT("Equip Weapon!!!"));
-	AttachWeaponToPlayer(TargetCharacter);
-
+	//AttachWeaponToPlayer(TargetCharacter);
 	SetInputActionBinding();
 
 	ChangeState(IdleState);
@@ -597,7 +942,6 @@ void UACWeapon::UnequipWeapon(ASuraCharacterPlayerWeapon* TargetCharacter)
 {
 	// TODO: Detach 전에 처리해야하는 것들 처리해야함
 	ResetInputActionBinding();
-
 	DetachWeaponFromPlayer();
 
 	UE_LOG(LogTemp, Warning, TEXT("Unequip Weapon!!!"));
@@ -614,33 +958,46 @@ void UACWeapon::SetInputActionBinding()
 			{
 				if (WeaponName == EWeaponName::WeaponName_Rifle)
 				{
-					// FullAuto Shot
-					LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot);
-					EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot);
-
-					//TODO: Zoom을 Holding 방식으로 바꿔야함
-					// Zoom Toggle
-					RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle);
-
-					// Reload
-					RButtonActionBinding = &EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+					//FullAuto Shot
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &UACWeapon::StartFullAutoShot));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &UACWeapon::StopFullAutoShot));
+					//Zoom
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle));
+					//Reload
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
 				}
 				else if (WeaponName == EWeaponName::WeaponName_ShotGun)
 				{
-					// Fire Single Shot
-					LeftMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::FireMultiProjectile);
-
-					// Fire Burst Shot
-					RightMouseButtonActionBinding = &EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire);
-
-					// Reload
-					RButtonActionBinding = &EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload);
+					//Fire Single Shot
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleSingleFire));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireBurstShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleBurstFire));
+					//Reload
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
+				}
+				else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
+				{
+					//Fire Single Shot
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(FireSingleShotAction, ETriggerEvent::Started, this, &UACWeapon::HandleSingleFire));
+					//Targeting
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(HoldAction, ETriggerEvent::Triggered, this, &UACWeapon::StartTargetDetection));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(HoldAction, ETriggerEvent::Completed, this, &UACWeapon::StopTargetDetection));
+					//Reload
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
+				}
+				else if (WeaponName == EWeaponName::WeaponName_RailGun)
+				{
+					//Charging
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Triggered, this, &UACWeapon::StartCharge));
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ChargeAction, ETriggerEvent::Completed, this, &UACWeapon::StopCharge));
+					//Zoom
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &UACWeapon::ZoomToggle));
+					//Reload
+					InputActionBindingHandles.Add(&EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &UACWeapon::HandleReload));
 				}
 			}
 		}
 	}
 }
-
 void UACWeapon::ResetInputActionBinding()
 {
 	if (Character)
@@ -649,21 +1006,11 @@ void UACWeapon::ResetInputActionBinding()
 		{
 			if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 			{
-				//EnhancedInputComponent->RemoveBinding(*RightMouseButtonActionBinding);
-				//EnhancedInputComponent->RemoveBinding(*LeftMouseButtonActionBinding);
-				if (EnhancedInputComponent->RemoveBinding(*RightMouseButtonActionBinding))
+				for (FInputBindingHandle* bindinghandle : InputActionBindingHandles)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Left Action Binding Removed!"));
+					EnhancedInputComponent->RemoveBinding(*bindinghandle);
 				}
-				if (EnhancedInputComponent->RemoveBinding(*LeftMouseButtonActionBinding))
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Right Action Binding Removed!"));
-				}
-				if (EnhancedInputComponent->RemoveBinding(*RButtonActionBinding))
-				{
-					UE_LOG(LogTemp, Warning, TEXT("R Action Binding Removed!"));
-				}
-
+				InputActionBindingHandles.Empty();
 			}
 		}
 	}
@@ -675,38 +1022,110 @@ void UACWeapon::HandleReload()
 {
 	if (CurrentState == IdleState)
 	{
-		ChangeState(ReloadingState);
-		StartAnimation(AM_Reload_Character, AM_Reload_Weapon, ReloadingTime, ReloadingTime);
+		if (NumOfLeftAmmo < MaxAmmo)
+		{
+			//TODO: ReloadingState의 EnterState에서 StartReload 해도 될 듯
+			ChangeState(ReloadingState);
+			//StartReload();
+		}
 	}
 }
-void UACWeapon::ReloadingEnd()
+void UACWeapon::CancelReload()
 {
+	CancelAnimation(AM_Reload_Character, AM_Reload_Weapon);
+	GetWorld()->GetTimerManager().ClearTimer(ReloadingTimer);
+}
+void UACWeapon::StartReload()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Start Reload!!!"));
+
+	if (bIsZoomIn)
+	{
+		ZoomOut();
+	}
+
+	StartAnimation(AM_Reload_Character, AM_Reload_Weapon, ReloadingTime, ReloadingTime);
+	GetWorld()->GetTimerManager().SetTimer(ReloadingTimer, this, &UACWeapon::StopReload, ReloadingTime, false);
+}
+void UACWeapon::StopReload()
+{
+	ReloadAmmo();
 	ChangeState(IdleState);
+}
+
+void UACWeapon::ConsumeAmmo()
+{
+	if (NumOfLeftAmmo > 0)
+	{
+		NumOfLeftAmmo--;
+		if (AmmoCounterWidget)
+		{
+			AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+		}
+	}
+}
+void UACWeapon::ReloadAmmo()
+{
+	NumOfLeftAmmo = MaxAmmo;
+	if (AmmoCounterWidget)
+	{
+		AmmoCounterWidget->UpdateAmmoCount(NumOfLeftAmmo);
+	}
+}
+bool UACWeapon::HasAmmo()
+{
+	return (NumOfLeftAmmo > 0);
+}
+void UACWeapon::AutoReload()
+{
+	if (bCanAutoReload)
+	{
+		if (!HasAmmo())
+		{
+			ChangeState(ReloadingState);
+		}
+	}
+}
+void UACWeapon::ReloadingEnd() //Legacy: 사용 안함. animation이 끝날 때의 처리를 위해 남겨 둠.
+{
+	UE_LOG(LogTemp, Warning, TEXT("Reloading End!!!"));
 }
 #pragma endregion
 
-void UACWeapon::ActivateCrosshairWidget(bool bflag)
+void UACWeapon::Create3DUI()
 {
-	//if (bflag)
+	////RenderTarget 생성
+	//RenderTarget = NewObject<UTextureRenderTarget2D>();
+	//RenderTarget->InitAutoFormat(512, 512); // UI 해상도 설정
+	//RenderTarget->ClearColor = FLinearColor::Transparent;
+	//RenderTarget->UpdateResource();
+
+	////UUserWidget을 RenderTarget에 그리기
+	//UUserWidget* AmmoCounterWidget = CreateWidget<UUserWidget>(GetWorld(), LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/AmmoCounterWidget_BP.AmmoCounterWidget_BP_C")));
+	//if (AmmoCounterWidget)
 	//{
-	//	if (CrosshairWidgetClass)
-	//	{
-	//		CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
-	//		if (CrosshairWidget)
-	//		{
-	//			CrosshairWidget->AddToViewport();
-	//		}
-	//	}
-	//}
-	//else
-	//{
-	//	if (CrosshairWidget)
-	//	{
-	//		CrosshairWidget->RemoveFromViewport();
-	//		CrosshairWidget = nullptr;
-	//	}
+	//	UWidgetLayoutLibrary::ProjectWorldLocationToWidgetPosition(
+	//		GetWorld()->GetFirstPlayerController(),
+	//		GetComponentLocation(),
+	//		RenderTarget-,
+	//		true
+	//	);
+
+	//	AmmoCounterWidget->AddToViewport();
 	//}
 
+	////머티리얼 동적 인스턴스 생성 및 RenderTarget 적용
+	//UMaterialInterface* BaseMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_UI_BaseMaterial.M_UI_BaseMaterial"));
+	//if (BaseMaterial)
+	//{
+	//	WidgetMaterialInstance = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+	//	WidgetMaterialInstance->SetTextureParameterValue(FName("RenderTargetTexture"), RenderTarget);
+	//	SetMaterial(0, WidgetMaterialInstance);
+	//}
+}
+
+void UACWeapon::ActivateCrosshairWidget(bool bflag)
+{
 	if (bflag)
 	{
 		if (CrosshairWidget)
@@ -722,16 +1141,36 @@ void UACWeapon::ActivateCrosshairWidget(bool bflag)
 		}
 	}
 }
+void UACWeapon::ActivateAmmoCounterWidget(bool bflag)
+{
+	if (bflag)
+	{
+		if (AmmoCounterWidget)
+		{
+			AmmoCounterWidget->AddToViewport();
+		}
+	}
+	else
+	{
+		if (AmmoCounterWidget)
+		{
+			AmmoCounterWidget->RemoveFromViewport();
+		}
+	}
+}
 
 #pragma region FireMode
 void UACWeapon::HandleSingleFire()
 {
+	if (CurrentState == IdleState)
+	{
+		ChangeState(FiringState);
+		StartSingleShot();
+	}
 }
-
 void UACWeapon::HandleBurstFire()
 {
-	if (CurrentState != UnequippedState
-		&& CurrentState != FiringState)
+	if (CurrentState == IdleState)
 	{
 		ChangeState(FiringState);
 
@@ -745,10 +1184,43 @@ void UACWeapon::HandleBurstFire()
 		}
 	}
 }
-
 void UACWeapon::HandleFullAutoFire()
 {
+	if (CurrentState == IdleState)
+	{
+		ChangeState(FiringState);
+		StartSingleShot();
+	}
+}
+#pragma endregion
 
+#pragma region FireMode/SingleShot
+void UACWeapon::StartSingleShot(float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+{
+	//TODO: 방식을 바꿔야 함 
+	//TODO: Enum에 따라서 다르게 함수 호출하는 방식이 아니라, StartSingleShot 자체에 Input을 넣어서 필요한 곳에서 각각 다른 Input 넣어서 작동하도록 해야함
+	if (WeaponName == EWeaponName::WeaponName_Rifle)
+	{
+		FireSingleProjectile();
+	}
+	else if (WeaponName == EWeaponName::WeaponName_ShotGun)
+	{
+		FireMultiProjectile();
+	}
+	else if (WeaponName == EWeaponName::WeaponName_MissileLauncher)
+	{
+		FireSingleProjectile();
+	}
+	else if (WeaponName == EWeaponName::WeaponName_RailGun)
+	{
+		FireSingleProjectile(true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(SingleShotTimer, this, &UACWeapon::StopSingleShot, SingleShotDelay, false);
+}
+void UACWeapon::StopSingleShot()
+{
+	ChangeState(IdleState);
 }
 #pragma endregion
 
@@ -789,36 +1261,472 @@ void UACWeapon::StopBurstFire()
 #pragma region FireMode/FullAuto
 void UACWeapon::StartFullAutoShot()
 {
-	ChangeState(FiringState);
-
-	UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Started!!!"));
-	if (!GetWorld()->GetTimerManager().IsTimerActive(FullAutoShotTimer))
+	if (CurrentState == IdleState)
 	{
-		FireSingleProjectile();
-		GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, this, &UACWeapon::FireSingleProjectile, FullAutoShotFireRate, true);
+		ChangeState(FiringState);
+
+		UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Started!!!"));
+		if (!GetWorld()->GetTimerManager().IsTimerActive(FullAutoShotTimer))
+		{
+			FireSingleProjectile();
+			//GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, this, &UACWeapon::FireSingleProjectile, FullAutoShotFireRate, true);
+			bool bShouldConsumeAmmo = true;
+			float AdditionalDamage = 0.f;
+			bool bCanHoming = false;
+			GetWorld()->GetTimerManager().SetTimer(FullAutoShotTimer, [this, bShouldConsumeAmmo, AdditionalDamage, bCanHoming]() {FireSingleProjectile(bShouldConsumeAmmo, AdditionalDamage, bCanHoming); }, FullAutoShotFireRate, true);
+		}
 	}
 }
-
 void UACWeapon::StopFullAutoShot()
 {
-	UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
-	GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
+	//TODO: 방식에 마음에 안듦. 다른 방법 생각해보기
+	if (CurrentState == FiringState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FullAutoShot Ended!!!"));
+		GetWorld()->GetTimerManager().ClearTimer(FullAutoShotTimer);
+
+		ChangeState(IdleState);
+	}
+}
+#pragma endregion
+
+#pragma region FireMode/Targeting
+void UACWeapon::StartTargetDetection()
+{
+	if (CurrentState == IdleState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Start Target Detection!!!"));
+
+		ChangeState(TargetingState);
+		UpdateTargetDetection(GetWorld()->GetDeltaSeconds());
+	}
+}
+void UACWeapon::UpdateTargetDetection(float DeltaTime) //TODO: 해당 타겟 혹은 기존 타겟의 생존 여부도 판단해서 Update 해야함
+{
+	ElapsedTimeAfterTargetingStarted += DeltaTime;
+
+	TArray<AActor*> NewOverlappedActors;
+
+	CurrentTargetDetectionRadius = (FMath::Clamp(ElapsedTimeAfterTargetingStarted, 0.f, TimeToReachMaxTargetDetectionRange) / TimeToReachMaxTargetDetectionRange) * MaxTargetDetectionRadius;
+	CurrentTargetDetectionAngle = (FMath::Clamp(ElapsedTimeAfterTargetingStarted, 0.f, TimeToReachMaxTargetDetectionRange) / TimeToReachMaxTargetDetectionRange) * MaxTargetDetectionAngle;
+
+	SearchOverlappedActor(Character->GetActorLocation(), CurrentTargetDetectionRadius, NewOverlappedActors);
+
+
+	//TODO: Targets에 대한 Update가 필요함. 죽었으면 Targets에서 제외시켜야함
+	// TargetMarker의 경우에는 Visibility만 false로 바꿔주는 식으로 관리하기
+
+	for (TSet<AActor*>::TIterator It = Targets.CreateIterator(); It; ++It)
+	{
+		AActor* PreviousTarget = *It;
+		if (IsValid(PreviousTarget) && CheckIfTargetIsBlockedByObstacle(PreviousTarget))
+		{
+			UUserWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(PreviousTarget);
+			(*TargetMarkerPtr)->RemoveFromViewport();
+			(*TargetMarkerPtr)->RemoveFromParent();
+			TargetMarkerWidgets.Remove(*TargetMarkerPtr);
+
+			It.RemoveCurrent();
+			MapTargetActorToWidget.Remove(PreviousTarget);
+		}
+	}
+
+	for (AActor* NewOverlappedActor : NewOverlappedActors)
+	{
+		if (Targets.Num() >= MaxTargetNum || ElapsedTimeAfterTargetingStarted > MaxTargetDetectionTime)
+		{
+			break;
+		}
+		if (!Targets.Contains(NewOverlappedActor))
+		{
+			if (IsInViewport(GetScreenPositionOfWorldLocation(NewOverlappedActor->GetActorLocation()).Get<0>(), 1.f, 1.f))
+			{
+				if (GetUnsignedAngleBetweenVectors(Character->GetActorForwardVector(), NewOverlappedActor->GetActorLocation() - Character->GetActorLocation(), FVector::ZAxisVector) < CurrentTargetDetectionAngle)
+				{
+					if (!CheckIfTargetIsBlockedByObstacle(NewOverlappedActor))
+					{
+						Targets.Add(NewOverlappedActor);
+						UUserWidget* NewTargetMarker = CreateTargetMarkerWidget(NewOverlappedActor);
+						if (NewTargetMarker)
+						{
+							TargetMarkerWidgets.Add(NewTargetMarker);
+							NewTargetMarker->AddToViewport();
+							NewTargetMarker->SetAlignmentInViewport(FVector2D(0.5f, 0.5f));
+							NewTargetMarker->SetVisibility(ESlateVisibility::Hidden);
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+	GetWorld()->GetTimerManager().SetTimer(TargetDetectionTimer, [this, DeltaSeconds]() {UpdateTargetDetection(DeltaSeconds); }, DeltaSeconds, false);
+}
+void UACWeapon::StopTargetDetection()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Stop Target Detection!!!"));
+
+	GetWorld()->GetTimerManager().ClearTimer(TargetDetectionTimer);
+
+	ElapsedTimeAfterTargetingStarted = 0.f;
+	CurrentTargetDetectionRadius = 0.f;
+	CurrentTargetDetectionAngle = 0.f;
+
+	ResetTargetMarkers();
+	//TODO: Targets에 저장된 Target을 향해 유도 미사일 발사 시작
+	//일단은 Targets를 초기화 시키기만 함
+	//Targets.Empty();
+	//MapTargetActorToWidget의 요소들을 전부 삭제해야함 -> 이래서 Widget을 저장하는 컨테이너가 필요할 듯
+
+	TArray<AActor*> TargetsArray = Targets.Array();
+	Targets.Empty();
+	StartMissileLaunch(TargetsArray);
+}
+
+bool UACWeapon::SearchOverlappedActor(FVector CenterLocation, float SearchRadius, TArray<AActor*>& OverlappedActors)
+{
+	TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+	traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+	TArray<AActor*> ignoreActors;
+	ignoreActors.Init(Character, 1);
+	bool bIsAnyActorExist = UKismetSystemLibrary::SphereOverlapActors(GetWorld(), CenterLocation, SearchRadius, traceObjectTypes, nullptr, ignoreActors, OverlappedActors);
+
+	return bIsAnyActorExist;
+}
+TTuple<FVector2D, bool> UACWeapon::GetScreenPositionOfWorldLocation(const FVector& SearchLocation) const
+{
+	FVector2D ScreenLocation = FVector2D::ZeroVector;
+	bool bResult = UGameplayStatics::ProjectWorldToScreen(CharacterController, SearchLocation, ScreenLocation);
+
+	return MakeTuple(ScreenLocation, bResult);
+}
+bool UACWeapon::IsInViewport(FVector2D ActorScreenPosition, float ScreenRatio_Width, float ScreenRatio_Height) const
+{
+	FVector2D ViewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
+
+	bool bIsInWidth = true;
+	bool bIsInHeight = true;
+
+	// Check Width
+	if (ScreenRatio_Width == 0.0f || UKismetMathLibrary::Abs(ScreenRatio_Width) > 1.0f || (ScreenRatio_Width == (1.0f - ScreenRatio_Width)))
+	{
+		if (ActorScreenPosition.X >= 0.0f && ActorScreenPosition.X <= ViewportSize.X)
+		{
+			bIsInWidth = true;
+		}
+		else
+		{
+			bIsInWidth = false;
+		}
+	}
+	else
+	{
+		float LargeScreenRatio_Width;
+		float SmallScreenRatio_Width;
+
+		if (ScreenRatio_Width < (1.0f - ScreenRatio_Width))
+		{
+			LargeScreenRatio_Width = 1.0f - ScreenRatio_Width;
+			SmallScreenRatio_Width = ScreenRatio_Width;
+		}
+		else
+		{
+			LargeScreenRatio_Width = ScreenRatio_Width;
+			SmallScreenRatio_Width = 1.0f - ScreenRatio_Width;
+		}
+
+		if (ActorScreenPosition.X >= ViewportSize.X * SmallScreenRatio_Width && ActorScreenPosition.X <= ViewportSize.X * LargeScreenRatio_Width)
+		{
+			bIsInWidth = true;
+		}
+		else
+		{
+			bIsInWidth = false;
+		}
+	}
+
+	// Check Height
+	if (ScreenRatio_Height == 0.0f || UKismetMathLibrary::Abs(ScreenRatio_Height) > 1.0f || (ScreenRatio_Height == (1.0f - ScreenRatio_Height)))
+	{
+		if (ActorScreenPosition.Y >= 0.0f && ActorScreenPosition.Y <= ViewportSize.Y)
+		{
+			bIsInHeight = true;
+		}
+		else
+		{
+			bIsInHeight = false;
+		}
+	}
+	else
+	{
+		float LargeScreenRatio_Height;
+		float SmallScreenRatio_Height;
+
+		if (ScreenRatio_Height < (1.0f - ScreenRatio_Height))
+		{
+			LargeScreenRatio_Height = 1.0f - ScreenRatio_Height;
+			SmallScreenRatio_Height = ScreenRatio_Height;
+		}
+		else
+		{
+			LargeScreenRatio_Height = ScreenRatio_Height;
+			SmallScreenRatio_Height = 1.0f - ScreenRatio_Height;
+		}
+
+		if (ActorScreenPosition.Y >= ViewportSize.Y * SmallScreenRatio_Height && ActorScreenPosition.Y <= ViewportSize.Y * LargeScreenRatio_Height)
+		{
+			bIsInHeight = true;
+		}
+		else
+		{
+			bIsInHeight = false;
+		}
+	}
+
+	// Return
+	if (bIsInWidth && bIsInHeight)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+float UACWeapon::GetUnsignedAngleBetweenVectors(const FVector& VectorA, const FVector& VectorB, const FVector& Axis)
+{
+	FVector NormalizedA = VectorA.GetSafeNormal();
+	FVector NormalizedB = VectorB.GetSafeNormal();
+
+	//두 벡터 사이의 회전을 나타내는 쿼터니언 생성
+	FQuat Quat = FQuat::FindBetweenNormals(NormalizedA, NormalizedB);
+
+	//회전 축에 대한 방향성을 고려한 각도 계산
+	float Angle = Quat.GetAngle();  // 기본적으로 라디안 단위로 각도를 반환
+
+	//쿼터니언을 축에 투영하여 방향 결정
+	FVector RotationAxis = Quat.GetAxisZ();  // 쿼터니언의 회전 축을 구함 (축은 X, Y, Z 중 하나를 선택 가능)
+
+	float DotProduct = FVector::DotProduct(RotationAxis, Axis);
+
+	// DotProduct가 양수면 각도는 그대로, 음수면 반대 방향으로 각도 부호를 변경
+	float SignedAngle = Angle * FMath::Sign(DotProduct);
+
+	//각도를 도 단위로 변환
+	return FMath::RadiansToDegrees(Angle);
+}
+bool UACWeapon::CheckIfTargetIsBlockedByObstacle(AActor* target)
+{
+	float Radius = 10.f;
+
+	FVector StartPoint = Character->GetActorLocation();
+	FVector EndPoint = target->GetActorLocation();
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+
+	TArray<FHitResult> HitResults;
+	FCollisionQueryParams QueryParams;
+	QueryParams.bTraceComplex = false;
+	QueryParams.bReturnPhysicalMaterial = false;
+	QueryParams.AddIgnoredActor(Character);
+
+	bool bHit = GetWorld()->SweepMultiByObjectType(
+		HitResults,
+		StartPoint,
+		EndPoint,
+		FQuat::Identity,
+		FCollisionObjectQueryParams(ObjectTypes),
+		FCollisionShape::MakeSphere(Radius),
+		QueryParams
+	);
+	return bHit;
+}
+UUserWidget* UACWeapon::CreateTargetMarkerWidget(AActor* TargetActor)
+{
+	if (TargetMarkerWidgetClass)
+	{
+		UUserWidget* NewTargetMarkerWidget = CreateWidget<UUserWidget>(GetWorld(), TargetMarkerWidgetClass);
+		MapTargetActorToWidget.Add(TargetActor, NewTargetMarkerWidget);
+		return NewTargetMarkerWidget;
+	}
+	return nullptr;
+}
+void UACWeapon::UpdateTargetMarkers()
+{
+	for (AActor* Target : Targets)
+	{
+		FVector TargetLocation = Target->GetActorLocation();
+		FVector TargetOffset(0.f, 0.f, 50.f);
+
+		UUserWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(Target);
+
+		FVector2D TargetScreenPosition = GetScreenPositionOfWorldLocation(TargetLocation + TargetOffset).Get<0>();
+
+		if (IsInViewport(TargetScreenPosition, 1.f, 1.f))
+		{
+			(*TargetMarkerPtr)->SetPositionInViewport(TargetScreenPosition);
+
+			if ((*TargetMarkerPtr)->Visibility == ESlateVisibility::Hidden)
+			{
+				(*TargetMarkerPtr)->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
+		else
+		{
+			if ((*TargetMarkerPtr)->Visibility == ESlateVisibility::Visible)
+			{
+				(*TargetMarkerPtr)->SetVisibility(ESlateVisibility::Hidden);
+			}
+		}
+	}
+}
+void UACWeapon::ResetTargetMarkers()
+{
+	for (AActor* Target : Targets)
+	{
+		UUserWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(Target);
+
+		(*TargetMarkerPtr)->RemoveFromViewport();
+		(*TargetMarkerPtr)->RemoveFromParent();
+	}
+	TargetMarkerWidgets.Empty();
+	MapTargetActorToWidget.Empty();
+}
+
+void UACWeapon::StartMissileLaunch(TArray<AActor*> TargetActors)
+{
+	ConfirmedTargets = TargetActors;
+	CurrentTargetIndex = 0;
+	if (ConfirmedTargets.Num() == 0)
+	{
+		StopMissileLaunch();
+	}
+	else
+	{
+		ChangeState(FiringState);
+		UpdateMissileLaunch();
+	}
+}
+void UACWeapon::UpdateMissileLaunch()
+{
+	FireSingleProjectile(false, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
+	CurrentTargetIndex++;
+	if (ConfirmedTargets.Num() <= CurrentTargetIndex)
+	{
+		StopMissileLaunch();
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(MissileLaunchTimer, this, &UACWeapon::UpdateMissileLaunch, MissileLaunchDelay, false);
+	}
+}
+void UACWeapon::StopMissileLaunch()
+{
+	ConfirmedTargets.Empty();
+	CurrentTargetIndex = 0;
 
 	ChangeState(IdleState);
 }
 #pragma endregion
 
+#pragma region FireMode/Charging
+void UACWeapon::StartCharge()
+{
+	//TODO: Chargning 하는 동안 CameraShake 적용, Charging 시간에 따라 Camera Shake 정도가 점점 더 커지게 하기
+	if (CurrentState == IdleState)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Start Charging!!!"));
+
+		ChangeState(ChargingState);
+		UpdateCharge();
+	}
+
+}
+void UACWeapon::UpdateCharge()
+{
+	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+	ElapsedChargeTime += DeltaSeconds;
+
+	// TODO: Camera Shake Test 적용하기
+	// TODO: Charging 정도에 따라 CameraShake 정도를 다르게 하기
+	if (Character)
+	{
+		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+		{
+			if (ChargingCameraShakeClass)
+			{
+				float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 2.f); //TODO: Max는 멤버변수로 지정하던가 해야함
+				UCameraShakeBase* CameraShakeIntance = PlayerController->PlayerCameraManager->StartCameraShake(ChargingCameraShakeClass, ChargingCamShakeScale);
+				UWeaponCameraShakeBase* CamShake = Cast<UWeaponCameraShakeBase>(CameraShakeIntance);
+				if (CamShake)
+				{
+					//TODO: 디테일하게 속성값을 설정 가능하지만, 너무 복잡하고, 굳이?임
+					//CamShake->SetZero();
+				}
+			}
+		}
+	}
+
+	if (bAutoFireAtMaxChargeTime)
+	{
+		if (ElapsedChargeTime > MaxChargeTime)
+		{
+			StopCharge();
+		}
+		else
+		{
+			GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &UACWeapon::UpdateCharge, DeltaSeconds, false);
+		}
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(ChargingTimer, this, &UACWeapon::UpdateCharge, DeltaSeconds, false);
+	}
+}
+void UACWeapon::StopCharge()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Stop Charging!!!"));
+
+	if (CurrentState == ChargingState)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(ChargingTimer);
+
+		ChangeState(FiringState);
+
+		float ChargingAdditionalDamage = 0.f;
+		float AdditionalRecoilAmountPitch = 0.f;
+		float AdditionalRecoilAmountYaw = 0.f;
+		float AdditionalProjectileRadius = 0.f;
+		if (ElapsedChargeTime > ChargeTimeThreshold)
+		{
+			// TODO: Clamp 해줘야함...
+			ChargingAdditionalDamage = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalDamageBase;
+			AdditionalRecoilAmountPitch = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountPitchBase;
+			AdditionalRecoilAmountYaw = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountYawBase;
+			AdditionalProjectileRadius = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalProjectileRadiusBase;
+		}
+
+		StartSingleShot(ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+
+		ElapsedChargeTime = 0.f;
+	}
+}
+#pragma endregion
+
 
 #pragma region Recoil
-void UACWeapon::AddRecoilValue()
+void UACWeapon::AddRecoilValue(float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw)
 {
 	bIsRecoiling = true;
 
 	//float RandRecoilPitch = FMath::RandRange(RecoilAmountPitch * 0.8f, RecoilAmountPitch * 1.2f) * (-1);
 	//float RandRecoilYaw = FMath::RandRange(-RecoilAmountYaw, RecoilAmountYaw);
 
-	float RandRecoilPitch = FMath::RandRange(RecoilAmountPitch * RecoilRangeMinPitch , RecoilAmountPitch * RecoilRangeMaxPitch) * (-1);
-	float RandRecoilYaw = FMath::RandRange(RecoilAmountYaw * RecoilRangeMinYaw, RecoilAmountYaw * RecoilRangeMaxYaw);
+	float RandRecoilPitch = FMath::RandRange((RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilRangeMinPitch , (RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilRangeMaxPitch) * (-1);
+	float RandRecoilYaw = FMath::RandRange((RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilRangeMinYaw, (RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilRangeMaxYaw);
 
 	TotalTargetRecoilValuePitch += RandRecoilPitch;
 	TotalTargetRecoilValueYaw += RandRecoilYaw;
@@ -914,7 +1822,6 @@ void UACWeapon::RecoverRecoil(float DeltaTime)
 		bIsRecoiling = false;
 	}
 }
-
 void UACWeapon::UpdateRecoil(float DeltaTime)
 {
 	if (Character)
@@ -931,6 +1838,8 @@ void UACWeapon::UpdateRecoil(float DeltaTime)
 #pragma region Camera
 void UACWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
 {
+	bIsUsingPlayerCamFov = true;
+
 	if (GetWorld()->GetTimerManager().IsTimerActive(CamSettingTimer))
 	{
 		GetWorld()->GetTimerManager().ClearTimer(CamSettingTimer);
@@ -940,6 +1849,8 @@ void UACWeapon::StartCameraSettingChange(FWeaponCamSettingValue* CamSetting)
 }
 void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* CamSetting)
 {
+	//UE_LOG(LogTemp, Error, TEXT("UpdateCameraSetting"));
+
 	if (Character)
 	{
 		UCameraComponent* Camera = Character->GetCamera();
@@ -956,9 +1867,14 @@ void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* Cam
 			FRotator CameraRelativeRotation_Error = CamSetting->CameraRelativeRotation - Camera->GetRelativeRotation();
 			CameraRelativeRotation_Error.Normalize();
 
-			if (CameraRelativeRotation_Error.IsNearlyZero()
-				&& FVector::Dist(CamSetting->CameraRelativeLocation, Camera->GetRelativeLocation()) < 0.01
-				//&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < KINDA_SMALL_NUMBER
+			//if (CameraRelativeRotation_Error.IsNearlyZero()
+			//	&& FVector::Dist(CamSetting->CameraRelativeLocation, Camera->GetRelativeLocation()) < 0.01
+			//	//&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < KINDA_SMALL_NUMBER
+			//	&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < 0.05)
+			//{
+			//	StopCameraSettingChange();
+			//}
+			if (FVector::Dist(CamSetting->CameraRelativeLocation, Camera->GetRelativeLocation()) < 0.01
 				&& FMath::Abs(CamSetting->FOV - Camera->FieldOfView) < 0.01)
 			{
 				StopCameraSettingChange();
@@ -973,7 +1889,17 @@ void UACWeapon::UpdateCameraSetting(float DeltaTime, FWeaponCamSettingValue* Cam
 }
 void UACWeapon::StopCameraSettingChange()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Zoom In Completed!!!"));
+	bIsUsingPlayerCamFov = false;
+	UE_LOG(LogTemp, Error, TEXT("Modifying Cam Setting is Completed!!!"));
+}
+void UACWeapon::ForceStopCamModification()
+{
+	bIsUsingPlayerCamFov = false;
+
+	if (GetWorld()->GetTimerManager().IsTimerActive(CamSettingTimer))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CamSettingTimer);
+	}
 }
 void UACWeapon::ApplyCameraShake()
 {
@@ -983,7 +1909,6 @@ void UACWeapon::ApplyCameraShake()
 		{
 			//PlayerController->ClientStartCameraShake(CameraShake->GetClass());
 			//PlayerController->PlayerCameraManager->StartCameraShake(CameraShake->GetClass());
-
 			if (CameraShakeClass)
 			{
 				PlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass);

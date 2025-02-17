@@ -34,6 +34,7 @@ class SURAS_API USuraPlayerWallRunningState : public USuraPlayerBaseState
 
 	float MaxDuration;
 
+	UPROPERTY()
 	APlayerController* PlayerController;
 	
 public:

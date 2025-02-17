@@ -7,8 +7,10 @@
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "Characters/SuraCharacterBase.h"
+#include "Interfaces/Damageable.h"
 #include "SuraCharacterPlayer.generated.h"
 
+class UACDamageSystem;
 class USuraPlayerSlidingState;
 class USphereComponent;
 class USuraPlayerWallRunningState;
@@ -32,11 +34,14 @@ class UInputMappingContext;
  * 
  */
 UCLASS()
-class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase
+class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase, public IDamageable
 {
 	GENERATED_BODY()
 
 protected:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
+	UACDamageSystem* DamageSystemComponent;
 
 	UPROPERTY()
 	USuraPlayerBaseState* CurrentState;
@@ -125,8 +130,12 @@ protected:
 	void PrintPlayerDebugInfo() const;
 
 	void UpdateDashCooldowns(float DeltaTime);
-
 	
+	UFUNCTION()
+	void OnDamaged();
+
+	UFUNCTION()
+	void OnDeath();
 
 	
 	virtual void Tick(float DeltaTime) override;
@@ -168,7 +177,7 @@ public:
 	// If floor angle is 45 degrees downward slope, returns -45.f
 	float FindFloorAngle() const;
 	void RestoreCameraTilt(float DeltaTime);
-	void InterpCameraFOV(float DeltaTime);
+	virtual void InterpCameraFOV(float DeltaTime);
 
 	UPROPERTY(EditDefaultsOnly, Category = Camera)
 	TSubclassOf<UCameraShakeBase> IdleCamShake;
@@ -301,6 +310,10 @@ public:
 	bool ShouldEnterWallRunning(FVector& OutWallRunDirection, EWallSide& OutWallRunSide);
 
 	void InterpCapsuleHeight(float TargetScale, float DeltaTime);
+
+	UACDamageSystem* GetDamageSystemComponent() const { return DamageSystemComponent; }
+	
+	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 
 };
 

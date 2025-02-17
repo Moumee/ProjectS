@@ -22,14 +22,24 @@ class SURAS_API USuraPlayerFallingState : public USuraPlayerBaseState
 
 	float ElapsedTimeFromWallRun = 0.f;
 
+	UPROPERTY()
 	APlayerController* PlayerController;
+
+	FVector DesiredSlidingDirection = FVector::ZeroVector;
+
+	
 	
 public:
 
 	USuraPlayerFallingState();
 
+	FVector GetDesiredSlidingDirection() const { return DesiredSlidingDirection; }
+
 	virtual void EnterState(ASuraCharacterPlayer* Player) override;
+	
 	void UpdateBaseMovementSpeed(ASuraCharacterPlayer* Player, float DeltaTime);
+	
+	void CacheSlidingDirection(ASuraCharacterPlayer* Player);
 
 	virtual void UpdateState(ASuraCharacterPlayer* Player, float DeltaTime) override;
 

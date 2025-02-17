@@ -10,10 +10,17 @@ public class SuraS : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
-			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
+			"Core",
+			"CoreUObject",
+			"Engine",
+			"InputCore",
+			"EnhancedInput",
 			"AnimGraphRuntime",
-			"UMG",
-            "EngineCameras"
+			"AIModule",			// Added by Yoony for AI
+			"NavigationSystem",	// Added by Yoony for AI Navigation
+            "UMG",			 //Added by Boranaga for the use of UI
+            "EngineCameras", //Added by Boranaga for the use of CameraShake
+			"Niagara"        //Added by Boranaga for the use of ParticleSystem
         });
-	}
+    }
 }

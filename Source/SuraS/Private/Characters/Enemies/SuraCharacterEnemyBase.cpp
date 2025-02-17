@@ -5,7 +5,6 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
-#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
 
@@ -30,6 +29,8 @@ ASuraCharacterEnemyBase::ASuraCharacterEnemyBase()
 			HealthBarWidget->SetWidgetClass((WidgetClass.Class));
 		}
 	}
+
+	EnemyType = "Base";
 }
 
 void ASuraCharacterEnemyBase::BeginPlay()
@@ -49,7 +50,7 @@ void ASuraCharacterEnemyBase::BeginPlay()
 	// GetCapsuleComponent()->SetVisibility(true);
 	// GetCapsuleComponent()->SetHiddenInGame(false);
 
-	const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>("Base", "");
+	const auto EnemyAttributesData = EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(EnemyType, "");
 
 	if (EnemyAttributesData)
 	{
@@ -58,6 +59,7 @@ void ASuraCharacterEnemyBase::BeginPlay()
 
 		HitAnimation = EnemyAttributesData->HitAnimation;
 		DeathAnimation = EnemyAttributesData->DeathAnimation;
+		AttackAnimation = EnemyAttributesData->AttackAnimation;
 	}
 }
 
@@ -90,7 +92,7 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	if (DeathAnimation)
 		PlayAnimMontage(DeathAnimation);
 
-	// Disable all collision on capsule
+	// Disable all collisions on capsule
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionObjectType(ECC_GameTraceChannel1); // to disable collision with SuraProjectile object
@@ -114,7 +116,17 @@ void ASuraCharacterEnemyBase::UpdateHealthBarValue()
 		widget->SetHealthBarPercent(Health / MaxHealth);
 }
 
-bool ASuraCharacterEnemyBase::TakeDamage(FDamageData DamageData, AActor* DamageCauser)
+bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
 {
 	return GetDamageSystemComp()->TakeDamage(DamageData, DamageCauser);
+}
+
+void ASuraCharacterEnemyBase::Attack(const ASuraCharacterPlayer* Player)
+{
+	return;
+}
+
+void ASuraCharacterEnemyBase::SetUpAIController(AEnemyBaseAIController* NewAIController)
+{
+	AIController = NewAIController;
 }

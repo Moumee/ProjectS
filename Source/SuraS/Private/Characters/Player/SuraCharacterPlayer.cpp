@@ -6,6 +6,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "ActorComponents/DamageComponent/ACDamageSystem.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraPlayerBaseState.h"
 #include "Characters/Player/SuraPlayerCrouchingState.h"
@@ -57,13 +58,16 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 	InventoryManager = CreateDefaultSubobject<UACInventoryManager>(TEXT("Inventory Manager Component"));
 	
 
+	DamageSystemComponent = CreateDefaultSubobject<UACDamageSystem>(TEXT("Damage System Component"));
+
 }
 
 void ASuraCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	GetDamageSystemComponent()->OnDamaged.AddDynamic(this, &ASuraCharacterPlayer::OnDamaged);
+	GetDamageSystemComponent()->OnDeath.AddDynamic(this, &ASuraCharacterPlayer::OnDeath);
 	
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -281,6 +285,16 @@ void ASuraCharacterPlayer::UpdateDashCooldowns(float DeltaTime)
 			}
 		}
 	}
+}
+
+void ASuraCharacterPlayer::OnDamaged()
+{
+	
+}
+
+void ASuraCharacterPlayer::OnDeath()
+{
+	
 }
 
 float ASuraCharacterPlayer::FindFloorAngle() const
@@ -504,6 +518,11 @@ void ASuraCharacterPlayer::InterpCapsuleHeight(float TargetScale, float DeltaTim
 	GetCapsuleComponent()->SetCapsuleHalfHeight(NewHeight);
 	
 
+}
+
+bool ASuraCharacterPlayer::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
+{
+	return GetDamageSystemComponent()->TakeDamage(DamageData, DamageCauser);
 }
 
 

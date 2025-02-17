@@ -261,7 +261,8 @@ bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 	if (CurrentWeapon == nullptr)
 	{
 		CurrentWeapon = NewWeapon;
-		CurrentWeapon->EquipWeapon(PlayerOwner);
+		//CurrentWeapon->EquipWeapon(PlayerOwner);
+		CurrentWeapon->SwitchWeapon(PlayerOwner, true);
 	}
 
 	return true;
@@ -274,6 +275,18 @@ void UWeaponSystemComponent::ZoomIn(bool bZoomIn)
 	bIsZoomIn = bZoomIn;
 
 	UE_LOG(LogTemp, Warning, TEXT("ZOOM Toggled!!!"));
+}
+
+bool UWeaponSystemComponent::IsWeaponModifyingCamFov()
+{
+	if (CurrentWeapon)
+	{
+		if (CurrentWeapon->IsModifyingPlayerCamFov() || bIsZoomIn)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 #pragma endregion
@@ -358,7 +371,6 @@ FTransform UWeaponSystemComponent::GetWeaponAimSocketRelativeTransform()
 #pragma region SwitchWeapon
 void UWeaponSystemComponent::SwitchToPreviousWeapon()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Wheel Down"));
 	if (WeaponInventory.Num() > 1)
 	{
 		CurrentWeaponIndex--;
@@ -366,30 +378,37 @@ void UWeaponSystemComponent::SwitchToPreviousWeapon()
 		{
 			CurrentWeaponIndex = WeaponInventory.Num() + CurrentWeaponIndex;
 		}
-		EquipWeapon(CurrentWeaponIndex);
+		ChangeWeapon(CurrentWeaponIndex);
 	}
 }
 
 void UWeaponSystemComponent::SwitchToNextWeapon()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Wheel Up"));
 	if (WeaponInventory.Num() > 1)
 	{
 		CurrentWeaponIndex = (CurrentWeaponIndex + 1) % WeaponInventory.Num();
-		EquipWeapon(CurrentWeaponIndex);
+		ChangeWeapon(CurrentWeaponIndex);
 	}
 }
 
-void UWeaponSystemComponent::EquipWeapon(int32 WeaponIndex)
+void UWeaponSystemComponent::SwitchToOtherWeapon()
+{
+	WeaponInventory[CurrentWeaponIndex]->SwitchWeapon(PlayerOwner, true);
+	CurrentWeapon = WeaponInventory[CurrentWeaponIndex];
+}
+
+void UWeaponSystemComponent::ChangeWeapon(int32 WeaponIndex)
 {
 	if (WeaponInventory.IsValidIndex(WeaponIndex))
 	{
 		if (IsValid(CurrentWeapon))
 		{
-			CurrentWeapon->UnequipWeapon(PlayerOwner);
+			//CurrentWeapon->UnequipWeapon(PlayerOwner);
+			//TODO: 여기서 CurrentWeapon의 state의 확인해서 무기 전환 여부 결정하기
+			CurrentWeapon->SwitchWeapon(PlayerOwner, false);
 		}
-		WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
-		CurrentWeapon = WeaponInventory[WeaponIndex];
+		//WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
+		//CurrentWeapon = WeaponInventory[WeaponIndex];
 	}
 }
 #pragma endregion
