@@ -268,7 +268,6 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bCanAutoReload = true;
-	//TODO: Auto Reload true일 때, 각각의 fire가 끝나면, Check ammo를 통해 남은 탄환수를 확인하고 0이면 자동으로 reloading으로 넘어가기
 
 	UPROPERTY(EditAnywhere)
 	float ReloadingTime = 2.5f;
@@ -510,13 +509,13 @@ public:
 	void UpdateRecoil(float DeltaTime);
 #pragma endregion
 
-#pragma region Projectile/Spread
+#pragma region Projectile/MultiProjectileSpread
 protected:
 	UPROPERTY(EditAnywhere)
 	int32 PelletsNum = 9;
 
 	UPROPERTY(EditAnywhere)
-	float MaxAngleOfProjectileSpread = 15.f;
+	float MaxAngleOfMultiProjectileSpread = 15.f;
 #pragma endregion
 
 #pragma region Camera

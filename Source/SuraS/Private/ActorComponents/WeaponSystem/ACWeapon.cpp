@@ -581,7 +581,7 @@ void UACWeapon::FireMultiProjectile()
 
 					for (int pellet = 0; pellet < PelletsNum; pellet++)
 					{
-						const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfProjectileSpread).Rotation();
+						const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfMultiProjectileSpread).Rotation();
 
 						//Set Spawn Collision Handling Override
 						FActorSpawnParameters ActorSpawnParams;
