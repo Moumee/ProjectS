@@ -82,10 +82,10 @@ public:
 #pragma endregion
 
 public:
-	virtual void InterpCameraFOV(float DeltaTime) override; // for test
+	virtual void InterpCameraFOV(float DeltaTime) override;
 
-
-
+	//virtual void StartCameraShake(TSubclassOf<UCameraShakeBase> CamShake) override; // test
+	void StartCamShake(TSubclassOf<UCameraShakeBase> CamShake); // test
 };
 
 

@@ -1911,6 +1911,8 @@ void UACWeapon::ApplyCameraShake()
 			//PlayerController->PlayerCameraManager->StartCameraShake(CameraShake->GetClass());
 			if (CameraShakeClass)
 			{
+				//PlayerController->PlayerCameraManager->StopAllCameraShakes(true);
+
 				PlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass);
 			}
 		}
