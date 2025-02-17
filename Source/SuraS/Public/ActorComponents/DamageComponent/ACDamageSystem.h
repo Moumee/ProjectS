@@ -3,14 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Delegates/Delegate.h"
 #include "Components/ActorComponent.h"
 #include "ACDamageSystem.generated.h"
 
 struct FDamageData;
 
-// Event dispatcher
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDamaged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
+// Event dispatchers
+DECLARE_MULTICAST_DELEGATE(FOnDamaged);
+DECLARE_MULTICAST_DELEGATE(FOnDeath);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SURAS_API UACDamageSystem : public UActorComponent
@@ -46,10 +47,8 @@ public:
 	float GetHealth() const { return Health; }
 	float GetMaxHealth() const { return MaxHealth; }
 
-	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnDamaged OnDamaged;
 
-	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnDeath OnDeath;
 
 	UFUNCTION(BlueprintCallable)

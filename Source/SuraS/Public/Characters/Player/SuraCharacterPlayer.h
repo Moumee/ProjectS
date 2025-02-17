@@ -129,10 +129,8 @@ protected:
 
 	void UpdateDashCooldowns(float DeltaTime);
 	
-	UFUNCTION()
 	void OnDamaged();
 
-	UFUNCTION()
 	void OnDeath();
 
 	

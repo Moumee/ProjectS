@@ -65,8 +65,8 @@ void ASuraCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetDamageSystemComponent()->OnDamaged.AddDynamic(this, &ASuraCharacterPlayer::OnDamaged);
-	GetDamageSystemComponent()->OnDeath.AddDynamic(this, &ASuraCharacterPlayer::OnDeath);
+	GetDamageSystemComponent()->OnDamaged.AddUObject(this, &ASuraCharacterPlayer::OnDamaged);
+	GetDamageSystemComponent()->OnDeath.AddUObject(this, &ASuraCharacterPlayer::OnDeath);
 	
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -288,12 +288,12 @@ void ASuraCharacterPlayer::UpdateDashCooldowns(float DeltaTime)
 
 void ASuraCharacterPlayer::OnDamaged()
 {
-	
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Damaged"));
 }
 
 void ASuraCharacterPlayer::OnDeath()
 {
-	
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Dead"));
 }
 
 float ASuraCharacterPlayer::FindFloorAngle() const
