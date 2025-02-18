@@ -25,12 +25,16 @@ class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDam
 	GENERATED_BODY()
 
 	AEnemyBaseAIController* AIController;
+
+	APlayerController* PlayerController;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor Components", meta = (AllowPrivateAccess = "true"))
 	UACDamageSystem* DamageSystemComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* HealthBarWidget;
+
+	FVector2D HealthBarWidgetSize;
 
 protected:
 	// [protected variables]
@@ -42,13 +46,13 @@ protected:
 
 	virtual void Tick(float DeltaSeconds) override;
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* BehaviorTree;
 
-	UFUNCTION()
 	virtual void OnDamagedTriggered();
 
-	UFUNCTION()
 	virtual void OnDeathTriggered();
 
 	virtual void UpdateHealthBarValue();
@@ -59,13 +63,22 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (RowType = "EnemyAttributesData"))
 	FDataTableRowHandle EnemyAttributesDT;
 
+	// ai controller getter
+	FORCEINLINE AEnemyBaseAIController* GetAIController() const { return AIController; }
+
+	// player controller getter
+	FORCEINLINE APlayerController* GetPlayerController() const { return PlayerController; }
+
+	// widget size getter
+	FORCEINLINE FVector2D GetHealthBarWidgetSize() const { return HealthBarWidgetSize; }
+
 	// damage system comp getter
-	UACDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
+	FORCEINLINE UACDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
 
 	// behavior tree getter
 	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 
-	void SetUpAIController(AEnemyBaseAIController* NewAIController);
+	void SetUpAIController(AEnemyBaseAIController* const NewAIController); // const ptr: the ptr address can't be changed
 
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;
 

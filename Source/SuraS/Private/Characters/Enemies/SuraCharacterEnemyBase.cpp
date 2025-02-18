@@ -3,7 +3,6 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
 #include "Components/CapsuleComponent.h"
-#include "Kismet/KismetMathLibrary.h"
 
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
@@ -40,11 +39,18 @@ void ASuraCharacterEnemyBase::BeginPlay()
 	UpdateHealthBarValue();
 
 	HealthBarWidget->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HealthBarWidget->SetHiddenInGame(true);
+
+	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
+	{
+		HealthBarWidgetSize = Widget->GetHealthBarSize();
+	}
+		
 
 	if (DamageSystemComp)
 	{
-		GetDamageSystemComp()->OnDamaged.AddDynamic(this, &ASuraCharacterEnemyBase::OnDamagedTriggered);
-		GetDamageSystemComp()->OnDeath.AddDynamic(this, &ASuraCharacterEnemyBase::OnDeathTriggered);
+		GetDamageSystemComp()->OnDamaged.AddUObject(this, &ASuraCharacterEnemyBase::OnDamagedTriggered);
+		GetDamageSystemComp()->OnDeath.AddUObject(this, &ASuraCharacterEnemyBase::OnDeathTriggered);
 	}
 
 	// GetCapsuleComponent()->SetVisibility(true);
@@ -61,23 +67,63 @@ void ASuraCharacterEnemyBase::BeginPlay()
 		DeathAnimation = EnemyAttributesData->DeathAnimation;
 		AttackAnimation = EnemyAttributesData->AttackAnimation;
 	}
+
+	PlayerController = GetWorld()->GetFirstPlayerController();
 }
 
 void ASuraCharacterEnemyBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	
+	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
+	{
+		float Distance = FVector::Dist(GetPlayerController()->PlayerCameraManager->GetCameraLocation(), GetActorLocation());
 
-	FVector CameraLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
-	FVector HealthBarLocation = HealthBarWidget->GetComponentLocation();
+		//int32 ViewportX, ViewportY;
+		//GetPlayerController()->GetViewportSize(ViewportX, ViewportY);
+		
+		Distance = FMath::Clamp(Distance, 100, 1000);
 
-	FRotator HealthBarTargetRotation = UKismetMathLibrary::FindLookAtRotation(HealthBarLocation, CameraLocation);
+		FVector2D NewSize = GetHealthBarWidgetSize() * 500 / Distance; // * (ViewportY / 2) / FMath::Tan(FMath::DegreesToRadians(GetPlayerController()->PlayerCameraManager->GetFOVAngle() / 2))
 
-	HealthBarWidget->SetWorldRotation(FQuat::MakeFromRotator(HealthBarTargetRotation));
+		Widget->ResizeHealthBar(NewSize);
+	}
+
+	/*FHitResult Hit;
+	
+	FCollisionQueryParams CollisionQueryParams;
+	CollisionQueryParams.AddIgnoredActor(this);
+
+	GetWorld()->LineTraceSingleByChannel(Hit, EnemyLocation, CameraLocation, ECollisionChannel::ECC_Visibility, CollisionQueryParams);
+
+	DrawDebugLine(GetWorld(), EnemyLocation, CameraLocation, Hit.bBlockingHit ? FColor::Blue : FColor::Red, false, 5.0f, 0, 10.0f);
+
+	if (Hit.bBlockingHit)
+		HealthBarWidget->SetHiddenInGame(true);
+	else
+		HealthBarWidget->SetHiddenInGame(false);*/
+}
+
+void ASuraCharacterEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 }
 
 void ASuraCharacterEnemyBase::OnDamagedTriggered()
 {
 	UpdateHealthBarValue();
+	HealthBarWidget->SetHiddenInGame(false);
+
+	FTimerHandle HideHealthBarHandle;
+
+	GetWorldTimerManager().SetTimer(
+		HideHealthBarHandle,
+		FTimerDelegate::CreateLambda([&]() { HealthBarWidget->SetHiddenInGame(true); }),
+		1.f,
+		false
+	);
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
@@ -91,6 +137,8 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 
 	if (DeathAnimation)
 		PlayAnimMontage(DeathAnimation);
+
+	AIController->GetBrainComponent()->StopLogic("Death");
 
 	// Disable all collisions on capsule
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -112,8 +160,8 @@ void ASuraCharacterEnemyBase::UpdateHealthBarValue()
 	const float Health = GetDamageSystemComp()->GetHealth();
 	const float MaxHealth = GetDamageSystemComp()->GetMaxHealth();
 
-	if (auto const widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
-		widget->SetHealthBarPercent(Health / MaxHealth);
+	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
+		Widget->SetHealthBarPercent(Health / MaxHealth);
 }
 
 bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser)
@@ -123,10 +171,14 @@ bool ASuraCharacterEnemyBase::TakeDamage(const FDamageData& DamageData, const AA
 
 void ASuraCharacterEnemyBase::Attack(const ASuraCharacterPlayer* Player)
 {
-	return;
+	if (AttackAnimation)
+	{
+		UAnimInstance* const EnemyAnimInstance = GetMesh()->GetAnimInstance();
+		EnemyAnimInstance->Montage_Play(AttackAnimation);
+	}
 }
 
-void ASuraCharacterEnemyBase::SetUpAIController(AEnemyBaseAIController* NewAIController)
+void ASuraCharacterEnemyBase::SetUpAIController(AEnemyBaseAIController* const NewAIController)
 {
 	AIController = NewAIController;
 }

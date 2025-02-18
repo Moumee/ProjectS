@@ -3,7 +3,27 @@
 
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 
-void UEnemyHealthBarWidget::SetHealthBarPercent(float const value)
+void UEnemyHealthBarWidget::SetHealthBarPercent(float const Value)
 {
-	HealthBar->SetPercent(value);
+	HealthBar->SetPercent(Value);
+}
+
+void UEnemyHealthBarWidget::ResizeHealthBar(FVector2D NewSize)
+{
+	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(HealthBar->Slot);
+	CanvasSlot->SetSize(NewSize);
+}
+
+void UEnemyHealthBarWidget::HideInGame(bool bHidden)
+{
+	if (bHidden)
+	{
+
+	}
+}
+
+FVector2D UEnemyHealthBarWidget::GetHealthBarSize()
+{
+	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(HealthBar->Slot);
+	return CanvasSlot->GetSize();
 }
