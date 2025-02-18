@@ -86,7 +86,7 @@ void ASuraCharacterPlayerWeapon::StartCamShake(TSubclassOf<UCameraShakeBase> Cam
 			return;
 		}
 	}
-	//Super::StartCamShake(CamShake);
+	Super::StartCamShake(CamShake);
 }
 
 void ASuraCharacterPlayerWeapon::BeginPlay()

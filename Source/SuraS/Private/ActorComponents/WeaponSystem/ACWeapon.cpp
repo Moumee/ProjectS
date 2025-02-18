@@ -313,19 +313,18 @@ void UACWeapon::LoadWeaponData(FName WeaponID)
 		MaxAmmo = WeaponData->MaxAmmo;
 		NumOfLeftAmmo = MaxAmmo;
 
-
 		// <SingleShot>
 		SingleShotDelay = WeaponData->SingleShotDelay;
+
 		// <Recoil>
-		bIsRecoilRecoverAffectedByPlayerInput = WeaponData->bIsRecoilRecoverAffectedByPlayerInput;
-		RecoilAmountPitch = WeaponData->RecoilAmountPitch;
-		RecoilRangeMinPitch = WeaponData->RecoilRangeMinPitch;
-		RecoilRangeMaxPitch = WeaponData->RecoilRangeMaxPitch;
-		RecoilAmountYaw = WeaponData->RecoilAmountYaw;
-		RecoilRangeMinYaw = WeaponData->RecoilRangeMinYaw;
-		RecoilRangeMaxYaw = WeaponData->RecoilRangeMaxYaw;
-		RecoilSpeed = WeaponData->RecoilSpeed;
-		RecoilRecoverSpeed = WeaponData->RecoilRecoverSpeed;
+		DefaultRecoil = WeaponData->DefaultRecoil;
+		ZoomRecoil = WeaponData->ZoomRecoil;
+
+		// <Camera Shake>
+		DefaultCameraShakeClass = WeaponData->DefaultCameraShakeClass;
+		ZoomCameraShakeClass = WeaponData->ZoomCameraShakeClass;
+		ChargingCameraShakeClass = WeaponData->ChargingCameraShakeClass;
+
 		// <Targeting(Homing)>
 		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
 		MaxTargetNum = WeaponData->MaxTargetNum;
@@ -540,10 +539,18 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDa
 		{
 			ConsumeAmmo();
 		}
-		ApplyCameraShake();
 
-		// <Recoil>
-		AddRecoilValue(AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+		// <Recoil & CamShake>
+		if (bIsZoomIn)
+		{
+			AddRecoilValue(&ZoomRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+			ApplyCameraShake(ZoomCameraShakeClass);
+		}
+		else
+		{
+			AddRecoilValue(&DefaultRecoil, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+			ApplyCameraShake(DefaultCameraShakeClass);
+		}
 	}
 }
 
@@ -607,10 +614,17 @@ void UACWeapon::FireMultiProjectile()
 
 			ConsumeAmmo();
 
-			ApplyCameraShake();
-
-			// <Recoil>
-			AddRecoilValue();
+			// <Recoil & CamShake>
+			if (bIsZoomIn)
+			{
+				AddRecoilValue(&ZoomRecoil);
+				ApplyCameraShake(ZoomCameraShakeClass);
+			}
+			else
+			{
+				AddRecoilValue(&DefaultRecoil);
+				ApplyCameraShake(DefaultCameraShakeClass);
+			}
 		}
 	}
 }
@@ -1652,28 +1666,39 @@ void UACWeapon::UpdateCharge()
 
 	// TODO: Camera Shake Test 적용하기
 	// TODO: Charging 정도에 따라 CameraShake 정도를 다르게 하기
-	if (Character)
-	{
-		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
-		{
-			if (ChargingCameraShakeClass)
-			{
-				float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 2.f); //TODO: Max는 멤버변수로 지정하던가 해야함
-				UCameraShakeBase* CameraShakeIntance = PlayerController->PlayerCameraManager->StartCameraShake(ChargingCameraShakeClass, ChargingCamShakeScale);
-				UWeaponCameraShakeBase* CamShake = Cast<UWeaponCameraShakeBase>(CameraShakeIntance);
-				if (CamShake)
-				{
-					//TODO: 디테일하게 속성값을 설정 가능하지만, 너무 복잡하고, 굳이?임
-					//CamShake->SetZero();
-				}
-			}
-		}
-	}
+	//if (Character)
+	//{
+	//	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+	//	{
+	//		if (ChargingCameraShakeClass)
+	//		{
+	//			//TODO: CamShake
+
+	//			float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 2.f); //TODO: Max는 멤버변수로 지정하던가 해야함
+
+	//			UCameraShakeBase* CameraShakeIntance = PlayerController->PlayerCameraManager->StartCameraShake(ChargingCameraShakeClass, ChargingCamShakeScale);
+
+	//			UWeaponCameraShakeBase* CamShake = Cast<UWeaponCameraShakeBase>(CameraShakeIntance);	
+	//			if (CamShake)
+	//			{
+	//				//TODO: 디테일하게 속성값을 설정 가능하지만, 너무 복잡하고, 굳이?임
+	//				//CamShake->SetZero();
+	//			}
+	//		}
+	//	}
+	//}
+
+	float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 2.f); //TODO: Max는 멤버변수로 지정하던가 해야함
+	ApplyCameraShake(ChargingCameraShakeClass, ChargingCamShakeScale);
+
+
 
 	if (bAutoFireAtMaxChargeTime)
 	{
 		if (ElapsedChargeTime > MaxChargeTime)
 		{
+			//TODO: Timer로 계산한 시간이랑 실제 시간이랑 다른 것 같음. Log로 확인해봐야함 -> Tick 에서 계산한 시간이랑 여기서 계산한 시간이랑 비교해봐야함
+
 			StopCharge();
 		}
 		else
@@ -1718,29 +1743,29 @@ void UACWeapon::StopCharge()
 
 
 #pragma region Recoil
-void UACWeapon::AddRecoilValue(float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw)
+void UACWeapon::AddRecoilValue(FWeaponRecoilStruct* RecoilStruct, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw)
 {
 	bIsRecoiling = true;
 
-	//float RandRecoilPitch = FMath::RandRange(RecoilAmountPitch * 0.8f, RecoilAmountPitch * 1.2f) * (-1);
-	//float RandRecoilYaw = FMath::RandRange(-RecoilAmountYaw, RecoilAmountYaw);
+	if (RecoilStruct)
+	{
+		float RandRecoilPitch = FMath::RandRange((RecoilStruct->RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilStruct->RecoilRangeMinPitch, (RecoilStruct->RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilStruct->RecoilRangeMaxPitch) * (-1);
+		float RandRecoilYaw = FMath::RandRange((RecoilStruct->RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilStruct->RecoilRangeMinYaw, (RecoilStruct->RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilStruct->RecoilRangeMaxYaw);
 
-	float RandRecoilPitch = FMath::RandRange((RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilRangeMinPitch , (RecoilAmountPitch + AdditionalRecoilAmountPitch) * RecoilRangeMaxPitch) * (-1);
-	float RandRecoilYaw = FMath::RandRange((RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilRangeMinYaw, (RecoilAmountYaw + AdditionalRecoilAmountYaw) * RecoilRangeMaxYaw);
-
-	TotalTargetRecoilValuePitch += RandRecoilPitch;
-	TotalTargetRecoilValueYaw += RandRecoilYaw;
+		TotalTargetRecoilValuePitch += RandRecoilPitch;
+		TotalTargetRecoilValueYaw += RandRecoilYaw;
+	}
 }
 
-void UACWeapon::ApplyRecoil(float DeltaTime)
+void UACWeapon::ApplyRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct)
 {
-	if (Character)
+	if (Character && RecoilStruct)
 	{
 		APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
 		if (!PlayerController) return;
 
-		float InterpRecoilTargetValue_Pitch = FMath::FInterpTo(0.f, TotalTargetRecoilValuePitch - CulmulatedRecoilValuePitch, DeltaTime, RecoilSpeed);
-		float InterpRecoilTargetValue_Yaw = FMath::FInterpTo(0.f, TotalTargetRecoilValueYaw- CulmulatedRecoilValueYaw, DeltaTime, RecoilSpeed);;
+		float InterpRecoilTargetValue_Pitch = FMath::FInterpTo(0.f, TotalTargetRecoilValuePitch - CulmulatedRecoilValuePitch, DeltaTime, RecoilStruct->RecoilSpeed);
+		float InterpRecoilTargetValue_Yaw = FMath::FInterpTo(0.f, TotalTargetRecoilValueYaw - CulmulatedRecoilValueYaw, DeltaTime, RecoilStruct->RecoilSpeed);;
 
 		PlayerController->AddPitchInput(InterpRecoilTargetValue_Pitch);
 		PlayerController->AddYawInput(InterpRecoilTargetValue_Yaw);
@@ -1750,20 +1775,22 @@ void UACWeapon::ApplyRecoil(float DeltaTime)
 	}
 }
 
-void UACWeapon::RecoverRecoil(float DeltaTime)
+void UACWeapon::RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct)
 {
 	APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
 	if (!PlayerController) return;
 
-	if (bIsRecoilRecoverAffectedByPlayerInput)
+	if (!RecoilStruct) return;
+
+	if (RecoilStruct->bIsRecoilRecoverAffectedByPlayerInput)
 	{
 		FVector2D PlayerLookInputVector2D = Character->GetPlayerLookInputVector();
 
-		if (FMath::Sign(PlayerLookInputVector2D.Y) == FMath::Sign((CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch)*(-1)))
+		if (FMath::Sign(PlayerLookInputVector2D.Y) == FMath::Sign((CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch) * (-1)))
 		{
 			if (PlayerLookInputVector2D.Y >= 0)
 			{
-				RecoveredRecoilValuePitch += (-1) * FMath::Clamp(PlayerLookInputVector2D.Y, 0.f, (CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch)*(-1));
+				RecoveredRecoilValuePitch += (-1) * FMath::Clamp(PlayerLookInputVector2D.Y, 0.f, (CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch) * (-1));
 			}
 			else
 			{
@@ -1783,8 +1810,8 @@ void UACWeapon::RecoverRecoil(float DeltaTime)
 			}
 		}
 
-		float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(0.f, CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch, DeltaTime, RecoilRecoverSpeed);
-		float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw, DeltaTime, RecoilRecoverSpeed);;
+		float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(0.f, CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch, DeltaTime, RecoilStruct->RecoilRecoverSpeed);
+		float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw, DeltaTime, RecoilStruct->RecoilRecoverSpeed);;
 
 		PlayerController->AddPitchInput(-InterpRecoilRecoverTargetValue_Pitch);
 		PlayerController->AddYawInput(-InterpRecoilRecoverTargetValue_Yaw);
@@ -1794,8 +1821,8 @@ void UACWeapon::RecoverRecoil(float DeltaTime)
 	}
 	else
 	{
-		float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(0.f, CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch, DeltaTime, RecoilRecoverSpeed);
-		float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw, DeltaTime, RecoilRecoverSpeed);;
+		float InterpRecoilRecoverTargetValue_Pitch = FMath::FInterpTo(0.f, CulmulatedRecoilValuePitch - RecoveredRecoilValuePitch, DeltaTime, RecoilStruct->RecoilRecoverSpeed);
+		float InterpRecoilRecoverTargetValue_Yaw = FMath::FInterpTo(0.f, CulmulatedRecoilValueYaw - RecoveredRecoilValueYaw, DeltaTime, RecoilStruct->RecoilRecoverSpeed);;
 
 		PlayerController->AddPitchInput(-InterpRecoilRecoverTargetValue_Pitch);
 		PlayerController->AddYawInput(-InterpRecoilRecoverTargetValue_Yaw);
@@ -1809,7 +1836,6 @@ void UACWeapon::RecoverRecoil(float DeltaTime)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Recoil has been perfectly Recovered!!!"));
 
-		// TODO: Reset recoil value 함수를 따로 만드는 것이 좋을 듯 함
 		TotalTargetRecoilValuePitch = 0.f;
 		TotalTargetRecoilValueYaw = 0.f;
 
@@ -1828,8 +1854,16 @@ void UACWeapon::UpdateRecoil(float DeltaTime)
 	{
 		if (bIsRecoiling)
 		{
-			ApplyRecoil(DeltaTime);
-			RecoverRecoil(DeltaTime);
+			if (bIsZoomIn)
+			{
+				ApplyRecoil(DeltaTime, &ZoomRecoil);
+				RecoverRecoil(DeltaTime, &ZoomRecoil);
+			}
+			else
+			{
+				ApplyRecoil(DeltaTime, &DefaultRecoil);
+				RecoverRecoil(DeltaTime, &DefaultRecoil);
+			}
 		}
 	}
 }
@@ -1901,20 +1935,31 @@ void UACWeapon::ForceStopCamModification()
 		GetWorld()->GetTimerManager().ClearTimer(CamSettingTimer);
 	}
 }
-void UACWeapon::ApplyCameraShake()
+void UACWeapon::ApplyCameraShake(TSubclassOf<UWeaponCameraShakeBase> CamShakeClass, float Scale)
 {
-	if (Character)
+	//if (Character)
+	//{
+	//	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
+	//	{
+	//		//PlayerController->ClientStartCameraShake(CameraShake->GetClass());
+	//		//PlayerController->PlayerCameraManager->StartCameraShake(CameraShake->GetClass());
+	//		if (DefaultCameraShakeClass)
+	//		{
+	//			//PlayerController->PlayerCameraManager->StopAllCameraShakes(true);
+
+	//			PlayerController->PlayerCameraManager->StartCameraShake(DefaultCameraShakeClass);
+	//		}
+	//	}
+	//}
+
+	//-----------------------------------------------
+	if (Character && CamShakeClass)
 	{
 		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
 		{
-			//PlayerController->ClientStartCameraShake(CameraShake->GetClass());
-			//PlayerController->PlayerCameraManager->StartCameraShake(CameraShake->GetClass());
-			if (CameraShakeClass)
-			{
-				//PlayerController->PlayerCameraManager->StopAllCameraShakes(true);
+			UE_LOG(LogTemp, Error, TEXT("CamShake!!!"));
 
-				PlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass);
-			}
+			PlayerController->PlayerCameraManager->StartCameraShake(CamShakeClass, Scale);
 		}
 	}
 }

@@ -10,6 +10,7 @@
 #include "ActorComponents/WeaponSystem/WeaponFireMode.h"
 #include "ActorComponents/WeaponSystem/WeaponCamSettingValue.h"
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
+#include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
 
 #include "Engine/DataTable.h"
 #include "WeaponData.h"
@@ -467,30 +468,10 @@ protected:
 	bool bIsRecoiling = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsRecoilRecoverAffectedByPlayerInput = false;
+	FWeaponRecoilStruct DefaultRecoil;
 
-	UPROPERTY(EditAnywhere)
-	float RecoilAmountPitch = 1.5f;
-
-	UPROPERTY(EditAnywhere)
-	float RecoilRangeMinPitch = 0.8f;
-
-	UPROPERTY(EditAnywhere)
-	float RecoilRangeMaxPitch = 1.2f;
-
-	UPROPERTY(EditAnywhere)
-	float RecoilAmountYaw = 0.8f;
-
-	UPROPERTY(EditAnywhere)
-	float RecoilRangeMinYaw = -1.f;
-
-	UPROPERTY(EditAnywhere)
-	float RecoilRangeMaxYaw = 1.f;
-
-	UPROPERTY(EditAnywhere)
-	float RecoilSpeed = 4.f;
-	UPROPERTY(EditAnywhere)
-	float RecoilRecoverSpeed = 3.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FWeaponRecoilStruct ZoomRecoil;
 
 	FTimerHandle RecoilRecoverTimer;
 
@@ -503,9 +484,9 @@ protected:
 	float RecoveredRecoilValuePitch = 0.f;
 	float RecoveredRecoilValueYaw = 0.f;
 public:
-	void AddRecoilValue(float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f);
-	void ApplyRecoil(float DeltaTime);
-	void RecoverRecoil(float DeltaTime);
+	void AddRecoilValue(FWeaponRecoilStruct* RecoilStruct = nullptr, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f);
+	void ApplyRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct = nullptr);
+	void RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct = nullptr);
 	void UpdateRecoil(float DeltaTime);
 #pragma endregion
 
@@ -545,12 +526,15 @@ public:
 
 #pragma region CameraShake
 protected:
-	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CameraShake")
-	TSubclassOf<UWeaponCameraShakeBase> CameraShakeClass;
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass;
 
-	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|CameraShake")
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> ZoomCameraShakeClass;
+
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
 	TSubclassOf<UWeaponCameraShakeBase> ChargingCameraShakeClass;
 public:
-	void ApplyCameraShake();
+	void ApplyCameraShake(TSubclassOf<UWeaponCameraShakeBase> CamShakeClass = nullptr, float Scale = 1.f);
 #pragma endregion
 };
