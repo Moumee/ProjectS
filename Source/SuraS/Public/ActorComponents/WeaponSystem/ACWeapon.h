@@ -33,6 +33,7 @@ class UWeaponCameraShakeBase;
 class UNiagaraSystem;
 class UWidgetComponent;
 class UAmmoCounterWidget;
+class UWeaponAimUIWidget;
 
 class UInputAction;
 struct FInputBindingHandle;
@@ -304,6 +305,12 @@ protected:
 	UPROPERTY()
 	UUserWidget* CrosshairWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "AimUIWidget")
+	TSubclassOf<UWeaponAimUIWidget> AimUIWidgetClass;
+
+	UPROPERTY()
+	UWeaponAimUIWidget* AimUIWidget;
+
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|AmmoCounterWidget")
 	//TSubclassOf<UUserWidget> AmmoCounterWidgetClass;
 	TSubclassOf<UAmmoCounterWidget> AmmoCounterWidgetClass;
@@ -488,6 +495,51 @@ public:
 	void ApplyRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct = nullptr);
 	void RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct = nullptr);
 	void UpdateRecoil(float DeltaTime);
+#pragma endregion
+
+#pragma region Projectile/SingleProjectileSpread
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bEnableSingleProjectileSpread = true;
+
+	bool bIsSpreading = false;
+
+	//TODO: 일단은 Spread 로직을 구현 중이기 때문에 멤버 변수로 하나씩 사용중인데,
+	//완성하면 관련 변수들 Struct화 해서 관리하기
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxSpreadValue = 40.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SpreadAmountBase = 1.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SpreadRangeMin = 0.8f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SpreadRangeMax = 1.2f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SpreadSpeed = 4.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SpreadRecoverSpeed = 3.5f;
+
+	//------------------------------------
+	float TotalTargetSpreadValue = 0.f;
+	float CurrentSpreadVaule = 0.f;
+
+	float SpreadRecoverTimer = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SpreadRecoveryStartTime = 1.f;
+
+protected:
+	void AddSpreadValue();
+	void ApplySpread(float DeltaTime);
+	void RecoverSpread(float DeltaTime);
+	void UpdateSpread(float DeltaTime);
+	FVector GetRandomSpreadVector(FVector BaseDir);
 #pragma endregion
 
 #pragma region Projectile/MultiProjectileSpread
