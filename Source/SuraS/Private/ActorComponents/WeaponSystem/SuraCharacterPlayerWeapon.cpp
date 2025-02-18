@@ -77,6 +77,18 @@ void ASuraCharacterPlayerWeapon::InterpCameraFOV(float DeltaTime)
 	//UE_LOG(LogTemp, Error, TEXT("Function Hiding!!!")); // 작동안함
 }
 
+void ASuraCharacterPlayerWeapon::StartCamShake(TSubclassOf<UCameraShakeBase> CamShake)
+{
+	if (WeaponSystem)
+	{
+		if (WeaponSystem->IsZoomIn())
+		{
+			return;
+		}
+	}
+	Super::StartCamShake(CamShake);
+}
+
 void ASuraCharacterPlayerWeapon::BeginPlay()
 {
 	Super::BeginPlay();

@@ -116,7 +116,7 @@ bool UWeaponSystemComponent::SearchWeapon()
 					MinDistanceToWeapon = DistanceToWeapon;
 					NearestWeapon = WeaponObject;
 
-					// TODO: Overlap �� weapon�� UI on/off ��� �߰��ϱ�
+					// TODO: Overlap �� weapon�� UI on/off ���?�߰��ϱ�
 				}
 			}
 		}
@@ -240,7 +240,7 @@ void UWeaponSystemComponent::PickUpWeapon()
 		ObtainNewWeapon(OverlappedWeapon);
 	}
 
-	/** 여기다 unlock 메서드 연결 **/
+	/** ?�기??unlock 메서???�결 **/
 }
 
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
@@ -309,7 +309,7 @@ FVector UWeaponSystemComponent::CalculateScreenCenterWorldPositionAndDirection(F
 	// ȭ�� ũ�� ��������
 	FVector2D ViewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
 
-	// ȭ�� �߾� ��ǥ ���
+	// ȭ�� �߾� ��ǥ ���?
 	FVector2D ScreenCenter(ViewportSize.X / 2.0f, ViewportSize.Y / 2.0f);
 
 	// ȭ�� �߽��� ���� ��ġ�� ���� ��������
@@ -318,7 +318,7 @@ FVector UWeaponSystemComponent::CalculateScreenCenterWorldPositionAndDirection(F
 	{
 		OutWorldPosition = WorldPosition;
 		OutWorldDirection = WorldDirection;
-		return WorldPosition + (WorldDirection * 15.0f); // TODO: ���� �Ÿ��� �������. ��ġ ���� �����ϵ��� �����ϱ�
+		return WorldPosition + (WorldDirection * 15.0f); // TODO: ���� �Ÿ��� �������? ��ġ ���� �����ϵ��� �����ϱ�
 	}
 
 	return FVector::ZeroVector;

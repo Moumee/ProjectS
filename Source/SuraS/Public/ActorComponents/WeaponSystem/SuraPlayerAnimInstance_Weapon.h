@@ -103,6 +103,9 @@ public:
 
 	//---------------------------------------
 
+	//UPROPERTY(BlueprintReadOnly, Category = "Weapon")
+	//FTransform DefalutCameraRelativeTransform;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Weapon")
 	FVector HandTargetRelativeLocation;
 

@@ -110,6 +110,8 @@ void USuraPlayerAnimInstance_Weapon::NativeUpdateAnimation(float DeltaTime)
 			UpdateWeapon();
 		}
 
+		// DefalutCameraRelativeTransform = Character->GetCamera()->GetRelativeTransform();
+
 
 		// LogTransform(AimSocketRelativeTransform);
 
@@ -237,18 +239,11 @@ void USuraPlayerAnimInstance_Weapon::SetTargetRightHandTransform()
 			FTransform WeaponAimSocketRelativeTransform = WeaponAimSocketTransform.GetRelativeTransform(RootTransform);
 			FTransform RightHandRelativeTransform = RightHandTransform.GetRelativeTransform(RootTransform);
 
-			float CamOffset = 20.f; //TODO: 임시로 설정했음. 설정가능한 변수로 바꾸기
-
+			float CamOffset = 10.f; //TODO: 임시로 설정했음. 설정가능한 변수로 바꾸기
 
 			AimPointRelativeLocation = CameraRelativeTransform.GetLocation() + CameraRelativeTransform.GetRotation().GetForwardVector() * CamOffset;
 			AimPointRelativeRotation = CameraRelativeTransform.GetRotation().Rotator();
 
-			//LogTransform(CameraRelativeTransform);
-
-			//-------------------------------------------------------------------
-			//FTransform AimRelativeToCam = WeaponAimSocketRelativeTransform.GetRelativeTransform(CameraRelativeTransform);
-			//FTransform RightHandRelativeToAim = RightHandRelativeTransform.GetRelativeTransform(WeaponAimSocketRelativeTransform);
-	
 			HandTargetRelativeLocation = AimPointRelativeLocation + (RightHandRelativeTransform.GetLocation() - WeaponAimSocketRelativeTransform.GetLocation());
 			HandTargetRelativeRotation = AimPointRelativeRotation + (RightHandRelativeTransform.GetRotation().Rotator() - WeaponAimSocketRelativeTransform.GetRotation().Rotator());
 		}
