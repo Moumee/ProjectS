@@ -248,7 +248,6 @@ void UWeaponSystemComponent::PickUpWeapon()
 		
 		// NewWeaponPickUp->GetWeaponName()을 inventory widget의 unlock 메서드에 인자로 전달해주면 될 듯. 거기서 dt_weapon의 해당 name에 맞는 이미지를 불러와서 unlock
 		/** suhyeon **/
-	}
 }
 
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
