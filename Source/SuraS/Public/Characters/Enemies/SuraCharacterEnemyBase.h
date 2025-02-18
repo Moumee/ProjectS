@@ -40,6 +40,8 @@ protected:
 	// [protected variables]
 	FName EnemyType; // for initializing differently btw enemy types from the DT
 
+	float AttackDamageAmount;
+
 	// [protected functions]
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -74,6 +76,9 @@ public:
 
 	// damage system comp getter
 	FORCEINLINE UACDamageSystem* GetDamageSystemComp() const { return DamageSystemComp; }
+
+	// damage system comp getter
+	FORCEINLINE float GetAttackDamageAmount() const { return AttackDamageAmount; }
 
 	// behavior tree getter
 	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
