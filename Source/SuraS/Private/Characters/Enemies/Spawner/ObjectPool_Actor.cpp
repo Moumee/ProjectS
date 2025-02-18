@@ -6,22 +6,21 @@
 // Sets default values
 AObjectPool_Actor::AObjectPool_Actor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 }
 
-AActor* AObjectPool_Actor::SpawnPooledObject()
+APawn* AObjectPool_Actor::SpawnPooledObject()
 {
-	for (AActor* PoolableActor : ObjectPool)
+	for (APawn* PoolableActor : ObjectPool)
 	{
 		if (PoolableActor != nullptr && PoolableActor->IsHidden())
 		{
 			PoolableActor->TeleportTo(GetActorLocation()+FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator(0, 0, 0));
 			PoolableActor->SetActorHiddenInGame(false);
 			PoolableActor->SetActorEnableCollision(true);
-			FString error = (PoolableActor->IsHidden()) ? "true" : "false";
-			UE_LOG(LogBlueprint, Warning, TEXT("%s"), *error);
+			//FString error = (PoolableActor->IsHidden()) ? "true" : "false";
+			//UE_LOG(LogBlueprint, Warning, TEXT("%s"), *error);
 			return PoolableActor;
 		}
 	}
@@ -29,8 +28,8 @@ AActor* AObjectPool_Actor::SpawnPooledObject()
 	UWorld* const World = GetWorld();
 	if (World != nullptr)
 	{
-		AActor* newPoolableActor = World->SpawnActor<AActor>(PooledObjectSubclass,
-			GetActorLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator().ZeroRotator, ActorSpawnParameters);
+		APawn* newPoolableActor = UAIBlueprintHelperLibrary::SpawnAIFromClass(World,
+			PooledObjectSubclass, BehaviorTree, GetActorLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator().ZeroRotator, true);
 		newPoolableActor->SetActorHiddenInGame(false);
 		ObjectPool.Add(newPoolableActor);
 		return newPoolableActor;
@@ -64,8 +63,9 @@ void AObjectPool_Actor::BeginPlay()
 		{
 			for (int i = 0; i < PoolSize; i++)
 			{
-				AActor* PoolableActor = World->SpawnActor<AActor>(PooledObjectSubclass, 
-					GetActorLocation(), FRotator().ZeroRotator);
+				APawn* PoolableActor = UAIBlueprintHelperLibrary::SpawnAIFromClass(World, 
+					PooledObjectSubclass, BehaviorTree, GetActorLocation() + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), 0), FRotator().ZeroRotator, true);
+
 
 				if (PoolableActor != nullptr)
 				{

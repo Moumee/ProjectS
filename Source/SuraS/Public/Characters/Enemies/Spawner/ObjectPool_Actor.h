@@ -4,6 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
+#include "Kismet/GameplayStatics.h"
+#include "AIController.h"
+#include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 #include "ObjectPool_Actor.generated.h"
 
@@ -16,13 +20,13 @@ public:
 	AObjectPool_Actor();
 
 	UFUNCTION(BlueprintCallable, Category = "ObjectPool")
-		AActor* SpawnPooledObject();
+		APawn* SpawnPooledObject();
 
 	UFUNCTION()
 		void SpawnWrapper();
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-		TSubclassOf<class AActor> PooledObjectSubclass;
+		TSubclassOf<class APawn> PooledObjectSubclass;
 
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
 		int PoolSize = 5;
@@ -30,12 +34,15 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	TArray<AActor*> ObjectPool;
+	TArray<APawn*> ObjectPool;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "ObjectPool")
-		float interval = 5.0f;
+		float interval = 20.0f;
+	UPROPERTY(EditAnywhere, Category = "ObjectPool")
 		int spawnCount = 5;
+	UPROPERTY(EditAnywhere, Category = "ObjectPool")
+		UBehaviorTree* BehaviorTree;
 
 	FTimerHandle TimerHandler;
 

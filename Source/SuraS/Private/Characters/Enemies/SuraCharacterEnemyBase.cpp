@@ -153,6 +153,10 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionObjectType(ECC_GameTraceChannel1); // to disable collision with SuraProjectile object
+
+	//objectpoolDisableEnemy
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
 }
 
 void ASuraCharacterEnemyBase::UpdateHealthBarValue()
