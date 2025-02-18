@@ -22,10 +22,10 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
 			TempOwnerComp = &OwnerComp; // for finishing task latently
 
-			FOnMontageEnded OnMontageEnded;
-			OnMontageEnded.BindUObject(this, &UBTT_MeleeAttack::OnAttackEnded);
+			FOnMontageEnded OnAttackMontageEnded;
+			OnAttackMontageEnded.BindUObject(this, &UBTT_MeleeAttack::OnAttackEnded);
 
-			Enemy->GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnMontageEnded);
+			Enemy->GetMesh()->GetAnimInstance()->Montage_SetEndDelegate(OnAttackMontageEnded);
 
 			FinishLatentTask(OwnerComp, EBTNodeResult::InProgress);
 			return EBTNodeResult::InProgress;
