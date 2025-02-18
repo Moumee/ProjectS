@@ -12,6 +12,13 @@ AEnemyBaseAIController::AEnemyBaseAIController(FObjectInitializer const& ObjectI
 	SetupPerceptionSystem();
 }
 
+void AEnemyBaseAIController::InitializeBlackBoard(float StrafeRadius, float AttackRadius, float AttackRate)
+{
+	GetBlackboardComponent()->SetValueAsFloat("StrafeRadius", StrafeRadius);
+	GetBlackboardComponent()->SetValueAsFloat("AttackRadius", AttackRadius);
+	GetBlackboardComponent()->SetValueAsFloat("AttackRate", AttackRate);
+}
+
 void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 {
 	Super::OnPossess(PossessedPawn);

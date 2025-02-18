@@ -19,6 +19,9 @@ class SURAS_API UEnemyHealthBarWidget : public UUserWidget
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget, AllowPrivateAccess = "true"))
 	UProgressBar* HealthBar = nullptr;
 
+	UPROPERTY(BlueprintReadOnly, Transient, meta = (BindWidgetAnim, AllowPrivateAccess = "true"))
+	class UWidgetAnimation* FadeInOutAnimation;
+
 // protected:
 	// Called when the game starts
 	// virtual bool Initialize() override;
@@ -29,4 +32,5 @@ public:
 	void ResizeHealthBar(FVector2D NewSize);
 	void HideInGame(bool bHidden);
 	FVector2D GetHealthBarSize();
+	void PlayFadeAnimtion();
 };

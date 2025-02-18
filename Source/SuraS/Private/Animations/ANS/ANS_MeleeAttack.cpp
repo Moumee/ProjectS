@@ -46,7 +46,7 @@ void UANS_MeleeAttack::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenc
 			{
 
 				FDamageData DamageData;
-				DamageData.DamageAmount = DamageAmount;
+				DamageData.DamageAmount = Enemy->GetAttackDamageAmount() + AdditionalDamageAmount;
 				DamageData.DamageType = EDamageType::Melee;
 
 				Player->TakeDamage(DamageData, GetEnemyChar());

@@ -23,7 +23,7 @@ class SURAS_API UANS_MeleeAttack : public UAnimNotifyState
 
 public:
 	UPROPERTY(EditAnywhere)
-	float DamageAmount;
+	float AdditionalDamageAmount;
 
 	UPROPERTY(EditAnywhere)
 	float AttackRange;

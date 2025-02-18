@@ -4,27 +4,27 @@
 
 #include "CoreMinimal.h"
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
-#include "SuraCharacterEnemyMelee.generated.h"
+#include "Weapons/Firearms/SuraFirearmRifle.h"
+#include "SuraCharacterEnemyRifle.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SURAS_API ASuraCharacterEnemyMelee : public ASuraCharacterEnemyBase
+class SURAS_API ASuraCharacterEnemyRifle : public ASuraCharacterEnemyBase
 {
 	GENERATED_BODY()
-
-	FTimerHandle RotationHandle;
-
-	const ASuraCharacterPlayer* Player;
-
-	void RotateTowardPlayer();
 	
+	ASuraFirearmRifle* Firearm;
+
 protected:
 	virtual void BeginPlay() override;
 
 public:
-	ASuraCharacterEnemyMelee();
+	ASuraCharacterEnemyRifle();
+
+	UPROPERTY(EditAnywhere, Category = "Firearm")
+	TSubclassOf<class ASuraFirearmRifle> RifleClass;
 
 	virtual void Attack(const ASuraCharacterPlayer* Player) override;
 };

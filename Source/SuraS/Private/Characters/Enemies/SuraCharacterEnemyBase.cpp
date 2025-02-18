@@ -3,6 +3,7 @@
 #include "Characters/Enemies/SuraCharacterEnemyBase.h"
 
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 #include "Widgets/Enemies/EnemyHealthBarWidget.h"
 #include "Structures/Enemies/EnemyAttributesData.h"
@@ -38,14 +39,12 @@ void ASuraCharacterEnemyBase::BeginPlay()
 
 	UpdateHealthBarValue();
 
-	HealthBarWidget->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HealthBarWidget->SetHiddenInGame(true);
 
 	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
 	{
 		HealthBarWidgetSize = Widget->GetHealthBarSize();
 	}
-		
 
 	if (DamageSystemComp)
 	{
@@ -63,9 +62,15 @@ void ASuraCharacterEnemyBase::BeginPlay()
 		GetDamageSystemComp()->SetMaxHealth(EnemyAttributesData->MaxHealth);
 		GetDamageSystemComp()->SetHealth(EnemyAttributesData->MaxHealth);
 
+		GetCharacterMovement()->MaxWalkSpeed = EnemyAttributesData->MaxWalkSpeed;
+
+		AttackDamageAmount = EnemyAttributesData->AttackDamageAmount;
+
 		HitAnimation = EnemyAttributesData->HitAnimation;
 		DeathAnimation = EnemyAttributesData->DeathAnimation;
 		AttackAnimation = EnemyAttributesData->AttackAnimation;
+
+		GetAIController()->InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
 	}
 
 	PlayerController = GetWorld()->GetFirstPlayerController();
@@ -115,6 +120,9 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 {
 	UpdateHealthBarValue();
 	HealthBarWidget->SetHiddenInGame(false);
+
+	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
+		Widget->PlayFadeAnimtion();
 
 	FTimerHandle HideHealthBarHandle;
 

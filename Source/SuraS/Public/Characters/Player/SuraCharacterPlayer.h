@@ -8,6 +8,7 @@
 #include "ActorComponents/UISystem/ACInventoryManager.h"
 #include "Characters/SuraCharacterBase.h"
 #include "Interfaces/Damageable.h"
+#include "Widgets/Player/PlayerHitWidget.h"
 #include "SuraCharacterPlayer.generated.h"
 
 class UACDamageSystem;
@@ -37,6 +38,9 @@ UCLASS()
 class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase, public IDamageable
 {
 	GENERATED_BODY()
+
+	TSubclassOf<class UUserWidget> HitEffectWidgetClass;
+	UPlayerHitWidget* HitEffectWidget;
 
 protected:
 

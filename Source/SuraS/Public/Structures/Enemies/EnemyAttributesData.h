@@ -17,6 +17,21 @@ struct SURAS_API FEnemyAttributesData : public FTableRowBase
 	float MaxHealth;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxWalkSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float StrafeRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AttackRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AttackRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AttackDamageAmount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimMontage* HitAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
