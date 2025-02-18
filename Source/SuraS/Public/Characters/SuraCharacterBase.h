@@ -17,10 +17,6 @@ public:
 	// Sets default values for this character's properties
 	ASuraCharacterBase();
 
-	// Attributes actor component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Wall Run", meta = (AllowPrivateAccess = "true"))
-	UACAttributes* AttributesComponent;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -31,7 +27,4 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	/** Returns Attributes Component **/
-	UACAttributes* GetAttributesComponent() const { return AttributesComponent; }
 };

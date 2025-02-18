@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "ActorComponents/WeaponSystem/ProjectileType.h"
+#include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
+#include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
 #include "NiagaraSystem.h"
 #include "WeaponData.generated.h"
 
@@ -39,30 +41,16 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	float SingleShotDelay = 1.f;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	bool bIsRecoilRecoverAffectedByPlayerInput = false;
-
+	FWeaponRecoilStruct DefaultRecoil;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	float RecoilAmountPitch = 1.5f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	float RecoilRangeMinPitch = 0.8f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	float RecoilRangeMaxPitch = 1.2f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	float RecoilAmountYaw = 0.8f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	float RecoilRangeMinYaw = -1.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	float RecoilRangeMaxYaw = 1.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	float RecoilSpeed = 4.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
-	float RecoilRecoverSpeed = 3.5f;
+	FWeaponRecoilStruct ZoomRecoil;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> DefaultCameraShakeClass;
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> ZoomCameraShakeClass;
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "CameraShake")
+	TSubclassOf<UWeaponCameraShakeBase> ChargingCameraShakeClass;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Targeting")
 	float MissileLaunchDelay = 0.2;
@@ -91,5 +79,4 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	float ChargingAdditionalRecoilAmountYawBase = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
-
 };

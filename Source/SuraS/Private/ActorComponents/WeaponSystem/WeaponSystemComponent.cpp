@@ -116,7 +116,7 @@ bool UWeaponSystemComponent::SearchWeapon()
 					MinDistanceToWeapon = DistanceToWeapon;
 					NearestWeapon = WeaponObject;
 
-					// TODO: Overlap �� weapon�� UI on/off ��� �߰��ϱ�
+					// TODO: Overlap �� weapon�� UI on/off ���?�߰��ϱ�
 				}
 			}
 		}
@@ -238,12 +238,13 @@ void UWeaponSystemComponent::PickUpWeapon()
 		//TODO: �ٷ� Attach �ϴ� ���� �ƴ϶� inventory�� �ѱ⸦ �����ϱ�
 		// OverlappedWeapon->AttachToCharacter(PlayerOwner);
 		ObtainNewWeapon(OverlappedWeapon);
+	}
 
 		/** suhyeon **/
 		// 여기다 unlock 메서드 연결 
 
 		// 저장된 InventoryWidget을 사용해 UnlockWeapon 호출
-		UInventoryWidget->UnlockWeapon(OverlappedWeapon->GetWeaponName());
+		// UInventoryWidget->UnlockWeapon(OverlappedWeapon->GetWeaponName());
 		
 		// NewWeaponPickUp->GetWeaponName()을 inventory widget의 unlock 메서드에 인자로 전달해주면 될 듯. 거기서 dt_weapon의 해당 name에 맞는 이미지를 불러와서 unlock
 		/** suhyeon **/
@@ -321,7 +322,7 @@ FVector UWeaponSystemComponent::CalculateScreenCenterWorldPositionAndDirection(F
 	// ȭ�� ũ�� ��������
 	FVector2D ViewportSize = GEngine->GameViewport->Viewport->GetSizeXY();
 
-	// ȭ�� �߾� ��ǥ ���
+	// ȭ�� �߾� ��ǥ ���?
 	FVector2D ScreenCenter(ViewportSize.X / 2.0f, ViewportSize.Y / 2.0f);
 
 	// ȭ�� �߽��� ���� ��ġ�� ���� ��������
@@ -330,7 +331,7 @@ FVector UWeaponSystemComponent::CalculateScreenCenterWorldPositionAndDirection(F
 	{
 		OutWorldPosition = WorldPosition;
 		OutWorldDirection = WorldDirection;
-		return WorldPosition + (WorldDirection * 15.0f); // TODO: ���� �Ÿ��� �������. ��ġ ���� �����ϵ��� �����ϱ�
+		return WorldPosition + (WorldDirection * 15.0f); // TODO: ���� �Ÿ��� �������? ��ġ ���� �����ϵ��� �����ϱ�
 	}
 
 	return FVector::ZeroVector;

@@ -74,10 +74,7 @@ void USuraPlayerCrouchingState::UpdateState(ASuraCharacterPlayer* Player, float 
 
 	Player->InterpCapsuleHeight(0.6f, DeltaTime);
 
-	if (Player->DashCamShake && PlayerController)
-	{
-		PlayerController->ClientStartCameraShake(Player->DashCamShake);
-	}
+	Player->StartCamShake(Player->CrouchCamShake);
 
 	FHitResult UpperHit;
 	FCollisionQueryParams UpperParams;

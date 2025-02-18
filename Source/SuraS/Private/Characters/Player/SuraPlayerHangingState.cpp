@@ -42,10 +42,7 @@ void USuraPlayerHangingState::UpdateState(ASuraCharacterPlayer* Player, float De
 {
 	Super::UpdateState(Player, DeltaTime);
 	
-	if (Player->HangingCamShake && PlayerController)
-	{
-		PlayerController->ClientStartCameraShake(Player->HangingCamShake);
-	}
+	Player->StartCamShake(Player->HangingCamShake);
 	
 	Player->InterpCapsuleHeight(1.f, DeltaTime);
 

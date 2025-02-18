@@ -71,10 +71,7 @@ void USuraPlayerRunningState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	Player->InterpCapsuleHeight(1.f, DeltaTime);
 
-	if (Player->RunCamShake && PlayerController)
-	{
-		PlayerController->ClientStartCameraShake(Player->RunCamShake);
-	}
+	Player->StartCamShake(Player->RunCamShake);
 	
 	if (bShouldUpdateSpeed)
 	{
