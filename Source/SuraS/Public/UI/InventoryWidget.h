@@ -70,8 +70,30 @@ public:
 	virtual void CloseUI() override;
 
 #pragma region Weapon
-	// 획득한 무기 슬롯 업데이트
-	void UpdateWeaponSlot(int32 WeaponType, int32 WeaponIndex, bool bIsUnlocked);
+	
+	// WBP_Invnetory 초기화
+	void InitializeInventory();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
+	UDataTable* DTWeapon;  // 블루프린트에서 데이터 테이블 할당
+
+	void UnlockWeapon(FName WeaponName);
+
+
+	/** 총기 umg 바인딩 **/
+	UPROPERTY(meta = (BindWidget))
+	UImage* Rifle;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* ShotGun;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* MissileLauncher;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* RailGun;
+
+	TMap<FString, UImage*> WeaponImages;
 
 #pragma endregion Weapon
 
@@ -86,5 +108,6 @@ private:
 	
 	UPROPERTY()
 	UImage* LockBackGroundImage;
+	
 };
 

@@ -18,17 +18,17 @@ UACCrosshairManager::UACCrosshairManager()
 	bIsHeadShot = false;
 
 	// crosshair widget class 초기화
-	InitializeCrosshairWidgetClass();
+	// InitializeCrosshairWidgetClass();
 
 	// crosshair widget 초기화
-	InitializeCrosshairWidget();
+	// InitializeCrosshairWidget();
 
 	// Overlay 위젯 초기화 및 가져오기
-	if (CrosshairWidget)
-	{
-		NormalOverlay = Cast<UOverlay>(CrosshairWidget->GetWidgetFromName(TEXT("NormalDamageOverlay")));
-		CriticalOverlay = Cast<UOverlay>(CrosshairWidget->GetWidgetFromName(TEXT("CriticalDamageOverlay")));
-	}
+	// if (CrosshairWidget)
+	// {
+	// 	NormalOverlay = Cast<UOverlay>(CrosshairWidget->GetWidgetFromName(TEXT("NormalDamageOverlay")));
+	// 	CriticalOverlay = Cast<UOverlay>(CrosshairWidget->GetWidgetFromName(TEXT("CriticalDamageOverlay")));
+	// }
 	
 }
 
@@ -53,7 +53,7 @@ void UACCrosshairManager::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// 크로스헤어 상태 업데이트
-	UpdateCrosshairState();
+	// UpdateCrosshairState();
 
 	PerformLineTrace();
 

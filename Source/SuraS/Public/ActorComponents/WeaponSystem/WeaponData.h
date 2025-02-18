@@ -22,6 +22,15 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UNiagaraSystem* FireEffect;
 
+	/** Start Suhyeon  **/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UTexture2D* WeaponImage; // 총기 이미지
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsWeaponOwned; // 총기 소유 불값
+	
+	/** End Suhyeon **/
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Reload")
 	int32 MaxAmmo = 10.f;

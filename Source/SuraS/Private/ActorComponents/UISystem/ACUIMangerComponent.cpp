@@ -62,6 +62,17 @@ UBaseUIWidget* UACUIMangerComponent::GetWidget(EUIType UIType)
 		if (NewWidget)
 		{
 			UIWidgets.Add(UIType, NewWidget);
+
+			// 최초 생성 시에만 초기화 (Update가 아님)
+			if (UIType == EUIType::Inventory)
+			{
+				UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(NewWidget);
+				if (InventoryWidget)
+				{
+					InventoryWidget->InitializeInventory();
+				}
+			}
+			
 			return NewWidget;
 		}
         

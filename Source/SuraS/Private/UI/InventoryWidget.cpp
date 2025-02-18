@@ -1,6 +1,8 @@
 #include "UI/InventoryWidget.h"
 
 #include "ActorComponents/UISystem/ACInventoryManager.h"
+#include "ActorComponents/WeaponSystem/WeaponData.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet/GameplayStatics.h"
@@ -15,6 +17,8 @@ void UInventoryWidget::NativeConstruct()
     // 기본값 설정
     CurrentTab = EInventoryTab::Weapon;
     SetActiveTab(CurrentTab);
+
+    InitializeInventory(); // UI 초기화
 
 
 #pragma region Weapon
@@ -84,11 +88,12 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
     if (InKeyEvent.GetKey() == EKeys::T)  // T 키를 눌렀을 때
     {
         // 무기 언락 처리
-        if (UACInventoryManager* InventoryManager = GetOwningPlayerPawn()->FindComponentByClass<UACInventoryManager>())
-        {
-            InventoryManager->UnlockWeapon("WeaponImage1_0","WeaponText1_0", "LockBackground1_0", "LockImage1_0");  // 예시로 UnlockWeapon 함수 호출
-            GEngine->AddOnScreenDebugMessage(-1, 2.f , FColor::Red, TEXT("Weapon unlocked"));
-        }
+        // if (UACInventoryManager* InventoryManager = GetOwningPlayerPawn()->FindComponentByClass<UACInventoryManager>())
+        // {
+        //     InventoryManager->UnlockWeapon("Rifle","RifleName");  // 예시로 UnlockWeapon 함수 호출
+        //     GEngine->AddOnScreenDebugMessage(-1, 2.f , FColor::Red, TEXT("Weapon unlocked"));
+        // }
+        UnlockWeapon(TEXT("Rifle"));
     
         return FReply::Handled();
     }
@@ -158,8 +163,58 @@ void UInventoryWidget::CloseUI()
     GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Orange, "CloseInventory");
 }
 
-void UInventoryWidget::UpdateWeaponSlot(int32 WeaponType, int32 WeaponIndex, bool bIsUnlocked)
+void UInventoryWidget::InitializeInventory()
 {
-    
+    if (!DTWeapon)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DT_Weapon이 설정되지 않았습니다!"));
+        return;
+    }
+
+    static const FString ContextString(TEXT("Weapon Data Context"));
+    TArray<FName> RowNames = DTWeapon->GetRowNames();
+
+    // umg에서 바인딩한 image 위젯들 (각 무기 종류에 맞게 설정)
+    WeaponImages.Add(TEXT("Rifle"), Rifle);
+    WeaponImages.Add(TEXT("ShotGun"), ShotGun);
+    WeaponImages.Add(TEXT("MissileLauncher"), MissileLauncher);
+    WeaponImages.Add(TEXT("RailGun"), RailGun);
+
+    for (FName RowName : RowNames)
+    {
+        // RowName을 기반으로 데이터 테이블에서 해당 행 찾기
+        FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(RowName, ContextString);
+        if (WeaponData)
+        {
+            FString WeaponNameStr = RowName.ToString(); // RowName을 문자열로 변환
+
+            if (WeaponImages.Contains(WeaponNameStr))
+            {
+                WeaponImages[WeaponNameStr]->SetBrushFromTexture(WeaponData->WeaponImage);
+            }
+        }
+    }
 }
+
+void UInventoryWidget::UnlockWeapon(FName WeaponName)
+{
+    if (!DTWeapon) return;
+
+    static const FString ContextString(TEXT("Weapon Unlock Context"));
+    FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(WeaponName, ContextString);
+
+    if (WeaponData && !WeaponData->bIsWeaponOwned)
+    {
+        WeaponData->bIsWeaponOwned = true;
+
+        // ✅ `WeaponImages`를 재사용
+        FString WeaponNameStr = WeaponName.ToString();
+        if (WeaponImages.Contains(WeaponNameStr))
+        {
+            WeaponImages[WeaponNameStr]->SetOpacity(1.0f);  // 이미지 활성화
+        }
+    }
+}
+
+
 

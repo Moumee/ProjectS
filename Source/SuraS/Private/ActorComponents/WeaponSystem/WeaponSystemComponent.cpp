@@ -238,13 +238,25 @@ void UWeaponSystemComponent::PickUpWeapon()
 		//TODO: �ٷ� Attach �ϴ� ���� �ƴ϶� inventory�� �ѱ⸦ �����ϱ�
 		// OverlappedWeapon->AttachToCharacter(PlayerOwner);
 		ObtainNewWeapon(OverlappedWeapon);
-	}
 
-	/** 여기다 unlock 메서드 연결 **/
+		/** suhyeon **/
+		// 여기다 unlock 메서드 연결 
+
+		// 저장된 InventoryWidget을 사용해 UnlockWeapon 호출
+		UInventoryWidget->UnlockWeapon(OverlappedWeapon->GetWeaponName());
+		
+		// NewWeaponPickUp->GetWeaponName()을 inventory widget의 unlock 메서드에 인자로 전달해주면 될 듯. 거기서 dt_weapon의 해당 name에 맞는 이미지를 불러와서 unlock
+		/** suhyeon **/
+	}
 }
 
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 {
+	// suhyeon
+	EWeaponName WeaponEnumValue = OverlappedWeapon->GetWeaponName();
+	// 디버그 메시지 출력
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, UEnum::GetValueAsString(WeaponEnumValue));
+	// suhyeon
 	for (const UACWeapon* WeaponInPossession : WeaponInventory)
 	{
 		if (WeaponInPossession->GetWeaponName() == NewWeaponPickUp->GetWeaponName())
@@ -404,7 +416,7 @@ void UWeaponSystemComponent::ChangeWeapon(int32 WeaponIndex)
 		if (IsValid(CurrentWeapon))
 		{
 			//CurrentWeapon->UnequipWeapon(PlayerOwner);
-			//TODO: ���⼭ CurrentWeapon�� state�� Ȯ���ؼ� ���� ��ȯ ���� �����ϱ�
+			//TODO: ���⼭ CurrentWeapon�� state�� Ȯ���ؼ� ���� ��ȯ ���� �����ϱ�
 			CurrentWeapon->SwitchWeapon(PlayerOwner, false);
 		}
 		//WeaponInventory[WeaponIndex]->EquipWeapon(PlayerOwner);
