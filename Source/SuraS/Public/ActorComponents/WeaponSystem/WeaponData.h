@@ -7,6 +7,7 @@
 #include "ActorComponents/WeaponSystem/ProjectileType.h"
 #include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
 #include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
+#include "ActorComponents/WeaponSystem/ProjectileSpreadValue.h"
 #include "NiagaraSystem.h"
 #include "WeaponData.generated.h"
 
@@ -39,6 +40,22 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SingleShot")
 	float SingleShotDelay = 1.f;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BurstShot")
+	float BurstShotFireRate = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BurstShot")
+	int32 BurstShotCount = 3;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FullAutoShot")
+	float FullAutoShotFireRate = 1.f;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSpread")
+	FProjectileSpreadValue DefaultSpread;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSpread")
+	FProjectileSpreadValue ZoomSpread;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MultiProjectileSpread")
+	float MaxAngleOfMultiProjectileSpread = 15.f;
 	//-----------------------------------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
 	FWeaponRecoilStruct DefaultRecoil;

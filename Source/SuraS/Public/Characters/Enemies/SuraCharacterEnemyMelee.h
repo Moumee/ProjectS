@@ -13,6 +13,12 @@ UCLASS()
 class SURAS_API ASuraCharacterEnemyMelee : public ASuraCharacterEnemyBase
 {
 	GENERATED_BODY()
+
+	FTimerHandle RotationHandle;
+
+	const ASuraCharacterPlayer* Player;
+
+	void RotateTowardPlayer();
 	
 protected:
 	virtual void BeginPlay() override;

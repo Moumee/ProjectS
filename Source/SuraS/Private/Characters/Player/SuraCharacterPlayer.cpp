@@ -25,7 +25,6 @@
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Extensions/UIComponent.h"
 
-
 ASuraCharacterPlayer::ASuraCharacterPlayer()
 {
 
@@ -60,6 +59,11 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 
 	DamageSystemComponent = CreateDefaultSubobject<UACDamageSystem>(TEXT("Damage System Component"));
 
+	// Hit Effect Class Init - by Yoony
+	static ConstructorHelpers::FClassFinder<UPlayerHitWidget> WidgetClass{ TEXT("/Game/UI/Player/WBP_PlayerHit") };
+
+	if (WidgetClass.Succeeded())
+		HitEffectWidgetClass = WidgetClass.Class;
 }
 
 void ASuraCharacterPlayer::BeginPlay()
@@ -112,6 +116,17 @@ void ASuraCharacterPlayer::BeginPlay()
 	PreviousGroundedState = RunningState;
 	CurrentState = RunningState;
 
+	// Hit Effect Widget Init - by Yoony
+	if (IsValid(HitEffectWidgetClass))
+	{
+		HitEffectWidget = Cast<UPlayerHitWidget>(CreateWidget<UPlayerHitWidget>(GetWorld(), HitEffectWidgetClass));
+		
+		if (IsValid(HitEffectWidget))
+		{
+			HitEffectWidget->AddToViewport();
+			HitEffectWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 }
 
 void ASuraCharacterPlayer::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -290,6 +305,9 @@ void ASuraCharacterPlayer::UpdateDashCooldowns(float DeltaTime)
 void ASuraCharacterPlayer::OnDamaged()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Player Damaged"));
+
+	HitEffectWidget->SetVisibility(ESlateVisibility::Visible);
+	HitEffectWidget->PlayFadeAnimtion();
 }
 
 void ASuraCharacterPlayer::OnDeath()

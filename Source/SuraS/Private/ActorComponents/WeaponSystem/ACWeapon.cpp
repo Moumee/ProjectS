@@ -17,6 +17,7 @@
 #include "ActorComponents/WeaponSystem/SuraWeaponChargingState.h"
 #include "ActorComponents/WeaponSystem/WeaponCameraShakeBase.h"
 #include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
+#include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -224,9 +225,14 @@ void UACWeapon::InitializeCamera(ASuraCharacterPlayerWeapon* NewCharacter)
 
 void UACWeapon::InitializeUI()
 {
-	if (CrosshairWidgetClass)
+	//if (CrosshairWidgetClass)
+	//{
+		//CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
+	//}
+
+	if (AimUIWidgetClass)
 	{
-		CrosshairWidget = CreateWidget<UUserWidget>(GetWorld(), CrosshairWidgetClass);
+		AimUIWidget = CreateWidget<UWeaponAimUIWidget>(GetWorld(), AimUIWidgetClass);
 	}
 
 	if (AmmoCounterWidgetClass)
@@ -316,6 +322,20 @@ void UACWeapon::LoadWeaponData(FName WeaponID)
 		// <SingleShot>
 		SingleShotDelay = WeaponData->SingleShotDelay;
 
+		// <BurstShot>
+		BurstShotFireRate = WeaponData->BurstShotFireRate;
+		BurstShotCount = WeaponData->BurstShotCount;
+
+		// <FullAutoShot>
+		FullAutoShotFireRate = WeaponData->FullAutoShotFireRate;
+
+		// <ProjectileSpread>
+		DefaultSpread = WeaponData->DefaultSpread;
+		ZoomSpread = WeaponData->ZoomSpread;
+
+		// <MultiProjectileSpread>
+		MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread;
+
 		// <Recoil>
 		DefaultRecoil = WeaponData->DefaultRecoil;
 		ZoomRecoil = WeaponData->ZoomRecoil;
@@ -383,6 +403,8 @@ void UACWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		CurrentState->UpdateState(this, DeltaTime);
 	}
 	UpdateRecoil(DeltaTime);
+
+	UpdateSpread(DeltaTime);
 }
 
 void UACWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -480,10 +502,34 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDa
 			}
 		}
 
-
-		//TODO: 투사체 타입이 직사형인지 곡사형인지, 그리고 관통형인지에 따라서 Trace 방식을 달리 해야함. 우선은 단순 직사형 and 일반형(관통X)로 진행
 		FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
 		FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
+
+		if (bIsZoomIn)
+		{
+			if (ZoomSpread.bEnableProjectileSpread)
+			{
+				LineTraceDirection = GetRandomSpreadVector(Character->GetCamera()->GetForwardVector());
+			}
+
+			if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
+			{
+				AddSpreadValue(&ZoomSpread);
+			}
+		}
+		else
+		{
+			if (DefaultSpread.bEnableProjectileSpread)
+			{
+				LineTraceDirection = GetRandomSpreadVector(Character->GetCamera()->GetForwardVector());
+			}
+
+			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
+			{
+				AddSpreadValue(&DefaultSpread);
+			}
+		}
+
 		FVector LineTraceHitLocation;
 
 		//----------------------------------------------
@@ -565,6 +611,21 @@ void UACWeapon::FireMultiProjectile()
 
 		if (HasAmmo())
 		{
+			if (bIsZoomIn)
+			{
+				if (ZoomSpread.bEnableAimUISpread)
+				{
+					AddSpreadValue(&ZoomSpread);
+				}
+			}
+			else
+			{
+				if (DefaultSpread.bEnableAimUISpread)
+				{
+					AddSpreadValue(&DefaultSpread);
+				}
+			}
+
 			FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
 			FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
 			FVector LineTraceHitLocation;
@@ -578,7 +639,7 @@ void UACWeapon::FireMultiProjectile()
 				TargetLocationOfProjectile = LineTraceHitLocation;
 			}
 
-			// Try and fire a projectile
+			// <Fire Projectile>
 			if (ProjectileClass != nullptr)
 			{
 				UWorld* const World = GetWorld();
@@ -1140,18 +1201,34 @@ void UACWeapon::Create3DUI()
 
 void UACWeapon::ActivateCrosshairWidget(bool bflag)
 {
+	//if (bflag)
+	//{
+	//	if (CrosshairWidget)
+	//	{
+	//		CrosshairWidget->AddToViewport();
+	//	}
+	//}
+	//else
+	//{
+	//	if (CrosshairWidget)
+	//	{
+	//		CrosshairWidget->RemoveFromViewport();
+	//	}
+	//}
+
 	if (bflag)
 	{
-		if (CrosshairWidget)
+		if (AimUIWidget)
 		{
-			CrosshairWidget->AddToViewport();
+			AimUIWidget->AddToViewport();
+			AimUIWidget->ResetAimUISize();
 		}
 	}
 	else
 	{
-		if (CrosshairWidget)
+		if (AimUIWidget)
 		{
-			CrosshairWidget->RemoveFromViewport();
+			AimUIWidget->RemoveFromViewport();
 		}
 	}
 }
@@ -1866,6 +1943,97 @@ void UACWeapon::UpdateRecoil(float DeltaTime)
 			}
 		}
 	}
+}
+#pragma endregion
+
+#pragma region Projectile/SingleProjectileSpread
+void UACWeapon::AddSpreadValue(FProjectileSpreadValue* SpreadValue)
+{
+	if (!SpreadValue) return;
+
+	bIsSpreading = true;
+	SpreadRecoverTimer = 0.f;
+
+	float RandSpreadValue = FMath::RandRange((SpreadValue->SpreadAmountBase) * SpreadValue->SpreadRangeMin, (SpreadValue->SpreadAmountBase) * SpreadValue->SpreadRangeMax);
+
+	TotalTargetSpreadValue += RandSpreadValue;
+	TotalTargetSpreadValue = FMath::Clamp(TotalTargetSpreadValue, 0.f, SpreadValue->MaxSpreadValue);
+}
+void UACWeapon::ApplySpread(float DeltaTime, FProjectileSpreadValue* SpreadValue)
+{
+	if (!SpreadValue) return;
+
+	float InterpSpreadTargetValue = FMath::FInterpConstantTo(CurrentSpreadVaule, TotalTargetSpreadValue, DeltaTime, SpreadValue->SpreadSpeed);
+	CurrentSpreadVaule = InterpSpreadTargetValue;
+
+	SpreadRecoverTimer += DeltaTime;
+}
+void UACWeapon::RecoverSpread(float DeltaTime, FProjectileSpreadValue* SpreadValue)
+{
+	if (!SpreadValue) return;
+
+	float InterpSpreadRecoverTargetValue = FMath::FInterpConstantTo(CurrentSpreadVaule, 0.f, DeltaTime, SpreadValue->SpreadRecoverSpeed);
+	CurrentSpreadVaule = InterpSpreadRecoverTargetValue;
+
+	if (FMath::Abs(CurrentSpreadVaule) < 0.1f)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Spread has been perfectly Recovered!!!"));
+
+		TotalTargetSpreadValue = 0.f;
+		CurrentSpreadVaule = 0.f;
+
+		bIsSpreading = false;
+
+		if (AimUIWidget)
+		{
+			AimUIWidget->ResetAimUISize();
+		}
+	}
+}
+void UACWeapon::UpdateSpread(float DeltaTime)
+{
+	if (Character)
+	{
+		if (bIsSpreading)
+		{
+			if (bIsZoomIn)
+			{
+				if (ZoomSpread.SpreadRecoveryStartTime > SpreadRecoverTimer)
+				{
+					ApplySpread(DeltaTime, &ZoomSpread);
+				}
+				else
+				{
+					RecoverSpread(DeltaTime, &ZoomSpread);
+				}
+			}
+			else
+			{
+				if (DefaultSpread.SpreadRecoveryStartTime > SpreadRecoverTimer)
+				{
+					ApplySpread(DeltaTime, &DefaultSpread);
+				}
+				else
+				{
+					RecoverSpread(DeltaTime, &DefaultSpread);
+				}
+
+				if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
+				{
+					if (AimUIWidget)
+					{
+						AimUIWidget->ApplyAimUISpread(CurrentSpreadVaule);
+					}
+				}
+			}
+		}
+	}
+}
+FVector UACWeapon::GetRandomSpreadVector(FVector BaseDir)
+{
+	const FVector SpreadVector = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(BaseDir.GetSafeNormal(), CurrentSpreadVaule);
+
+	return SpreadVector;
 }
 #pragma endregion
 

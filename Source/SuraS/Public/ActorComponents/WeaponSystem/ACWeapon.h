@@ -11,6 +11,7 @@
 #include "ActorComponents/WeaponSystem/WeaponCamSettingValue.h"
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
 #include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
+#include "ActorComponents/WeaponSystem/ProjectileSpreadValue.h"
 
 #include "Engine/DataTable.h"
 #include "WeaponData.h"
@@ -33,6 +34,7 @@ class UWeaponCameraShakeBase;
 class UNiagaraSystem;
 class UWidgetComponent;
 class UAmmoCounterWidget;
+class UWeaponAimUIWidget;
 
 class UInputAction;
 struct FInputBindingHandle;
@@ -304,6 +306,12 @@ protected:
 	UPROPERTY()
 	UUserWidget* CrosshairWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "AimUIWidget")
+	TSubclassOf<UWeaponAimUIWidget> AimUIWidgetClass;
+
+	UPROPERTY()
+	UWeaponAimUIWidget* AimUIWidget;
+
 	UPROPERTY(EditAnywhere, BlueprintreadWrite, Category = "Weapon|AmmoCounterWidget")
 	//TSubclassOf<UUserWidget> AmmoCounterWidgetClass;
 	TSubclassOf<UAmmoCounterWidget> AmmoCounterWidgetClass;
@@ -372,7 +380,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float BurstShotFireRate = 0.1f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 BurstShotCount = 3;
 
 	int32 BurstShotFired = 0;
@@ -488,6 +496,26 @@ public:
 	void ApplyRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct = nullptr);
 	void RecoverRecoil(float DeltaTime, FWeaponRecoilStruct* RecoilStruct = nullptr);
 	void UpdateRecoil(float DeltaTime);
+#pragma endregion
+
+#pragma region Projectile/SingleProjectileSpread
+protected:
+	bool bIsSpreading = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSpread")
+	FProjectileSpreadValue DefaultSpread;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSpread")
+	FProjectileSpreadValue ZoomSpread;
+
+	float TotalTargetSpreadValue = 0.f;
+	float CurrentSpreadVaule = 0.f;
+	float SpreadRecoverTimer = 0.f;
+protected:
+	void AddSpreadValue(FProjectileSpreadValue* SpreadValue = nullptr);
+	void ApplySpread(float DeltaTime, FProjectileSpreadValue* SpreadValue = nullptr);
+	void RecoverSpread(float DeltaTime, FProjectileSpreadValue* SpreadValue = nullptr);
+	void UpdateSpread(float DeltaTime);
+	FVector GetRandomSpreadVector(FVector BaseDir);
 #pragma endregion
 
 #pragma region Projectile/MultiProjectileSpread
