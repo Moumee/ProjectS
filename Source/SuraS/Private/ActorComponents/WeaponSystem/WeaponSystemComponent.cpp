@@ -238,16 +238,15 @@ void UWeaponSystemComponent::PickUpWeapon()
 		//TODO: �ٷ� Attach �ϴ� ���� �ƴ϶� inventory�� �ѱ⸦ �����ϱ�
 		// OverlappedWeapon->AttachToCharacter(PlayerOwner);
 		ObtainNewWeapon(OverlappedWeapon);
+
+		/** suhyeon **/
+		// WeaponName을 FName으로 변환
+		FName WeaponNameAsFName = FName(*UEnum::GetValueAsString(OverlappedWeapon->GetWeaponName()));
+		//
+		// 델리게이트 호출
+		OnWeaponPickedUp.Broadcast(WeaponNameAsFName);
+		/** suhyeon **/
 	}
-
-		/** suhyeon **/
-		// 여기다 unlock 메서드 연결 
-
-		// 저장된 InventoryWidget을 사용해 UnlockWeapon 호출
-		// UInventoryWidget->UnlockWeapon(OverlappedWeapon->GetWeaponName());
-		
-		// NewWeaponPickUp->GetWeaponName()을 inventory widget의 unlock 메서드에 인자로 전달해주면 될 듯. 거기서 dt_weapon의 해당 name에 맞는 이미지를 불러와서 unlock
-		/** suhyeon **/
 }
 
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)

@@ -1,7 +1,9 @@
 #include "UI/InventoryWidget.h"
 
-#include "ActorComponents/UISystem/ACInventoryManager.h"
+#include "ActorComponents/WeaponSystem/SuraCharacterPlayerWeapon.h"
 #include "ActorComponents/WeaponSystem/WeaponData.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+#include "Characters/Player/SuraCharacterPlayer.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
@@ -20,48 +22,31 @@ void UInventoryWidget::NativeConstruct()
 
     InitializeInventory(); // UI 초기화
 
+   
+
 
 #pragma region Weapon
 
-    //const int32 MaxWeaponTypes = 3;  // 예: Rifle, Sniper, Pistol
-    //const int32 MaxWeaponSlots = 5;  // 각 무기 타입에 대해 5개의 슬롯
-
-    // Weapon 이미지 및 이름 배열 초기화
-    // WeaponImages.SetNum(MaxWeaponTypes);
-    // WeaponNames.SetNum(MaxWeaponSlots);
-
-    // for (int32 i = 0; i < MaxWeaponTypes; ++i)
-    // {
-    //     // WeaponImages[i].SetNum(MaxWeaponSlots);
-    //     // WeaponNames[i].SetNum(MaxWeaponSlots);
-    // }
-    
-    // 무기 타입별 슬롯에 해당하는 UI 위젯 할당
-    // 구현해야함
-
-    // 공통 Lock 이미지 (모든 잠긴 무기 위에 띄울 자물쇠)
-    //LockImage = Cast<UImage>(GetWidgetFromName(TEXT("Lock_Overlay")));
-
-    // 기본적으로 모든 무기 슬롯은 잠겨있다고 가정
-    // for (int32 i = 0; i < MaxWeaponTypes; ++i)
-    // {
-    //     for (int32 j = 0; j < MaxWeaponSlots; ++j)
-    //     {
-    //         if (WeaponStates[i][j] == false)
-    //         {
-    //             // 잠금 이미지 보이기
-    //             if (WeaponImages[i][j])
-    //             {
-    //                 WeaponImages[i][j]->SetVisibility(ESlateVisibility::Visible);
-    //             }
-    //         }
-    //     }
-    // }
-    
+    // Player의 UWeaponSystemComponent 가져오기
+    ASuraCharacterPlayerWeapon* Player = Cast<ASuraCharacterPlayerWeapon>(GetOwningPlayerPawn());
+    if (Player)
+    {
+        UWeaponSystemComponent* WeaponSystem = Player->FindComponentByClass<UWeaponSystemComponent>() ;
+        if (WeaponSystem)
+        {
+            // 델리게이트 바인딩
+            WeaponSystem->OnWeaponPickedUp.AddDynamic(this, &UInventoryWidget::OnWeaponPickedUp);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("WeaponSystem is nullptr!"));
+        }
+    }
+    else if (!Player)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Player is nullptr!"));
+    }
 #pragma endregion Weapon
- 
-    
-    
 }
 
 FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
@@ -93,7 +78,7 @@ FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKey
         //     InventoryManager->UnlockWeapon("Rifle","RifleName");  // 예시로 UnlockWeapon 함수 호출
         //     GEngine->AddOnScreenDebugMessage(-1, 2.f , FColor::Red, TEXT("Weapon unlocked"));
         // }
-        UnlockWeapon(TEXT("Rifle"));
+        //UnlockWeapon(TEXT("Rifle"));
     
         return FReply::Handled();
     }
@@ -200,20 +185,33 @@ void UInventoryWidget::UnlockWeapon(FName WeaponName)
 {
     if (!DTWeapon) return;
 
+    // WeaponName_ 접두어를 제거하고, 실제 이름만 추출
+    FString WeaponNameStr = WeaponName.ToString().RightChop(24);  // "EWeaponName::WeaponName_"을 제거
+
+    // 수정된 WeaponNameStr을 사용하여 FindRow 호출
     static const FString ContextString(TEXT("Weapon Unlock Context"));
-    FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(WeaponName, ContextString);
+    FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(*WeaponNameStr, ContextString);
 
     if (WeaponData && !WeaponData->bIsWeaponOwned)
     {
         WeaponData->bIsWeaponOwned = true;
 
-        // ✅ `WeaponImages`를 재사용
-        FString WeaponNameStr = WeaponName.ToString();
+        // `WeaponImages`를 재사용
+        // FString WeaponNameStr = WeaponName.ToString();
         if (WeaponImages.Contains(WeaponNameStr))
         {
-            WeaponImages[WeaponNameStr]->SetOpacity(1.0f);  // 이미지 활성화
+            WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));  // 이미지 활성화
+            GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Unlocked Weapon");
+
+            // 텍스트 변경
+            
         }
     }
+}
+
+void UInventoryWidget::OnWeaponPickedUp(FName WeaponName)
+{
+    UnlockWeapon(WeaponName);
 }
 
 

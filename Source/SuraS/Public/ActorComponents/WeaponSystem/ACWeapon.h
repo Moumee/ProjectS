@@ -17,8 +17,8 @@
 
 #include "ACWeapon.generated.h"
 
-//TODO: Character Class¸¦ ASuraCharacterBase·Î ÇÒÁö °í¹ÎÇØºÁ¾ßÇÔ
-// ±Ùµ¥ ¿ì¼±Àº »ó¼Ó¹ÞÀº Å¬·¡½º·Î ±¸Çö
+//TODO: Character Classï¿½ï¿½ ASuraCharacterBaseï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½
+// ï¿½Ùµï¿½ ï¿½ì¼±ï¿½ï¿½ ï¿½ï¿½Ó¹ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 class ASuraCharacterPlayerWeapon;
 class USuraWeaponBaseState;
 class USuraWeaponIdleState;
@@ -65,7 +65,7 @@ public:
 	FVector MuzzleOffset;
 
 	/** MappingContext */
-	//TODO: FireMappingÀ» Character¿¡¼­ Ã³¸®ÇÏ´Â °ÍÀÌ ³ªÀºÁö °í¹ÎÇØºÁ¾ßÇÔ
+	//TODO: FireMappingï¿½ï¿½ Characterï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* FireMappingContext;
 
@@ -138,7 +138,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 #pragma region WeaponState
-protected: //TODO: publicÀ¸·Î ¼öÁ¤ÇÏ±â
+protected: //TODO: publicï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponBaseState* CurrentState;
 
@@ -318,12 +318,12 @@ protected:
 	TSubclassOf<UUserWidget> TargetMarkerWidgetClass;
 
 	//-----------------------------------------------------------
-	//TODO: ¾Æ·¡´Â Test¸¦ À§ÇØ¼­ ÀÓ½Ã·Î »ç¿ëÁßÀÎ °ÍÀÓ. ³ªÁß¿¡ »èÁ¦ÇÏ´øÁö ÇØ¾ßÇÔ
+	//TODO: ï¿½Æ·ï¿½ï¿½ï¿½ Testï¿½ï¿½ ï¿½ï¿½ï¿½Ø¼ï¿½ ï¿½Ó½Ã·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ß¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½ ï¿½Ø¾ï¿½ï¿½ï¿½
 
 	UPROPERTY()
 	UTextureRenderTarget2D* RenderTarget;
 
-	// 3D UIÀÇ ¸ÓÆ¼¸®¾ó ÀÎ½ºÅÏ½º
+	// 3D UIï¿½ï¿½ ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½ï¿½ ï¿½Î½ï¿½ï¿½Ï½ï¿½
 	UPROPERTY()
 	UMaterialInstanceDynamic* WidgetMaterialInstance;
 

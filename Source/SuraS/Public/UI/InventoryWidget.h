@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BaseUIWidget.h"
-
+#include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "InventoryWidget.generated.h"
 
 
@@ -95,19 +95,12 @@ public:
 
 	TMap<FString, UImage*> WeaponImages;
 
+	UFUNCTION()
+	void OnWeaponPickedUp(FName WeaponName);
+
 #pragma endregion Weapon
 
-private:
-	// 3 x 5 무기 UI 배열
-	//TArray<TArray<UImage*>> WeaponImages;
-	//TArray<TArray<UTextBlock*>> WeaponNames;
 
-	// lock 이미지
-	UPROPERTY()
-	UImage* LockImage;
-	
-	UPROPERTY()
-	UImage* LockBackGroundImage;
 	
 };
 
