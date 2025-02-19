@@ -116,13 +116,8 @@ void ASuraCharacterEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ASuraCharacterEnemyBase::OnDamagedTriggered()
 {
-	UpdateHealthBarValue();
-	HealthBarWidget->SetHiddenInGame(false);
-
-	if (UEnemyHealthBarWidget* const Widget = Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject()))
-		Widget->PlayFadeAnimtion();
-
-	FTimerHandle HideHealthBarHandle;
+	if (GetWorldTimerManager().IsTimerActive(HideHealthBarHandle))
+		GetWorldTimerManager().ClearTimer(HideHealthBarHandle);
 
 	GetWorldTimerManager().SetTimer(
 		HideHealthBarHandle,
@@ -130,6 +125,11 @@ void ASuraCharacterEnemyBase::OnDamagedTriggered()
 		1.f,
 		false
 	);
+
+	UpdateHealthBarValue();
+	HealthBarWidget->SetHiddenInGame(false);
+
+	Cast<UEnemyHealthBarWidget>(HealthBarWidget->GetUserWidgetObject())->PlayFadeAnimtion();
 
 	// GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("%s"), *(HitAnimation->GetFName()).ToString()));
 
@@ -161,8 +161,14 @@ void ASuraCharacterEnemyBase::OnDeathTriggered()
 	GetMesh()->SetCollisionObjectType(ECC_GameTraceChannel1); // to disable collision with SuraProjectile object
 
 	//objectpoolDisableEnemy
-	SetActorHiddenInGame(true);
-	SetActorEnableCollision(false);
+	FTimerHandle DeathHandle;
+
+	GetWorldTimerManager().SetTimer(
+		DeathHandle,
+		FTimerDelegate::CreateLambda([&]() { SetActorHiddenInGame(true); }),
+		3.f,
+		false
+	);
 }
 
 void ASuraCharacterEnemyBase::UpdateHealthBarValue()
