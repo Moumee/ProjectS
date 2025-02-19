@@ -322,6 +322,20 @@ void UACWeapon::LoadWeaponData(FName WeaponID)
 		// <SingleShot>
 		SingleShotDelay = WeaponData->SingleShotDelay;
 
+		// <BurstShot>
+		BurstShotFireRate = WeaponData->BurstShotFireRate;
+		BurstShotCount = WeaponData->BurstShotCount;
+
+		// <FullAutoShot>
+		FullAutoShotFireRate = WeaponData->FullAutoShotFireRate;
+
+		// <ProjectileSpread>
+		DefaultSpread = WeaponData->DefaultSpread;
+		ZoomSpread = WeaponData->ZoomSpread;
+
+		// <MultiProjectileSpread>
+		MaxAngleOfMultiProjectileSpread = WeaponData->MaxAngleOfMultiProjectileSpread;
+
 		// <Recoil>
 		DefaultRecoil = WeaponData->DefaultRecoil;
 		ZoomRecoil = WeaponData->ZoomRecoil;
@@ -390,10 +404,7 @@ void UACWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	}
 	UpdateRecoil(DeltaTime);
 
-	if (bEnableSingleProjectileSpread)
-	{
-		UpdateSpread(DeltaTime);
-	}
+	UpdateSpread(DeltaTime);
 }
 
 void UACWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -494,10 +505,29 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDa
 		FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
 		FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
 
-		if (bEnableSingleProjectileSpread)
+		if (bIsZoomIn)
 		{
-			LineTraceDirection = GetRandomSpreadVector(Character->GetCamera()->GetForwardVector());
-			AddSpreadValue();
+			if (ZoomSpread.bEnableProjectileSpread)
+			{
+				LineTraceDirection = GetRandomSpreadVector(Character->GetCamera()->GetForwardVector());
+			}
+
+			if (ZoomSpread.bEnableProjectileSpread || ZoomSpread.bEnableAimUISpread)
+			{
+				AddSpreadValue(&ZoomSpread);
+			}
+		}
+		else
+		{
+			if (DefaultSpread.bEnableProjectileSpread)
+			{
+				LineTraceDirection = GetRandomSpreadVector(Character->GetCamera()->GetForwardVector());
+			}
+
+			if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
+			{
+				AddSpreadValue(&DefaultSpread);
+			}
 		}
 
 		FVector LineTraceHitLocation;
@@ -581,6 +611,21 @@ void UACWeapon::FireMultiProjectile()
 
 		if (HasAmmo())
 		{
+			if (bIsZoomIn)
+			{
+				if (ZoomSpread.bEnableAimUISpread)
+				{
+					AddSpreadValue(&ZoomSpread);
+				}
+			}
+			else
+			{
+				if (DefaultSpread.bEnableAimUISpread)
+				{
+					AddSpreadValue(&DefaultSpread);
+				}
+			}
+
 			FVector LineTraceStartLocation = Character->GetCamera()->GetComponentLocation();
 			FVector LineTraceDirection = Character->GetCamera()->GetForwardVector();
 			FVector LineTraceHitLocation;
@@ -1902,28 +1947,32 @@ void UACWeapon::UpdateRecoil(float DeltaTime)
 #pragma endregion
 
 #pragma region Projectile/SingleProjectileSpread
-void UACWeapon::AddSpreadValue()
+void UACWeapon::AddSpreadValue(FProjectileSpreadValue* SpreadValue)
 {
+	if (!SpreadValue) return;
+
 	bIsSpreading = true;
 	SpreadRecoverTimer = 0.f;
 
-	float RandSpreadValue = FMath::RandRange((SpreadAmountBase) * SpreadRangeMin, (SpreadAmountBase) * SpreadRangeMax);
+	float RandSpreadValue = FMath::RandRange((SpreadValue->SpreadAmountBase) * SpreadValue->SpreadRangeMin, (SpreadValue->SpreadAmountBase) * SpreadValue->SpreadRangeMax);
 
 	TotalTargetSpreadValue += RandSpreadValue;
-	TotalTargetSpreadValue = FMath::Clamp(TotalTargetSpreadValue, 0.f, MaxSpreadValue);
+	TotalTargetSpreadValue = FMath::Clamp(TotalTargetSpreadValue, 0.f, SpreadValue->MaxSpreadValue);
 }
-void UACWeapon::ApplySpread(float DeltaTime)
+void UACWeapon::ApplySpread(float DeltaTime, FProjectileSpreadValue* SpreadValue)
 {
-	float InterpSpreadTargetValue = FMath::FInterpConstantTo(CurrentSpreadVaule, TotalTargetSpreadValue, DeltaTime, SpreadSpeed);
+	if (!SpreadValue) return;
+
+	float InterpSpreadTargetValue = FMath::FInterpConstantTo(CurrentSpreadVaule, TotalTargetSpreadValue, DeltaTime, SpreadValue->SpreadSpeed);
 	CurrentSpreadVaule = InterpSpreadTargetValue;
 
 	SpreadRecoverTimer += DeltaTime;
 }
-void UACWeapon::RecoverSpread(float DeltaTime)
+void UACWeapon::RecoverSpread(float DeltaTime, FProjectileSpreadValue* SpreadValue)
 {
-	//if (!RecoilStruct) return; //TODO: Spread 관련 Struct가 생길 것이기 때문에 남겨 놨음
+	if (!SpreadValue) return;
 
-	float InterpSpreadRecoverTargetValue = FMath::FInterpConstantTo(CurrentSpreadVaule, 0.f, DeltaTime, SpreadRecoverSpeed);
+	float InterpSpreadRecoverTargetValue = FMath::FInterpConstantTo(CurrentSpreadVaule, 0.f, DeltaTime, SpreadValue->SpreadRecoverSpeed);
 	CurrentSpreadVaule = InterpSpreadRecoverTargetValue;
 
 	if (FMath::Abs(CurrentSpreadVaule) < 0.1f)
@@ -1937,7 +1986,6 @@ void UACWeapon::RecoverSpread(float DeltaTime)
 
 		if (AimUIWidget)
 		{
-			//AimUIWidget->ApplyAimUISpread(CurrentSpreadVaule);
 			AimUIWidget->ResetAimUISize();
 		}
 	}
@@ -1948,32 +1996,34 @@ void UACWeapon::UpdateSpread(float DeltaTime)
 	{
 		if (bIsSpreading)
 		{
-			//TODO: 일단은 Zoom 했을 때 아닐 때 Spread 정도를 동일하게 하는데, 나중에는 이것도 다르게 적용하기
 			if (bIsZoomIn)
 			{
-				if (SpreadRecoveryStartTime > SpreadRecoverTimer)
+				if (ZoomSpread.SpreadRecoveryStartTime > SpreadRecoverTimer)
 				{
-					ApplySpread(DeltaTime);
+					ApplySpread(DeltaTime, &ZoomSpread);
 				}
 				else
 				{
-					RecoverSpread(DeltaTime);
+					RecoverSpread(DeltaTime, &ZoomSpread);
 				}
 			}
 			else
 			{
-				if (SpreadRecoveryStartTime > SpreadRecoverTimer)
+				if (DefaultSpread.SpreadRecoveryStartTime > SpreadRecoverTimer)
 				{
-					ApplySpread(DeltaTime);
+					ApplySpread(DeltaTime, &DefaultSpread);
 				}
 				else
 				{
-					RecoverSpread(DeltaTime);
+					RecoverSpread(DeltaTime, &DefaultSpread);
 				}
 
-				if (AimUIWidget)
+				if (DefaultSpread.bEnableProjectileSpread || DefaultSpread.bEnableAimUISpread)
 				{
-					AimUIWidget->ApplyAimUISpread(CurrentSpreadVaule);
+					if (AimUIWidget)
+					{
+						AimUIWidget->ApplyAimUISpread(CurrentSpreadVaule);
+					}
 				}
 			}
 		}
@@ -1981,7 +2031,6 @@ void UACWeapon::UpdateSpread(float DeltaTime)
 }
 FVector UACWeapon::GetRandomSpreadVector(FVector BaseDir)
 {
-	//TODO: 아직 구현중임
 	const FVector SpreadVector = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(BaseDir.GetSafeNormal(), CurrentSpreadVaule);
 
 	return SpreadVector;
