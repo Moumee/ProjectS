@@ -6,6 +6,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Structures/Enemies/EnemyAttributesData.h"
 
 AEnemyBaseAIController::AEnemyBaseAIController(FObjectInitializer const& ObjectInitializer)
 {
@@ -30,6 +31,13 @@ void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 			UBlackboardComponent* Bboard;
 			UseBlackboard(BehaviorTree->BlackboardAsset, Bboard);
 			Blackboard = Bboard; // "Blackboard" is an already existing variable name in AAIController class
+
+			const auto EnemyAttributesData = Enemy->EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(Enemy->GetEnemyType(), "");
+
+			if (EnemyAttributesData)
+			{
+				InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
+			}
 
 			RunBehaviorTree(BehaviorTree);
 

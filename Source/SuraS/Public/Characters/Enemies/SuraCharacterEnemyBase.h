@@ -36,6 +36,8 @@ class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDam
 
 	FVector2D HealthBarWidgetSize;
 
+	FTimerHandle HideHealthBarHandle;
+
 protected:
 	// [protected variables]
 	FName EnemyType; // for initializing differently btw enemy types from the DT
@@ -82,6 +84,8 @@ public:
 
 	// behavior tree getter
 	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
+
+	FORCEINLINE FName GetEnemyType() const { return EnemyType; }
 
 	void SetUpAIController(AEnemyBaseAIController* const NewAIController); // const ptr: the ptr address can't be changed
 
