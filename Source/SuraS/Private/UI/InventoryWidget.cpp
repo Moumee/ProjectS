@@ -160,10 +160,16 @@ void UInventoryWidget::InitializeInventory()
     TArray<FName> RowNames = DTWeapon->GetRowNames();
 
     // umg에서 바인딩한 image 위젯들 (각 무기 종류에 맞게 설정)
-    WeaponImages.Add(TEXT("Rifle"), Rifle);
-    WeaponImages.Add(TEXT("ShotGun"), ShotGun);
-    WeaponImages.Add(TEXT("MissileLauncher"), MissileLauncher);
-    WeaponImages.Add(TEXT("RailGun"), RailGun);
+    // WeaponImages.Add(TEXT("Rifle"), Rifle);
+    // WeaponImages.Add(TEXT("ShotGun"), ShotGun);
+    // WeaponImages.Add(TEXT("MissileLauncher"), MissileLauncher);
+    // WeaponImages.Add(TEXT("RailGun"), RailGun);
+
+    // 이미지와 텍스트를 같이 저장
+    WeaponUIElements.Add(TEXT("Rifle"), FWeaponUI(Rifle, RifleName));
+    WeaponUIElements.Add(TEXT("ShotGun"), FWeaponUI(ShotGun, ShotGunName));
+    WeaponUIElements.Add(TEXT("MissileLauncher"), FWeaponUI(MissileLauncher, MissileLauncherName));
+    WeaponUIElements.Add(TEXT("RailGun"), FWeaponUI(RailGun, RailGunName));
 
     for (FName RowName : RowNames)
     {
@@ -173,19 +179,50 @@ void UInventoryWidget::InitializeInventory()
         {
             FString WeaponNameStr = RowName.ToString(); // RowName을 문자열로 변환
 
-            if (WeaponImages.Contains(WeaponNameStr))
+            // if (WeaponImages.Contains(WeaponNameStr))
+            // {
+            //     WeaponImages[WeaponNameStr]->SetBrushFromTexture(WeaponData->WeaponImage);
+            // }
+            //
+            // // 무기 소유 여부에 따라 이미지 투명도 조정
+            // if (WeaponData->bIsWeaponOwned)
+            // {
+            //     WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f)); // 활성화
+            // }
+            // else
+            // {
+            //     WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f)); // 비활성화 (투명도 조절)
+            // }
+
+            if (WeaponUIElements.Contains(WeaponNameStr))
             {
-                WeaponImages[WeaponNameStr]->SetBrushFromTexture(WeaponData->WeaponImage);
-            }
-            
-            // 무기 소유 여부에 따라 이미지 투명도 조정
-            if (WeaponData->bIsWeaponOwned)
-            {
-                WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f)); // 활성화
-            }
-            else
-            {
-                WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f)); // 비활성화 (투명도 조절)
+                FWeaponUI& WeaponUI = WeaponUIElements[WeaponNameStr];
+
+                // 이미지 설정
+                if (WeaponUI.WeaponImage)
+                {
+                     WeaponUI.WeaponImage->SetBrushFromTexture(WeaponData->WeaponImage);
+                    // float Value = WeaponData->bIsWeaponOwned ? 1.0f : 0.0f;
+                    // WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, Value));
+                    if (WeaponData->bIsWeaponOwned)
+                    {
+                        WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f));
+                    }
+                    else
+                    {
+                        WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f));
+                    }
+                    
+                }
+                // 텍스트 설정
+                if (WeaponUI.WeaponText)
+                {
+                    if (WeaponData->bIsWeaponOwned)
+                    {
+                        WeaponUI.WeaponText->SetText(FText::FromString(WeaponNameStr));
+                        WeaponUI.WeaponText->SetOpacity(1.0f);
+                    }
+                }
             }
         }
     }

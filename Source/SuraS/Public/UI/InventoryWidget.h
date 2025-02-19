@@ -23,6 +23,22 @@ enum class EInventoryTab : uint8
 	Chip UMETA(DisplayName = "Chip")
 };
 
+
+USTRUCT(BlueprintType)
+struct FWeaponUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	UImage* WeaponImage;
+
+	UPROPERTY()
+	UTextBlock* WeaponText;
+
+	FWeaponUI() : WeaponImage(nullptr), WeaponText(nullptr) {}
+	FWeaponUI(UImage* Image, UTextBlock* Text) : WeaponImage(Image), WeaponText(Text) {};
+};
+
 UCLASS()
 class SURAS_API UInventoryWidget : public UBaseUIWidget	
 {
@@ -78,7 +94,12 @@ public:
 	UDataTable* DTWeapon;  // 블루프린트에서 데이터 테이블 할당
 
 	void UnlockWeapon(FName WeaponName);
+	
+	/** 총기 UI 요소 맵 */
+	TMap<FString, FWeaponUI> WeaponUIElements;
 
+	//
+	TMap<FString, UImage*> WeaponImages;
 
 	/** 총기 umg 바인딩 **/
 	UPROPERTY(meta = (BindWidget))
@@ -93,9 +114,20 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UImage* RailGun;
 
-	TMap<FString, UImage*> WeaponImages;
+	/** 총기 이름 바인딩 */
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* RifleName;
 
-	TMap<FString, UWeaponWidget*> WeapponWidgets;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ShotGunName;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MissileLauncherName;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* RailGunName;
+	
+	
 
 	UFUNCTION()
 	void OnWeaponPickedUp(FName WeaponName);
