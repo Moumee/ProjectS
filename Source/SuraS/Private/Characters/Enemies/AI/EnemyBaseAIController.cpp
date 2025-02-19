@@ -33,6 +33,7 @@ void AEnemyBaseAIController::OnPossess(APawn* PossessedPawn)
 			Blackboard = Bboard; // "Blackboard" is an already existing variable name in AAIController class
 
 			const auto EnemyAttributesData = Enemy->EnemyAttributesDT.DataTable->FindRow<FEnemyAttributesData>(Enemy->GetEnemyType(), "");
+
 			if (EnemyAttributesData)
 			{
 				InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);

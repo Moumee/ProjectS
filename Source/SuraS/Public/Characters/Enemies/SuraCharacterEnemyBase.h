@@ -36,6 +36,8 @@ class SURAS_API ASuraCharacterEnemyBase : public ASuraCharacterBase, public IDam
 
 	FVector2D HealthBarWidgetSize;
 
+	FTimerHandle HideHealthBarHandle;
+
 protected:
 	// [protected variables]
 	FName EnemyType; // for initializing differently btw enemy types from the DT
