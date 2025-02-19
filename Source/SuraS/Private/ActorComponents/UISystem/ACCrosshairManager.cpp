@@ -58,23 +58,23 @@ void UACCrosshairManager::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	PerformLineTrace();
 
 	// crosshair state debug message
-	if (bIsTargeting)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, TEXT("Targeting: TRUE"));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, TEXT("Targeting: FALSE"));
-	}
-
-	if (bIsHeadShot)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, TEXT("Headshot: TRUE"));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, TEXT("Headshot: FALSE"));
-	}
+	// if (bIsTargeting)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, TEXT("Targeting: TRUE"));
+	// }
+	// else
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, TEXT("Targeting: FALSE"));
+	// }
+	//
+	// if (bIsHeadShot)
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, TEXT("Headshot: TRUE"));
+	// }
+	// else
+	// {
+	// 	GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Blue, TEXT("Headshot: FALSE"));
+	// }
 }
 
 void UACCrosshairManager::InitializeCrosshairWidget()

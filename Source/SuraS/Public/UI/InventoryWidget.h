@@ -95,6 +95,8 @@ public:
 
 	TMap<FString, UImage*> WeaponImages;
 
+	TMap<FString, UWeaponWidget*> WeapponWidgets;
+
 	UFUNCTION()
 	void OnWeaponPickedUp(FName WeaponName);
 

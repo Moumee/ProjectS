@@ -177,6 +177,16 @@ void UInventoryWidget::InitializeInventory()
             {
                 WeaponImages[WeaponNameStr]->SetBrushFromTexture(WeaponData->WeaponImage);
             }
+            
+            // 무기 소유 여부에 따라 이미지 투명도 조정
+            if (WeaponData->bIsWeaponOwned)
+            {
+                WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f)); // 활성화
+            }
+            else
+            {
+                WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f)); // 비활성화 (투명도 조절)
+            }
         }
     }
 }
