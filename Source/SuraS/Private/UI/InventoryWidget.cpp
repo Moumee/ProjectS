@@ -15,15 +15,10 @@ void UInventoryWidget::NativeConstruct()
 
     // 키보드 입력을 받기 위해 IsFocusable를 true로 설정
     this->SetIsFocusable(true);
-    
+
     // 기본값 설정
     CurrentTab = EInventoryTab::Weapon;
     SetActiveTab(CurrentTab);
-
-    InitializeInventory(); // UI 초기화
-
-   
-
 
 #pragma region Weapon
 
@@ -31,22 +26,41 @@ void UInventoryWidget::NativeConstruct()
     ASuraCharacterPlayerWeapon* Player = Cast<ASuraCharacterPlayerWeapon>(GetOwningPlayerPawn());
     if (Player)
     {
-        UWeaponSystemComponent* WeaponSystem = Player->FindComponentByClass<UWeaponSystemComponent>() ;
+        UWeaponSystemComponent* WeaponSystem = Player->FindComponentByClass<UWeaponSystemComponent>();
         if (WeaponSystem)
         {
             // 델리게이트 바인딩
-            WeaponSystem->OnWeaponPickedUp.AddDynamic(this, &UInventoryWidget::OnWeaponPickedUp);
+            if (!WeaponSystem->OnWeaponPickedUp.IsAlreadyBound(this, &UInventoryWidget::OnWeaponPickedUp))
+            {
+                WeaponSystem->OnWeaponPickedUp.AddDynamic(this, &UInventoryWidget::OnWeaponPickedUp);
+            }
         }
         else
         {
             UE_LOG(LogTemp, Warning, TEXT("WeaponSystem is nullptr!"));
         }
     }
-    else if (!Player)
+    else
     {
         UE_LOG(LogTemp, Warning, TEXT("Player is nullptr!"));
     }
 #pragma endregion Weapon
+    
+    // 최초 한 번만 초기화되도록 체크
+    if (bIsInitialized)
+    {
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("WBP_Inventory 생성됨"));
+
+    InitializeInventory(); // UI 초기화
+
+
+
+    // 초기화 완료 후 bIsInitialized를 true로 설정
+    bIsInitialized = true;
+    
 }
 
 FReply UInventoryWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
@@ -159,12 +173,6 @@ void UInventoryWidget::InitializeInventory()
     static const FString ContextString(TEXT("Weapon Data Context"));
     TArray<FName> RowNames = DTWeapon->GetRowNames();
 
-    // umg에서 바인딩한 image 위젯들 (각 무기 종류에 맞게 설정)
-    // WeaponImages.Add(TEXT("Rifle"), Rifle);
-    // WeaponImages.Add(TEXT("ShotGun"), ShotGun);
-    // WeaponImages.Add(TEXT("MissileLauncher"), MissileLauncher);
-    // WeaponImages.Add(TEXT("RailGun"), RailGun);
-
     // 이미지와 텍스트를 같이 저장
     WeaponUIElements.Add(TEXT("Rifle"), FWeaponUI(Rifle, RifleName));
     WeaponUIElements.Add(TEXT("ShotGun"), FWeaponUI(ShotGun, ShotGunName));
@@ -179,49 +187,51 @@ void UInventoryWidget::InitializeInventory()
         {
             FString WeaponNameStr = RowName.ToString(); // RowName을 문자열로 변환
 
-            // if (WeaponImages.Contains(WeaponNameStr))
-            // {
-            //     WeaponImages[WeaponNameStr]->SetBrushFromTexture(WeaponData->WeaponImage);
-            // }
-            //
-            // // 무기 소유 여부에 따라 이미지 투명도 조정
-            // if (WeaponData->bIsWeaponOwned)
-            // {
-            //     WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f)); // 활성화
-            // }
-            // else
-            // {
-            //     WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f)); // 비활성화 (투명도 조절)
-            // }
-
             if (WeaponUIElements.Contains(WeaponNameStr))
             {
-                FWeaponUI& WeaponUI = WeaponUIElements[WeaponNameStr];
+                UpdateWeaponUI(WeaponNameStr);
+            }
+        }
+    }
+}
 
-                // 이미지 설정
-                if (WeaponUI.WeaponImage)
+void UInventoryWidget::UpdateWeaponUI(FString WeaponNameStr)
+{
+    if (!DTWeapon) return;
+
+    // 수정된 WeaponNameStr을 사용하여 FindRow 호출
+    static const FString ContextString(TEXT("Weapon Unlock Context"));
+    FWeaponData* WeaponData = DTWeapon->FindRow<FWeaponData>(*WeaponNameStr, ContextString);
+
+    if (WeaponData)
+    {
+        // 수정된 WeaponNameStr을 사용하여 FindRow 호출
+        if (WeaponUIElements.Contains(WeaponNameStr))
+        {
+            FWeaponUI& WeaponUI = WeaponUIElements[WeaponNameStr];
+
+            // 이미지 설정
+            if (WeaponUI.WeaponImage)
+            {
+                WeaponUI.WeaponImage->SetBrushFromTexture(WeaponData->WeaponImage);
+
+                // 무기 소유 여부에 따른 색상 조정
+                if (WeaponData->bIsWeaponOwned)
                 {
-                     WeaponUI.WeaponImage->SetBrushFromTexture(WeaponData->WeaponImage);
-                    // float Value = WeaponData->bIsWeaponOwned ? 1.0f : 0.0f;
-                    // WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, Value));
-                    if (WeaponData->bIsWeaponOwned)
-                    {
-                        WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f));
-                    }
-                    else
-                    {
-                        WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f));
-                    }
-                    
+                    WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f));
                 }
-                // 텍스트 설정
-                if (WeaponUI.WeaponText)
+                else
                 {
-                    if (WeaponData->bIsWeaponOwned)
-                    {
-                        WeaponUI.WeaponText->SetText(FText::FromString(WeaponNameStr));
-                        WeaponUI.WeaponText->SetOpacity(1.0f);
-                    }
+                    WeaponUI.WeaponImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f));
+                }
+            }
+            // 텍스트 설정
+            if (WeaponUI.WeaponText)
+            {
+                if (WeaponData->bIsWeaponOwned)
+                {
+                    WeaponUI.WeaponText->SetText(FText::FromString(WeaponNameStr));
+                    WeaponUI.WeaponText->SetOpacity(1.0f);
                 }
             }
         }
@@ -242,17 +252,7 @@ void UInventoryWidget::UnlockWeapon(FName WeaponName)
     if (WeaponData && !WeaponData->bIsWeaponOwned)
     {
         WeaponData->bIsWeaponOwned = true;
-
-        // `WeaponImages`를 재사용
-        // FString WeaponNameStr = WeaponName.ToString();
-        if (WeaponImages.Contains(WeaponNameStr))
-        {
-            WeaponImages[WeaponNameStr]->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));  // 이미지 활성화
-            GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Unlocked Weapon");
-
-            // 텍스트 변경
-            
-        }
+        UpdateWeaponUI(WeaponNameStr);
     }
 }
 

@@ -251,11 +251,6 @@ void UWeaponSystemComponent::PickUpWeapon()
 
 bool UWeaponSystemComponent::ObtainNewWeapon(ASuraWeaponPickUp* NewWeaponPickUp)
 {
-	// suhyeon
-	EWeaponName WeaponEnumValue = OverlappedWeapon->GetWeaponName();
-	// 디버그 메시지 출력
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, UEnum::GetValueAsString(WeaponEnumValue));
-	// suhyeon
 	for (const UACWeapon* WeaponInPossession : WeaponInventory)
 	{
 		if (WeaponInPossession->GetWeaponName() == NewWeaponPickUp->GetWeaponName())

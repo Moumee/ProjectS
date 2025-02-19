@@ -13,7 +13,11 @@ void UBaseUIWidget::NativeConstruct()
 // UI를 화면에 띄우는 메서드
 void UBaseUIWidget::OpenUI()
 {
-	AddToViewport();
+	if (!IsInViewport()) // 이미 Viewport에 추가된 경우 실행하지 않음
+	{
+		AddToViewport();
+	}
+	
 
 	// 게임 일시정지
 	// UGameplayStatics::SetGamePaused(GetWorld(), true);
@@ -33,7 +37,10 @@ void UBaseUIWidget::OpenUI()
 // UI를 화면에서 제거하는 메서드
 void UBaseUIWidget::CloseUI()
 {
-	RemoveFromParent();
+	if (IsInViewport())
+	{
+		RemoveFromParent();
+	}
         
 	// 게임 일시정지 해제
 	// UGameplayStatics::SetGamePaused(GetWorld(), false);

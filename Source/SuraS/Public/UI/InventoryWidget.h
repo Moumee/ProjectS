@@ -89,17 +89,16 @@ public:
 	
 	// WBP_Invnetory 초기화
 	void InitializeInventory();
+
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
 	UDataTable* DTWeapon;  // 블루프린트에서 데이터 테이블 할당
 
+	void UpdateWeaponUI(FString WeaponNameStr);
 	void UnlockWeapon(FName WeaponName);
 	
 	/** 총기 UI 요소 맵 */
 	TMap<FString, FWeaponUI> WeaponUIElements;
-
-	//
-	TMap<FString, UImage*> WeaponImages;
 
 	/** 총기 umg 바인딩 **/
 	UPROPERTY(meta = (BindWidget))
@@ -127,10 +126,11 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* RailGunName;
 	
-	
-
 	UFUNCTION()
 	void OnWeaponPickedUp(FName WeaponName);
+
+private:
+	bool bIsInitialized = false;
 
 #pragma endregion Weapon
 

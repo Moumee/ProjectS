@@ -41,6 +41,7 @@ void UACUIMangerComponent::SetupInput()
 
 void UACUIMangerComponent::OpenUI(EUIType UIType)
 {
+	
 	UBaseUIWidget* TargetWidget = GetWidget(UIType);
 	if (!TargetWidget) return; // 위젯 생성에 실패한 경우 처리
 
@@ -57,27 +58,14 @@ UBaseUIWidget* UACUIMangerComponent::GetWidget(EUIType UIType)
 	{
 		// 위젯이 없다면 새로 생성
 		UBaseUIWidget* NewWidget = CreateWidget<UBaseUIWidget>(GetWorld(), UIWidgetClasses[UIType]);
+		UE_LOG(LogTemp, Warning, TEXT("Widget created"));
         
 		// 새로 생성된 위젯이 있으면 UIWidgets에 저장
 		if (NewWidget)
 		{
 			UIWidgets.Add(UIType, NewWidget);
-
-			// 최초 생성 시에만 초기화 (Update가 아님)
-			if (UIType == EUIType::Inventory)
-			{
-				UInventoryWidget* InventoryWidget = Cast<UInventoryWidget>(NewWidget);
-				if (InventoryWidget)
-				{
-					InventoryWidget->InitializeInventory();
-				}
-			}
-			
-			return NewWidget;
 		}
-        
-		// 위젯 생성 실패 시 nullptr 반환
-		return nullptr;
+		return NewWidget;
 	}
 
 	// 이미 생성된 위젯이 있으면 반환
