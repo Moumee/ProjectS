@@ -5,9 +5,12 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 
-//TODO: °æ·Î ¼öÁ¤ÇÏ±â
+//TODO: ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
 #include "WeaponInterface.h"
 #include "WeaponSystemComponent.generated.h"
+
+// delegate about inventory widget (writted by suhyeon)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponPickedUp, FName, WeaponName);
 
 class UACWeapon;
 
@@ -19,6 +22,10 @@ class SURAS_API UWeaponSystemComponent : public UActorComponent, public IWeaponI
 public:	
 	// Sets default values for this component's properties
 	UWeaponSystemComponent();
+
+	// ë¸ë¦¬ê²Œì´íŠ¸ ì„ ì–¸ (by suhyeon)
+	UPROPERTY(BlueprintAssignable, Category = "Weapon")
+	FOnWeaponPickedUp OnWeaponPickedUp;
 
 protected:
 	// Called when the game starts
@@ -135,7 +142,7 @@ public:
 
 	FTransform GetWeaponAimSocketRelativeTransform();
 
-	//TODO: World SpaceÀÇ location°ú rotationÀ» bonespaceÀÇ °ÍÀ¸·Î º¯È¯ÇÏ´Â ÇÔ¼ö ¿Ï¼ºÇÏ±â
+	//TODO: World Spaceï¿½ï¿½ locationï¿½ï¿½ rotationï¿½ï¿½ bonespaceï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ï¿½Ï´ï¿½ ï¿½Ô¼ï¿½ ï¿½Ï¼ï¿½ï¿½Ï±ï¿½
 	//FVector ConvertTargetToBoneSpace(const FVector& TargetWorldLocation, const FName& BoneName) const;
 
 #pragma endregion
@@ -163,4 +170,5 @@ public:
 
 	void ChangeWeapon(int32 WeaponIndex);
 #pragma endregion
+	
 };

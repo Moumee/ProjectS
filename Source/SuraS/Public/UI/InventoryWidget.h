@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BaseUIWidget.h"
-
+#include "ActorComponents/WeaponSystem/WeaponName.h"
 #include "InventoryWidget.generated.h"
 
 
@@ -21,6 +21,22 @@ enum class EInventoryTab : uint8
 {
 	Weapon UMETA(DisplayName = "Weapon"),
 	Chip UMETA(DisplayName = "Chip")
+};
+
+
+USTRUCT(BlueprintType)
+struct FWeaponUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	UImage* WeaponImage;
+
+	UPROPERTY()
+	UTextBlock* WeaponText;
+
+	FWeaponUI() : WeaponImage(nullptr), WeaponText(nullptr) {}
+	FWeaponUI(UImage* Image, UTextBlock* Text) : WeaponImage(Image), WeaponText(Text) {};
 };
 
 UCLASS()
@@ -78,7 +94,12 @@ public:
 	UDataTable* DTWeapon;  // 블루프린트에서 데이터 테이블 할당
 
 	void UnlockWeapon(FName WeaponName);
+	
+	/** 총기 UI 요소 맵 */
+	TMap<FString, FWeaponUI> WeaponUIElements;
 
+	//
+	TMap<FString, UImage*> WeaponImages;
 
 	/** 총기 umg 바인딩 **/
 	UPROPERTY(meta = (BindWidget))
@@ -93,21 +114,27 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UImage* RailGun;
 
-	TMap<FString, UImage*> WeaponImages;
+	/** 총기 이름 바인딩 */
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* RifleName;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ShotGunName;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MissileLauncherName;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* RailGunName;
+	
+	
+
+	UFUNCTION()
+	void OnWeaponPickedUp(FName WeaponName);
 
 #pragma endregion Weapon
 
-private:
-	// 3 x 5 무기 UI 배열
-	//TArray<TArray<UImage*>> WeaponImages;
-	//TArray<TArray<UTextBlock*>> WeaponNames;
 
-	// lock 이미지
-	UPROPERTY()
-	UImage* LockImage;
-	
-	UPROPERTY()
-	UImage* LockBackGroundImage;
 	
 };
 
