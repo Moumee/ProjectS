@@ -83,6 +83,8 @@ public:
 	// behavior tree getter
 	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
 
+	FORCEINLINE FName GetEnemyType() const { return EnemyType; }
+
 	void SetUpAIController(AEnemyBaseAIController* const NewAIController); // const ptr: the ptr address can't be changed
 
 	virtual bool TakeDamage(const FDamageData& DamageData, const AActor* DamageCauser) override;

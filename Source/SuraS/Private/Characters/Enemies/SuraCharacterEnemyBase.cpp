@@ -69,8 +69,6 @@ void ASuraCharacterEnemyBase::BeginPlay()
 		HitAnimation = EnemyAttributesData->HitAnimation;
 		DeathAnimation = EnemyAttributesData->DeathAnimation;
 		AttackAnimation = EnemyAttributesData->AttackAnimation;
-
-		GetAIController()->InitializeBlackBoard(EnemyAttributesData->StrafeRadius, EnemyAttributesData->AttackRadius, EnemyAttributesData->AttackRate);
 	}
 
 	PlayerController = GetWorld()->GetFirstPlayerController();
