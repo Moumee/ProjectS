@@ -11,6 +11,7 @@
 #include "ActorComponents/WeaponSystem/WeaponCamSettingValue.h"
 #include "ActorComponents/WeaponSystem/WeaponInterface.h"
 #include "ActorComponents/WeaponSystem/WeaponRecoilStruct.h"
+#include "ActorComponents/WeaponSystem/ProjectileSpreadValue.h"
 
 #include "Engine/DataTable.h"
 #include "WeaponData.h"
@@ -379,7 +380,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float BurstShotFireRate = 0.1f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 BurstShotCount = 3;
 
 	int32 BurstShotFired = 0;
@@ -499,45 +500,20 @@ public:
 
 #pragma region Projectile/SingleProjectileSpread
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bEnableSingleProjectileSpread = true;
-
 	bool bIsSpreading = false;
 
-	//TODO: 일단은 Spread 로직을 구현 중이기 때문에 멤버 변수로 하나씩 사용중인데,
-	//완성하면 관련 변수들 Struct화 해서 관리하기
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSpread")
+	FProjectileSpreadValue DefaultSpread;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSpread")
+	FProjectileSpreadValue ZoomSpread;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxSpreadValue = 40.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SpreadAmountBase = 1.5f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SpreadRangeMin = 0.8f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SpreadRangeMax = 1.2f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SpreadSpeed = 4.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SpreadRecoverSpeed = 3.5f;
-
-	//------------------------------------
 	float TotalTargetSpreadValue = 0.f;
 	float CurrentSpreadVaule = 0.f;
-
 	float SpreadRecoverTimer = 0.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SpreadRecoveryStartTime = 1.f;
-
 protected:
-	void AddSpreadValue();
-	void ApplySpread(float DeltaTime);
-	void RecoverSpread(float DeltaTime);
+	void AddSpreadValue(FProjectileSpreadValue* SpreadValue = nullptr);
+	void ApplySpread(float DeltaTime, FProjectileSpreadValue* SpreadValue = nullptr);
+	void RecoverSpread(float DeltaTime, FProjectileSpreadValue* SpreadValue = nullptr);
 	void UpdateSpread(float DeltaTime);
 	FVector GetRandomSpreadVector(FVector BaseDir);
 #pragma endregion
