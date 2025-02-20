@@ -25,6 +25,8 @@
 #include "ActorComponents/UISystem/ACUIMangerComponent.h"
 #include "Extensions/UIComponent.h"
 
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
+
 ASuraCharacterPlayer::ASuraCharacterPlayer()
 {
 
@@ -64,6 +66,10 @@ ASuraCharacterPlayer::ASuraCharacterPlayer()
 
 	if (WidgetClass.Succeeded())
 		HitEffectWidgetClass = WidgetClass.Class;
+
+
+	// WeaponSystem
+	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 }
 
 void ASuraCharacterPlayer::BeginPlay()

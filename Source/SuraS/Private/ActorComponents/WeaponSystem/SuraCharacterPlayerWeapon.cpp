@@ -36,8 +36,8 @@ ASuraCharacterPlayerWeapon::ASuraCharacterPlayerWeapon()
 
 	GetArmMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	//WeaponSystem
-	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
+	////WeaponSystem
+	//WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
 
 	//AudioComponent
 	//AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
