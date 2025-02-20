@@ -1724,11 +1724,17 @@ void UACWeapon::UpdateTargetMarkers()
 	for (AActor* Target : Targets)
 	{
 		FVector TargetLocation = Target->GetActorLocation();
-		FVector TargetOffset(0.f, 0.f, 50.f);
+		//FVector TargetOffset(0.f, 0.f, 50.f);
 
 		UUserWidget** TargetMarkerPtr = MapTargetActorToWidget.Find(Target);
 
-		FVector2D TargetScreenPosition = GetScreenPositionOfWorldLocation(TargetLocation + TargetOffset).Get<0>();
+		USkeletalMeshComponent* TargetSkeletalMesh = Target->GetComponentByClass<USkeletalMeshComponent>();
+		if (TargetSkeletalMesh && TargetSkeletalMesh->DoesSocketExist(FName(TEXT("spine_03"))))
+		{
+			TargetLocation = TargetSkeletalMesh->GetBoneLocation(FName(TEXT("spine_03")));
+		}
+
+		FVector2D TargetScreenPosition = GetScreenPositionOfWorldLocation(TargetLocation).Get<0>();
 
 		if (IsInViewport(TargetScreenPosition, 1.f, 1.f))
 		{

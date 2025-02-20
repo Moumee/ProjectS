@@ -151,4 +151,12 @@ protected:
 	bool CheckHeadHit(const FHitResult& Hit);
 	bool CheckHeadOvelap(const AActor* OverlappedActor, const FHitResult& SweepResult);
 #pragma endregion
+
+#pragma region Homing
+protected:
+	//bool CheckIfTargetAccessible();
+
+
+#pragma endregion
+
 };
