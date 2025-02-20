@@ -19,6 +19,7 @@
 #include "ActorComponents/WeaponSystem/AmmoCounterWidget.h"
 #include "ActorComponents/WeaponSystem/WeaponAimUIWidget.h"
 
+
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -33,8 +34,10 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Components/WidgetComponent.h"
+#include "Components/AudioComponent.h"
 
 #include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 
 //----------------------------------
@@ -312,8 +315,18 @@ void UACWeapon::LoadWeaponData(FName WeaponID)
 	WeaponData = WeaponDataTable->FindRow<FWeaponData>(WeaponID, TEXT(""));
 	if (WeaponData)
 	{
+		//TODO: The data you load must be different depending on the weapon type
+
+		// <Sound>
+		FireSound = WeaponData->FireSound;
+		ChargeSound = WeaponData->ChargeSound;
+
+		// <Effect>
 		MuzzleFireEffect = WeaponData->FireEffect;
-		MissileLaunchDelay = WeaponData->MissileLaunchDelay;
+		ChargeEffect = WeaponData->ChargeEffect;
+		ChargeEffectLocation = WeaponData->ChargeEffectLocation;
+		ChargeEffectRotation = WeaponData->ChargeEffectRotation;
+		ChargeEffenctScale = WeaponData->ChargeEffenctScale;
 
 		// <Reload>
 		MaxAmmo = WeaponData->MaxAmmo;
@@ -352,6 +365,7 @@ void UACWeapon::LoadWeaponData(FName WeaponID)
 		MaxTargetDetectionAngle = WeaponData->MaxTargetDetectionAngle;
 		MaxTargetDetectionTime = WeaponData->MaxTargetDetectionTime;
 		TimeToReachMaxTargetDetectionRange = WeaponData->TimeToReachMaxTargetDetectionRange;
+
 		// <Charging>
 		bAutoFireAtMaxChargeTime = WeaponData->bAutoFireAtMaxChargeTime;
 		ChargeTimeThreshold = WeaponData->ChargeTimeThreshold;
@@ -360,6 +374,9 @@ void UACWeapon::LoadWeaponData(FName WeaponID)
 		ChargingAdditionalRecoilAmountPitchBase = WeaponData->ChargingAdditionalRecoilAmountPitchBase;
 		ChargingAdditionalRecoilAmountYawBase = WeaponData->ChargingAdditionalRecoilAmountYawBase;
 		ChargingAdditionalProjectileRadiusBase = WeaponData->ChargingAdditionalProjectileRadiusBase;
+
+		// <Penetration>
+		MaxPenetrableObjectsNum = WeaponData->MaxPenetrableObjectsNum;
 	}
 }
 
@@ -484,7 +501,7 @@ void UACWeapon::DetachWeaponFromPlayer()
 	}
 }
 
-void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, bool bIsHoming, AActor* HomingTarget) 
+void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 NumPenetrable, bool bIsHoming, AActor* HomingTarget)
 {
 	//TODO: Projectile 종류에 대한 정보를 input으로 받아야 하나? 아직은 잘 모르곘음
 	if (CurrentState != UnequippedState)
@@ -563,7 +580,7 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDa
 
 				// Spawn the projectile at the muzzle
 				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius);
+				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius, NumPenetrable);
 				SetUpAimUIDelegateBinding(Projectile);
 				if (bIsHoming)
 				{
@@ -580,6 +597,7 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDa
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
 		}
+
 
 		StartFireAnimation(AM_Fire_Character, AM_Fire_Weapon);
 		if (bShouldConsumeAmmo)
@@ -824,6 +842,24 @@ void UACWeapon::CancelAnimation(UAnimMontage* CharacterAnimation, UAnimMontage* 
 }
 #pragma endregion
 
+
+void UACWeapon::PlayChargeSound()
+{
+	if (ChargeSound)
+	{
+		ChargeAudioComponent = UGameplayStatics::SpawnSoundAttached(ChargeSound, this, FName(TEXT("Muzzle")), FVector(0, 0, 0), EAttachLocation::KeepRelativeOffset);
+	}
+}
+
+void UACWeapon::StopChargeSound()
+{
+	if (ChargeAudioComponent)
+	{
+		ChargeAudioComponent->Stop();
+	}
+}
+
+#pragma region Niagara
 void UACWeapon::SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotation)
 {
 	if (MuzzleFireEffect)
@@ -837,6 +873,36 @@ void UACWeapon::SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotat
 			true);
 	}
 }
+void UACWeapon::SpawnChargeEffect(FVector SpawnLocation, FRotator SpawnRotation, FVector EffectScale)
+{
+	if (ChargeEffect)
+	{
+		ChargeEffectComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			ChargeEffect,
+			this,
+			FName(TEXT("Muzzle")),
+			SpawnLocation,
+			FRotator(0, 0, 0),
+			EAttachLocation::KeepRelativeOffset,
+			true);
+
+		ChargeEffectComponent->SetRelativeScale3D(EffectScale);
+
+		//TODO: We need to find a way to fix the speed. This method doesn't work.
+		ChargeEffectComponent->SetSeekDelta(20.f / MaxChargeTime);
+	}
+}
+void UACWeapon::DestroyChargeEffect()
+{
+	if (ChargeEffectComponent)
+	{
+		ChargeEffectComponent->Deactivate();
+		ChargeEffectComponent->DestroyComponent();
+		ChargeEffectComponent = nullptr;
+	}
+}
+#pragma endregion
+
 
 bool UACWeapon::PerformLineTrace(FVector StartLocation, FVector LineDirection, float MaxDistance, FVector& HitLocation)
 {
@@ -1294,7 +1360,7 @@ void UACWeapon::HandleFullAutoFire()
 #pragma endregion
 
 #pragma region FireMode/SingleShot
-void UACWeapon::StartSingleShot(float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius)
+void UACWeapon::StartSingleShot(float AdditionalDamage, float AdditionalRecoilAmountPitch, float AdditionalRecoilAmountYaw, float AdditionalProjectileRadius, int32 NumPenetrable)
 {
 	//TODO: 방식을 바꿔야 함 
 	//TODO: Enum에 따라서 다르게 함수 호출하는 방식이 아니라, StartSingleShot 자체에 Input을 넣어서 필요한 곳에서 각각 다른 Input 넣어서 작동하도록 해야함
@@ -1312,7 +1378,7 @@ void UACWeapon::StartSingleShot(float AdditionalDamage, float AdditionalRecoilAm
 	}
 	else if (WeaponName == EWeaponName::WeaponName_RailGun)
 	{
-		FireSingleProjectile(true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false);
+		FireSingleProjectile(true, AdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, false, NumPenetrable);
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(SingleShotTimer, this, &UACWeapon::StopSingleShot, SingleShotDelay, false);
@@ -1711,7 +1777,7 @@ void UACWeapon::StartMissileLaunch(TArray<AActor*> TargetActors)
 }
 void UACWeapon::UpdateMissileLaunch()
 {
-	FireSingleProjectile(false, 0.f, 0.f, 0.f, 0.f, true, ConfirmedTargets[CurrentTargetIndex]);
+	FireSingleProjectile(false, 0.f, 0.f, 0.f, 0.f, 0, true, ConfirmedTargets[CurrentTargetIndex]);
 	CurrentTargetIndex++;
 	if (ConfirmedTargets.Num() <= CurrentTargetIndex)
 	{
@@ -1740,6 +1806,10 @@ void UACWeapon::StartCharge()
 		UE_LOG(LogTemp, Warning, TEXT("Start Charging!!!"));
 
 		ChangeState(ChargingState);
+
+		SpawnChargeEffect(ChargeEffectLocation, ChargeEffectRotation, ChargeEffenctScale);
+		PlayChargeSound();
+
 		UpdateCharge();
 	}
 
@@ -1749,31 +1819,7 @@ void UACWeapon::UpdateCharge()
 	float DeltaSeconds = GetWorld()->GetDeltaSeconds();
 	ElapsedChargeTime += DeltaSeconds;
 
-	// TODO: Camera Shake Test 적용하기
-	// TODO: Charging 정도에 따라 CameraShake 정도를 다르게 하기
-	//if (Character)
-	//{
-	//	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
-	//	{
-	//		if (ChargingCameraShakeClass)
-	//		{
-	//			//TODO: CamShake
-
-	//			float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 2.f); //TODO: Max는 멤버변수로 지정하던가 해야함
-
-	//			UCameraShakeBase* CameraShakeIntance = PlayerController->PlayerCameraManager->StartCameraShake(ChargingCameraShakeClass, ChargingCamShakeScale);
-
-	//			UWeaponCameraShakeBase* CamShake = Cast<UWeaponCameraShakeBase>(CameraShakeIntance);	
-	//			if (CamShake)
-	//			{
-	//				//TODO: 디테일하게 속성값을 설정 가능하지만, 너무 복잡하고, 굳이?임
-	//				//CamShake->SetZero();
-	//			}
-	//		}
-	//	}
-	//}
-
-	float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 2.f); //TODO: Max는 멤버변수로 지정하던가 해야함
+	float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 3.f); //TODO: Max는 멤버변수로 지정하던가 해야함
 	ApplyCameraShake(ChargingCameraShakeClass, ChargingCamShakeScale);
 
 	if (bAutoFireAtMaxChargeTime)
@@ -1781,7 +1827,6 @@ void UACWeapon::UpdateCharge()
 		if (ElapsedChargeTime > MaxChargeTime)
 		{
 			//TODO: Timer로 계산한 시간이랑 실제 시간이랑 다른 것 같음. Log로 확인해봐야함 -> Tick 에서 계산한 시간이랑 여기서 계산한 시간이랑 비교해봐야함
-
 			StopCharge();
 		}
 		else
@@ -1802,22 +1847,28 @@ void UACWeapon::StopCharge()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(ChargingTimer);
 
+		DestroyChargeEffect();
+		StopChargeSound();
+
 		ChangeState(FiringState);
 
 		float ChargingAdditionalDamage = 0.f;
 		float AdditionalRecoilAmountPitch = 0.f;
 		float AdditionalRecoilAmountYaw = 0.f;
 		float AdditionalProjectileRadius = 0.f;
+		int32 PenetrableObjectsNum = 0;
 		if (ElapsedChargeTime > ChargeTimeThreshold)
 		{
-			// TODO: Clamp 해줘야함...
+			// TODO: Clamp 해줘야함...(안해도 될듯?)
 			ChargingAdditionalDamage = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalDamageBase;
 			AdditionalRecoilAmountPitch = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountPitchBase;
 			AdditionalRecoilAmountYaw = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalRecoilAmountYawBase;
 			AdditionalProjectileRadius = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * ChargingAdditionalProjectileRadiusBase;
+			PenetrableObjectsNum = ((ElapsedChargeTime - ChargeTimeThreshold) / (MaxChargeTime - ChargeTimeThreshold)) * MaxPenetrableObjectsNum;
+			UE_LOG(LogTemp, Error, TEXT("Penetrable Num: %d"), PenetrableObjectsNum);
 		}
 
-		StartSingleShot(ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw);
+		StartSingleShot(ChargingAdditionalDamage, AdditionalRecoilAmountPitch, AdditionalRecoilAmountYaw, AdditionalProjectileRadius, PenetrableObjectsNum);
 
 		ElapsedChargeTime = 0.f;
 	}
@@ -2111,22 +2162,6 @@ void UACWeapon::ForceStopCamModification()
 }
 void UACWeapon::ApplyCameraShake(TSubclassOf<UWeaponCameraShakeBase> CamShakeClass, float Scale)
 {
-	//if (Character)
-	//{
-	//	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
-	//	{
-	//		//PlayerController->ClientStartCameraShake(CameraShake->GetClass());
-	//		//PlayerController->PlayerCameraManager->StartCameraShake(CameraShake->GetClass());
-	//		if (DefaultCameraShakeClass)
-	//		{
-	//			//PlayerController->PlayerCameraManager->StopAllCameraShakes(true);
-
-	//			PlayerController->PlayerCameraManager->StartCameraShake(DefaultCameraShakeClass);
-	//		}
-	//	}
-	//}
-
-	//-----------------------------------------------
 	if (Character && CamShakeClass)
 	{
 		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))

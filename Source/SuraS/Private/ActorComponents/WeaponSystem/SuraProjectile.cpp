@@ -69,7 +69,7 @@ ASuraProjectile::ASuraProjectile()
 	UE_LOG(LogTemp, Warning, TEXT("Projectile is Spawned!!!"));
 }
 
-void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius) //TODO: 여기서 ProjectileType을 input으로 받아야 할 듯
+void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon* OwnerWeapon, float additonalDamage, float AdditionalRadius, int32 NumPenetrable) //TODO: 여기서 ProjectileType을 input으로 받아야 할 듯
 {
 	// Weapon에서 spawn projectile 할 때 처리를 해줘야 하나?
 	// 근데 어차피 projectile 종류별로 BP 따로 만들고, Mesh도 다른거 사용하는데 의미가 있나?
@@ -107,7 +107,8 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon*
 		else if (ProjectileType == EProjectileType::Projectile_RailGun)
 		{
 			LoadProjectileData("RailGunProjectile");
-			SpawnTrailEffect(true);
+			SpawnTrailEffect();
+			//SpawnTrailEffect(true);
 		}
 	}
 
@@ -117,6 +118,9 @@ void ASuraProjectile::InitializeProjectile(AActor* OwnerOfProjectile, UACWeapon*
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASuraProjectile::OnComponentBeginOverlap);
 
 		CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+		NumPenetrableObjects = NumPenetrable;
+		UE_LOG(LogTemp, Error, TEXT("Projectile Penetrable Num: %d"), NumPenetrableObjects);
 	}
 	else
 	{
@@ -166,7 +170,7 @@ void ASuraProjectile::LoadProjectileData(FName ProjectileID)
 
 		// <Penetration>
 		bCanPenetrate = ProjectileData->bCanPenetrate;
-		NumPenetrableObjects = ProjectileData->NumPenetrableObjects;
+		//NumPenetrableObjects = ProjectileData->NumPenetrableObjects;
 	}
 }
 
@@ -361,7 +365,7 @@ void ASuraProjectile::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedCom
 				ApplyExplosiveDamage(bIsExplosive, SweepResult.ImpactPoint);
 
 				UpdatePenetration();
-				if (NumPenetratedObjects >= NumPenetrableObjects)
+				if (NumPenetratedObjects > NumPenetrableObjects)
 				{
 					ResetPenetration();
 
@@ -390,7 +394,7 @@ void ASuraProjectile::SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRot
 void ASuraProjectile::SpawnTrailEffect(bool bShouldAttachedToWeapon) //TODO: Rocket Trail 적용시 이상함. 손봐야함
 {
 	if (ProjectileMesh && TrailEffect)
-	{
+	{ 
 		FTransform TrailStartTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailStart")), ERelativeTransformSpace::RTS_Component);
 		FTransform TrailEndTransform = ProjectileMesh->GetSocketTransform(FName(TEXT("TrailEnd")), ERelativeTransformSpace::RTS_Component);
 

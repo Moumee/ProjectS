@@ -100,7 +100,7 @@ protected:
 	int32 NumPenetrableObjects = 4;
 public:	
 	ASuraProjectile();
-	void InitializeProjectile(AActor* Owner, UACWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f);
+	void InitializeProjectile(AActor* Owner, UACWeapon* OwnerWeapon, float additonalDamage = 0.f, float AdditionalRadius = 0.f, int32 NumPenetrable = 0);
 	void LoadProjectileData(FName ProjectileID);
 	void SetHomingTarget(bool bIsHoming, AActor* Target);
 	void LaunchProjectile();

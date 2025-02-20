@@ -48,13 +48,8 @@ public:
 
 	FWeaponData* WeaponData;
 
-	/** Projectile class to spawn */
 	UPROPERTY(EditDefaultsOnly, Category = Projectile)
 	TSubclassOf<class ASuraProjectile> ProjectileClass;
-
-	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	USoundBase* FireSound;
 
 	/** AnimMontage to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
@@ -109,7 +104,7 @@ public:
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void FireSingleProjectile(bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, bool bIsHoming = false, AActor* HomingTarget = nullptr);
+	void FireSingleProjectile(bool bShouldConsumeAmmo = true, float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 NumPenetrable = 0, bool bIsHoming = false, AActor* HomingTarget = nullptr);
 	void FireMultiProjectile();
 	void SpawnProjectile();
 
@@ -137,7 +132,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 #pragma region WeaponState
-protected: //TODO: public���� �����ϱ�
+protected: //TODO: public
 	UPROPERTY(VisibleAnywhere)
 	USuraWeaponBaseState* CurrentState;
 
@@ -212,12 +207,38 @@ public:
 	UAnimMontage* AM_Reload_Weapon;
 #pragma endregion
 
+#pragma region Sound
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* FireSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* ChargeSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	UAudioComponent* ChargeAudioComponent;
+
+	void PlayChargeSound();
+	void StopChargeSound();
+#pragma endregion
+
 #pragma region Niagara
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UNiagaraSystem* MuzzleFireEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UNiagaraSystem* ChargeEffect;
+
+	FVector ChargeEffectLocation;
+	FRotator ChargeEffectRotation;
+	FVector ChargeEffenctScale;
+
+	UPROPERTY()
+	UNiagaraComponent* ChargeEffectComponent;
 public:
 	void SpawnMuzzleFireEffect(FVector SpawnLocation, FRotator SpawnRotation);
+	void SpawnChargeEffect(FVector SpawnLocation, FRotator SpawnRotation, FVector EffectScale);
+	void DestroyChargeEffect();
 #pragma endregion
 
 #pragma region Aim
@@ -367,7 +388,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float SingleShotDelay = 1.f;
 public:
-	void StartSingleShot(float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f);
+	void StartSingleShot(float AdditionalDamage = 0.f, float AdditionalRecoilAmountPitch = 0.f, float AdditionalRecoilAmountYaw = 0.f, float AdditionalProjectileRadius = 0.f, int32 NumPenetrable = 0);
 	void StopSingleShot();
 #pragma endregion
 
@@ -460,6 +481,7 @@ protected:
 	float ChargingAdditionalRecoilAmountYawBase = 1.f;
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
 
+	int32 MaxPenetrableObjectsNum = 4;
 
 	float ElapsedChargeTime = 0.f;
 	FTimerHandle ChargingTimer;

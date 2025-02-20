@@ -5,6 +5,7 @@
 
 USuraWeaponChargingState::USuraWeaponChargingState()
 {
+	WeaponStateType = EWeaponStateType::WeaponStateType_Charging;
 }
 
 USuraWeaponChargingState::~USuraWeaponChargingState()

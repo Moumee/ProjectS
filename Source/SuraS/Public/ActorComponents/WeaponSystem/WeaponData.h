@@ -22,8 +22,23 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EProjectileType ProjectileType;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UNiagaraSystem* FireEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	UNiagaraSystem* ChargeEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	FVector ChargeEffectLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	FRotator ChargeEffectRotation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	FVector ChargeEffenctScale = { 1.f, 1.f, 1.f };
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* FireSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* ChargeSound;
+	//-----------------------------------------------------------------
 
 	/** Start Suhyeon  **/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -96,4 +111,7 @@ struct SURAS_API FWeaponData : public FTableRowBase
 	float ChargingAdditionalRecoilAmountYawBase = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charging")
 	float ChargingAdditionalProjectileRadiusBase = 20.f;
+	//-----------------------------------------------------------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
+	int32 MaxPenetrableObjectsNum = 4;
 };

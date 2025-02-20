@@ -62,7 +62,6 @@ public:
 
 
 #pragma region WeaponSystem
-
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
 	class UWeaponSystemComponent* WeaponSystem;
@@ -76,14 +75,23 @@ public:
 
 #pragma endregion
 
+#pragma region AudioComponent
+protected:
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	//UAudioComponent* AudioComponent;
+public:
+	//void PlaySound(USoundBase* Sound);
+	//void StopSound();
+#pragma endregion
+
 #pragma region Mesh
+public:
 	UFUNCTION()
 	USkeletalMeshComponent* GetArmMesh() { return ArmMesh; }
 #pragma endregion
 
 public:
 	virtual void InterpCameraFOV(float DeltaTime) override;
-
 	virtual void StartCamShake(TSubclassOf<UCameraShakeBase> CamShake) override;
 };
 

@@ -12,16 +12,7 @@ void UWeaponAimUIWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    //if (OutCircle)
-    //{
-    //    UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(OutCircle->Slot);
-    //    if (CanvasSlot)
-    //    {
-    //        DefaultOutCircleSize = CanvasSlot->GetSize();
-    //    }
-    //}
-
-    UE_LOG(LogTemp, Error, TEXT("UWeaponAimUIWidget::NativeConstruct()!!!"));
+    //UE_LOG(LogTemp, Error, TEXT("UWeaponAimUIWidget::NativeConstruct()!!!"));
 }
 
 void UWeaponAimUIWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -31,6 +22,7 @@ void UWeaponAimUIWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
     UpdateHitIndicator(InDeltaTime);
 }
 
+#pragma region Spread
 void UWeaponAimUIWidget::ResetAimUISize()
 {
     if (OutCircle)
@@ -42,7 +34,6 @@ void UWeaponAimUIWidget::ResetAimUISize()
         }
     }
 }
-
 void UWeaponAimUIWidget::ApplyAimUISpread(float SpreadValue)
 {
     if (OutCircle)
@@ -55,6 +46,7 @@ void UWeaponAimUIWidget::ApplyAimUISpread(float SpreadValue)
         }
     }
 }
+#pragma endregion
 
 #pragma region HitIndicator
 void UWeaponAimUIWidget::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
@@ -65,7 +57,7 @@ void UWeaponAimUIWidget::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
 
 void UWeaponAimUIWidget::HeadShot()
 {
-    UE_LOG(LogTemp, Error, TEXT("UWeaponAimUIWidget::HeadShot()!!!"));
+    //UE_LOG(LogTemp, Error, TEXT("UWeaponAimUIWidget::HeadShot()!!!"));
 
     SetNormalOvelayInvisible();
 
@@ -77,7 +69,7 @@ void UWeaponAimUIWidget::HeadShot()
 
 void UWeaponAimUIWidget::BodyShot()
 {
-    UE_LOG(LogTemp, Error, TEXT("UWeaponAimUIWidget::BodyShot()!!!"));
+    //UE_LOG(LogTemp, Error, TEXT("UWeaponAimUIWidget::BodyShot()!!!"));
 
     SetCriticalOvelayInvisible();
 
@@ -104,7 +96,7 @@ void UWeaponAimUIWidget::FadeOutCriticalOverlay(float DeltaTime)
 
     if (CurrentCriticalOverlayOpacity < 0.1f)
     {
-        UE_LOG(LogTemp, Error, TEXT("CriticalOverlay Fade Out!!!"));
+        //UE_LOG(LogTemp, Error, TEXT("CriticalOverlay Fade Out!!!"));
 
         bIsIndicatingCriticalHit = false;
         CurrentCriticalOverlayOpacity = 0.f;
@@ -129,7 +121,7 @@ void UWeaponAimUIWidget::FadeOutNormalOverlay(float DeltaTime)
 
     if (CurrentNormalOverlayOpacity < 0.1f)
     {
-        UE_LOG(LogTemp, Error, TEXT("NormalOverlay Fade Out!!!"));
+        //UE_LOG(LogTemp, Error, TEXT("NormalOverlay Fade Out!!!"));
 
         bIsIndicatingNormalHit = false;
         CurrentNormalOverlayOpacity = 0.f;

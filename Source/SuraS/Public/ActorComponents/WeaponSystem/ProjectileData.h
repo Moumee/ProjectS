@@ -60,6 +60,6 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
 	bool bCanPenetrate = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
-	int32 NumPenetrableObjects = 4;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Penetration")
+	//int32 NumPenetrableObjects = 4;
 };
