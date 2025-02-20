@@ -29,6 +29,7 @@ class UCameraComponent;
 struct FInputActionValue;
 class UInputAction;
 class UInputMappingContext;
+class UWeaponSystemComponent;
 
 
 /**
@@ -43,6 +44,10 @@ class SURAS_API ASuraCharacterPlayer : public ASuraCharacterBase, public IDamage
 	UPlayerHitWidget* HitEffectWidget;
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
+	UWeaponSystemComponent* WeaponSystem;
+
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
 	UACDamageSystem* DamageSystemComponent;

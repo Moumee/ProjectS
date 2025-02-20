@@ -62,9 +62,9 @@ public:
 
 
 #pragma region WeaponSystem
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
-	class UWeaponSystemComponent* WeaponSystem;
+//protected:
+//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WeaponSystem")
+//	class UWeaponSystemComponent* WeaponSystem;
 
 public:
 	UFUNCTION()
