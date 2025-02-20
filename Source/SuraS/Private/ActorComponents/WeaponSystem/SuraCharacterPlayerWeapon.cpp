@@ -18,6 +18,7 @@
 //#include "Characters/Player/SuraPlayerRunningState.h"
 //#include "Characters/Player/SuraPlayerWalkingState.h"
 #include "Components/CapsuleComponent.h"
+//#include "Components/AudioComponent.h"
 //#include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -37,19 +38,14 @@ ASuraCharacterPlayerWeapon::ASuraCharacterPlayerWeapon()
 
 	//WeaponSystem
 	WeaponSystem = CreateDefaultSubobject<UWeaponSystemComponent>(TEXT("WeaponSystem"));
+
+	//AudioComponent
+	//AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	//AudioComponent->bAutoActivate = false;
 }
 
 void ASuraCharacterPlayerWeapon::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Overlapped!!!"));
-
-	//ASuraWeaponPickUp* PickUpActor = Cast<ASuraWeaponPickUp>(OtherActor);
-	//if (PickUpActor)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("Overlapped!!!"));
-	//}
-
-
 }
 
 void ASuraCharacterPlayerWeapon::UpdateLookInputVector2D(const FInputActionValue& InputValue)

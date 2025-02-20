@@ -6,6 +6,7 @@
 
 USuraWeaponTargetingState::USuraWeaponTargetingState()
 {
+	WeaponStateType = EWeaponStateType::WeaponStateType_Targeting;
 }
 
 USuraWeaponTargetingState::~USuraWeaponTargetingState()

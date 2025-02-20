@@ -43,24 +43,26 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UImage* RightCrosshair;
 
+#pragma region Spread
 	void ResetAimUISize();
 	void ApplyAimUISpread(float SpreadValue = 0.f);
-
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector2D DefaultOutCircleSize;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float OutCircleSpreadSizeOffset = 10.f;
-
+#pragma endregion
 
 #pragma region HitIndicator
 protected:
 	bool bIsIndicatingNormalHit = false;
 	bool bIsIndicatingCriticalHit = false;
 
-	const float TargetNormalOverlayOpacity = 1.f;
-	const float TargetCriticalOverlayOpacity = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TargetNormalOverlayOpacity = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TargetCriticalOverlayOpacity = 1.f;
 
 	float CurrentNormalOverlayOpacity = 0.f;
 	float CurrentCriticalOverlayOpacity = 0.f;
@@ -99,7 +101,5 @@ protected:
 	void SetNormalOvelayInvisible();
 
 	void UpdateHitIndicator(float DeltaTime);
-
 #pragma endregion
-
 };
