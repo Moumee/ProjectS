@@ -4,6 +4,10 @@
 #include "Characters/Player/SuraPlayerWalkingState.h"
 
 #include "ActorComponents/ACPlayerMovmentData.h"
+#include "ActorComponents/WeaponSystem/ACWeapon.h"
+#include "ActorComponents/WeaponSystem/SuraWeaponBaseState.h"
+#include "ActorComponents/WeaponSystem/WeaponStateType.h"
+#include "ActorComponents/WeaponSystem/WeaponSystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Characters/Player/SuraCharacterPlayer.h"
 #include "Characters/Player/SuraPlayerCrouchingState.h"
@@ -103,8 +107,19 @@ void USuraPlayerWalkingState::UpdateState(ASuraCharacterPlayer* Player, float De
 
 	if (Player->ForwardAxisInputValue > 0.f)
 	{
-		Player->ChangeState(Player->RunningState);
-		return;
+		if (Player->HasWeapon())
+		{
+			if (Player->GetWeaponSystemComponent()->GetCurrentWeapon()->GetCurrentState()->GetWeaponStateType() != EWeaponStateType::WeaponStateType_Charging)
+			{
+				Player->ChangeState(Player->RunningState);
+				return;
+			}
+		}
+		else
+		{
+			Player->ChangeState(Player->RunningState);
+			return;
+		}
 	}
 	
 

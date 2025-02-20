@@ -106,6 +106,7 @@ void ASuraCharacterPlayer::BeginPlay()
 
 	BaseMovementSpeed = GetPlayerMovementData()->GetRunSpeed();
 	GetCharacterMovement()->AirControl = GetPlayerMovementData()->GetAirControl();
+	GetCharacterMovement()->GravityScale = DefaultGravityScale;
 
 	WalkingState = NewObject<USuraPlayerWalkingState>(this, USuraPlayerWalkingState::StaticClass());
 	RunningState = NewObject<USuraPlayerRunningState>(this, USuraPlayerRunningState::StaticClass());
@@ -176,6 +177,15 @@ bool ASuraCharacterPlayer::IsFallingDown() const
 {
 	
 	return GetCharacterMovement()->IsFalling() && GetCharacterMovement()->Velocity.Z < 0.f;
+}
+
+bool ASuraCharacterPlayer::HasWeapon() const
+{
+	if (WeaponSystem)
+	{
+		return WeaponSystem->GetCurrentWeapon() != nullptr;
+	}
+	return false;
 }
 
 bool ASuraCharacterPlayer::HasMovementInput() const
@@ -286,6 +296,9 @@ void ASuraCharacterPlayer::PrintPlayerDebugInfo() const
 
 			GEngine->AddOnScreenDebugMessage(94, 0.f, FColor::Green,
 				FString::Printf(TEXT("Wall Run Side : %s"), *UEnum::GetDisplayValueAsText(WallRunSide).ToString()));
+
+			GEngine->AddOnScreenDebugMessage(93, 0.f, FColor::Green,
+				FString::Printf(TEXT("Gravity Scale : %f"), GetCharacterMovement()->GravityScale));
 		}
 	}
 }
