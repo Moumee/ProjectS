@@ -27,8 +27,11 @@ struct SURAS_API FProjectileData : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
 	UMaterialInterface* HoleDecal;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Damage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	float DefaultDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	float HeadShotAdditionalDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float InitialLifeSpan;

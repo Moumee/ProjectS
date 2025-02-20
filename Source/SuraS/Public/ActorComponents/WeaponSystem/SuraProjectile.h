@@ -16,15 +16,19 @@
 class UACWeapon;
 
 class USphereComponent;
-class UProjectileMovementComponent; // 기본적인 projectile이 구현되어 있는 class임
-//class UParticleSystem;
+class UProjectileMovementComponent;
 class UNiagaraSystem;
+
+DECLARE_DELEGATE(FHeadShotDelegate);
+DECLARE_DELEGATE(FBodyShotDelegate);
 
 UCLASS(config = Game) //TODO: 무슨 속성인지 알아봐야함
 class SURAS_API ASuraProjectile : public AActor
 {
 	GENERATED_BODY()
-
+public:
+	FHeadShotDelegate OnHeadShot;
+	FBodyShotDelegate OnBodyShot;
 protected:
 	UPROPERTY(EditAnywhere, Category = Projectile)
 	EProjectileType ProjectileType = EProjectileType::Projectile_Rifle;
@@ -51,9 +55,7 @@ protected:
 
 	UPROPERTY()
 	UNiagaraComponent* TrailEffectComponent;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-	//UParticleSystem* ImpactEffect;
 	UNiagaraSystem* ImpactEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
@@ -61,6 +63,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DefaultDamage = 0.f;
+
+	float HeadShotAdditionalDamage = 0.f;
 
 	UPROPERTY(VisibleAnywhere)
 	AActor* ProjectileOwner;
@@ -119,7 +123,6 @@ public:
 	void SpawnImpactEffect(FVector SpawnLocation, FRotator SpawnRotation);
 	void SpawnTrailEffect(bool bShouldAttachedToWeapon = false);
 	void SpawnDecalEffect(FVector SpawnLocation, FRotator SpawnRotation);
-
 protected:
 	bool bShouldUpdateTrailEffect = false;
 	void UpdateTrailEffect();
@@ -141,5 +144,11 @@ protected:
 protected:
 	void UpdatePenetration();
 	void ResetPenetration();
+#pragma endregion
+
+#pragma region HeadShot
+protected:
+	bool CheckHeadHit(const FHitResult& Hit);
+	bool CheckHeadOvelap(const AActor* OverlappedActor, const FHitResult& SweepResult);
 #pragma endregion
 };

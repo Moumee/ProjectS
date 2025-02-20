@@ -18,8 +18,6 @@
 
 #include "ACWeapon.generated.h"
 
-//TODO: Character Class�� ASuraCharacterBase�� ���� �����غ�����
-// �ٵ� �켱�� ��ӹ��� Ŭ������ ����
 class ASuraCharacterPlayerWeapon;
 class USuraWeaponBaseState;
 class USuraWeaponIdleState;
@@ -103,7 +101,6 @@ public:
 
 	void LoadWeaponData(FName WeaponID);
 
-	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	bool AttachWeaponToPlayer(ASuraCharacterPlayerWeapon* TargetCharacter);
 
@@ -326,12 +323,11 @@ protected:
 	TSubclassOf<UUserWidget> TargetMarkerWidgetClass;
 
 	//-----------------------------------------------------------
-	//TODO: �Ʒ��� Test�� ���ؼ� �ӽ÷� ������� ����. ���߿� �����ϴ��� �ؾ���
-
+	//TODO: for 3D UI Test
 	UPROPERTY()
 	UTextureRenderTarget2D* RenderTarget;
 
-	// 3D UI�� ��Ƽ���� �ν��Ͻ�
+	//TODO: 3D UI Test
 	UPROPERTY()
 	UMaterialInstanceDynamic* WidgetMaterialInstance;
 
@@ -339,6 +335,8 @@ protected:
 public:
 	void ActivateCrosshairWidget(bool bflag);
 	void ActivateAmmoCounterWidget(bool bflag);
+protected:
+	void SetUpAimUIDelegateBinding(ASuraProjectile* Projectile);
 #pragma endregion
 
 #pragma region WeaponType

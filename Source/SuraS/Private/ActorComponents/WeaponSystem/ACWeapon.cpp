@@ -564,6 +564,7 @@ void UACWeapon::FireSingleProjectile(bool bShouldConsumeAmmo, float AdditionalDa
 				// Spawn the projectile at the muzzle
 				ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 				Projectile->InitializeProjectile(Character, this, AdditionalDamage, AdditionalProjectileRadius);
+				SetUpAimUIDelegateBinding(Projectile);
 				if (bIsHoming)
 				{
 					Projectile->SetHomingTarget(bIsHoming, HomingTarget);
@@ -651,13 +652,12 @@ void UACWeapon::FireMultiProjectile()
 					{
 						const FRotator SpawnRotation = UKismetMathLibrary::RandomUnitVectorInConeInDegrees((TargetLocationOfProjectile - SpawnLocation).GetSafeNormal(), MaxAngleOfMultiProjectileSpread).Rotation();
 
-						//Set Spawn Collision Handling Override
 						FActorSpawnParameters ActorSpawnParams;
 						ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-						// Spawn the projectile at the muzzle
 						ASuraProjectile* Projectile = World->SpawnActor<ASuraProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 						Projectile->InitializeProjectile(Character, this);
+						SetUpAimUIDelegateBinding(Projectile);
 						Projectile->LaunchProjectile();
 					}
 
@@ -904,8 +904,8 @@ bool UACWeapon::PerformSphereTrace(FVector StartLocation, FVector TraceDirection
 	{
 		FVector TraceEndedPoint = Start + TraceDirection * FVector::Distance(Start, End) * HitResult.Time;
 
-		DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 1.f, 12, FColor::Red, false, 50.f);
-		DrawDebugSphere(GetWorld(), TraceEndedPoint, 1.f, 12, FColor::Blue, false, 50.f);
+		//DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 1.f, 12, FColor::Red, false, 50.f);
+		//DrawDebugSphere(GetWorld(), TraceEndedPoint, 1.f, 12, FColor::Blue, false, 50.f);
 
 		//UE_LOG(LogTemp, Warning, TEXT("phere Trace Hit: %s"), *HitResult.GetActor()->GetName());
 		//HitLocation = HitResult.ImpactPoint;
@@ -1247,6 +1247,14 @@ void UACWeapon::ActivateAmmoCounterWidget(bool bflag)
 		{
 			AmmoCounterWidget->RemoveFromViewport();
 		}
+	}
+}
+
+void UACWeapon::SetUpAimUIDelegateBinding(ASuraProjectile* Projectile)
+{
+	if (AimUIWidget)
+	{
+		AimUIWidget->SetUpAimUIDelegateBinding(Projectile);
 	}
 }
 
@@ -1768,8 +1776,6 @@ void UACWeapon::UpdateCharge()
 	float ChargingCamShakeScale = FMath::Clamp((ElapsedChargeTime / MaxChargeTime), 0.1f, 2.f); //TODO: Max는 멤버변수로 지정하던가 해야함
 	ApplyCameraShake(ChargingCameraShakeClass, ChargingCamShakeScale);
 
-
-
 	if (bAutoFireAtMaxChargeTime)
 	{
 		if (ElapsedChargeTime > MaxChargeTime)
@@ -2125,7 +2131,7 @@ void UACWeapon::ApplyCameraShake(TSubclassOf<UWeaponCameraShakeBase> CamShakeCla
 	{
 		if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
 		{
-			UE_LOG(LogTemp, Error, TEXT("CamShake!!!"));
+			//UE_LOG(LogTemp, Error, TEXT("CamShake!!!"));
 
 			PlayerController->PlayerCameraManager->StartCameraShake(CamShakeClass, Scale);
 		}
